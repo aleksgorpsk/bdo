@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project
-        xmlns="http://maven.apache.org/POM/4.0.0"
-        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
@@ -12,15 +11,15 @@
         <relativePath/>
     </parent>
 
-    <groupId>ag.com.t2a</groupId>
-    <artifactId>t2</artifactId>
-    <version>4.0.2025</version>
-    <name>t2</name>
-    <description>A RESTful Web Service demonstrating clean architecture patterns with Spring Boot 4</description>
+    <groupId>ag.com.dbo</groupId>
+    <artifactId>bdo2</artifactId>
+    <version>1.0-SNAPSHOT</version>
 
     <properties>
-        <java.version>25</java.version>
+        <maven.compiler.source>25</maven.compiler.source>
+        <maven.compiler.target>25</maven.compiler.target>
         <lombok.version>1.18.42</lombok.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
     <dependencies>
@@ -169,8 +168,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.14.1</version>
                 <configuration>
-                    <source>${java.version}</source>
-                    <target>${java.version}</target>
+                    <source>${maven.compiler.source}</source>
+                    <target>${maven.compiler.target}</target>
                     <annotationProcessorPaths>
                         <path>
                             <groupId>org.projectlombok</groupId>
@@ -212,3 +211,4 @@
         </plugins>
     </build>
 </project>
+
