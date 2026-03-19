@@ -8,6 +8,8 @@ import org.modelmapper.ModelMapper;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.math.BigInteger;
@@ -28,17 +30,18 @@ public class EtlService {
      * -------------------------------------------------------------------------
      */
 
-    @CachePut(value = "etl", key = "#etlDTO.id")
+    @CachePut(value = "etl", key = "#etl.id")
     public boolean create(Etl etl) {
-        if (etlRepository.existsById(etl.getId())) {
-            return false;
-        } else {
-            etlRepository.save(etl);
+            Etl result = etlRepository.save(etl);
+            log.info("Service: result "+result);
             return true;
-        }
 
     }
 
+    public Page<Etl>  retrieveAll(PageRequest pageable){
+        Page<Etl> res = etlRepository.findAll(pageable);
+        return res;
+    }
     /*
      * -------------------------------------------------------------------------
      * Retrieve
@@ -46,7 +49,7 @@ public class EtlService {
      */
 
     @Cacheable(value = "etl", key = "#id")
-    public Etl retrieveByIsbn(BigInteger id) {
+    public Etl retrieveById(BigInteger id) {
         return etlRepository.findById(id)
                 .orElse(null);
     }
