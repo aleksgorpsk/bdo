@@ -14,7 +14,7 @@ import java.util.List;
 
 public interface StepRepository extends JpaRepository<@NonNull Step, @NonNull BigInteger> {
 
-    @Query("SELECT s FROM Step s WHERE s.etl = :etlId")
+    @Query("SELECT s FROM Step s WHERE s.etl.id = :etlId")
     List<Step> findAllStepsByEtl(@Param("etlId") BigInteger etlId);
 
 

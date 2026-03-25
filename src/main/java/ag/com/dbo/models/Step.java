@@ -15,7 +15,7 @@ import java.math.BigInteger;
 public class Step {
 
     @Id
-    @SequenceGenerator( name = "jpaSequence", sequenceName = "etl_step_id_seq", allocationSize = 1, initialValue = 1)
+    @SequenceGenerator( name = "jpaSequence", sequenceName = "etl_step_id_seq", allocationSize = 1, initialValue=1000)
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "jpaSequence")
     @Column(name = "step_id", updatable = false)
 //    @Column(name = "step_id", updatable = false, columnDefinition="numeric(38) DEFAULT nextval(\'etl_step_id_seq\')")
@@ -25,7 +25,7 @@ public class Step {
     private BigInteger[] parentSteps;
 
 
-    @ManyToOne(fetch = FetchType.LAZY) // Many steps to one etl
+    @ManyToOne(fetch = FetchType.EAGER) // Many steps to one etl
     @JoinColumn(name = "etl_id", nullable = false, columnDefinition="") // Specifies the FK column name
     private Etl etl;
 

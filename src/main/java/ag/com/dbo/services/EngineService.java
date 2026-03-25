@@ -9,12 +9,14 @@ import ag.com.dbo.repositories.EtlRepository;
 import ag.com.dbo.repositories.StepInstanceRepository;
 import ag.com.dbo.repositories.StepRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.math.BigInteger;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -51,25 +53,44 @@ public class EngineService {
         etl.setStatus(2);
         etlRepository.save(etl);
         log.info("save  etl status:"+ei);
-
+        startAllSteps(ei);
         return ei;
 
     }
     private void startAllSteps(EtlInstance etl){
+        log.info("steps:"+etl);
         List<Step> steps= stepRepository.findAllStepsByEtl(etl.getEtl().getId());
+        log.info("steps1:"+steps);
+
         List<StepInstance> sis = new ArrayList<>(steps.size());
         for(Step step: steps){
             StepInstance si = new StepInstance();
             si.setEtl(etl.getEtl());
+
             si.setStep(step);
-            if(step.getParentSteps() == null){
+            if(ArrayUtils.isEmpty(step.getParentSteps())){
                 si.setStatus(1);
             }
+            log.info("si:"+si);
             sis.add(si);
         }
-        List<StepInstance> sisout = stepInstanceRepository.saveAll(sis);
-        for (StepInstance si :sisout){
+        log.info("steps sis:"+sis);
 
+        List<StepInstance> sisout = stepInstanceRepository.saveAll(sis);
+        log.info("saved new etl status:"+sisout);
+
+        Map<BigInteger,BigInteger> stepInstanceRelation= new HashMap<>(sisout.size());
+        for (StepInstance si :sisout){
+            // map stepId-> stepInstanceId
+            stepInstanceRelation.put(si.getStep().getStepId(), si.getStepInstanceId());
         }
+        for (StepInstance si :sisout){
+            si.setParentStepInstanceIds(
+                    Arrays.stream( si.getParentStepInstanceIds())
+                            .map(stepInstanceRelation::get).toArray(BigInteger[]::new));
+        }
+
+
+
     }
 }

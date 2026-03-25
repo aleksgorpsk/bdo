@@ -15,7 +15,7 @@ import java.time.OffsetDateTime;
 @AllArgsConstructor
 public class EtlInstance {
     @Id
-    @SequenceGenerator( name = "jpaSequence", sequenceName = "etl_id_etl_instance_seq", allocationSize = 1, initialValue = 1)
+    @SequenceGenerator( name = "jpaSequence", sequenceName = "etl_id_etl_instance_seq", allocationSize = 1,  initialValue=1000)
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "jpaSequence")
 //    @Column(name = "id_etl_instance", updatable = false, columnDefinition="numeric(38) DEFAULT nextval(\'etl_id_etl_instance_seq\')")
     @Column(name = "id_etl_instance", updatable = false)

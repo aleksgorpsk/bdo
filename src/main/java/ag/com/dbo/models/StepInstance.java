@@ -16,7 +16,7 @@ import java.time.OffsetDateTime;
 public class StepInstance {
 
     @Id
-    @SequenceGenerator( name = "mySeqGen", sequenceName = "etl_step_instance_id_seq", allocationSize = 1)
+    @SequenceGenerator( name = "mySeqGen", sequenceName = "etl_step_instance_id_seq", initialValue=1000, allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "mySeqGen")
 //    @Column(name = "step_instance_id", updatable = false, columnDefinition="numeric(38) DEFAULT nextval(\'etl_step_instance_id_seq\')")
     @Column(name = "step_instance_id", updatable = false)
