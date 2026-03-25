@@ -9,30 +9,33 @@ import java.math.BigInteger;
 import java.time.OffsetDateTime;
 
 @Entity
-@Table(name = "step", schema = "etl" )
+@Table(name = "step_instance", schema = "etl" )
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class StepInstance {
 
     @Id
-    @SequenceGenerator( name = "jpaSequence", sequenceName = "etl_step_instance_id_seq", allocationSize = 1, initialValue = 1)
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "jpaSequence")
-    @Column(name = "step_instance_id", updatable = false, nullable = false)
+    @SequenceGenerator( name = "mySeqGen", sequenceName = "etl_step_instance_id_seq", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "mySeqGen")
+//    @Column(name = "step_instance_id", updatable = false, columnDefinition="numeric(38) DEFAULT nextval(\'etl_step_instance_id_seq\')")
+    @Column(name = "step_instance_id", updatable = false)
+
     private BigInteger stepInstanceId;
 
-    private Integer  stepOrder;
-    private Integer status;
+    private BigInteger[] parentStepInstanceIds;
+
+    private Integer status; // 1- start
+
     private OffsetDateTime startDate;
 
-
     @ManyToOne(fetch = FetchType.LAZY) // Many steps to one etl
-    @JoinColumn(name = "step_id", nullable = false) // Specifies the FK column name
+    @JoinColumn(name = "step_id", nullable = false, columnDefinition="") // Specifies the FK column name
     private Step step;
 
 
     @ManyToOne(fetch = FetchType.LAZY) // Many steps to one etl
-    @JoinColumn(name = "etl_id", nullable = false) // Specifies the FK column name
+    @JoinColumn(name = "etl_id", nullable = false, columnDefinition="") // Specifies the FK column name
     private Etl etl;
 
 }

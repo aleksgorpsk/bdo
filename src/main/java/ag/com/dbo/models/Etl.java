@@ -14,12 +14,15 @@ import java.math.BigInteger;
 @AllArgsConstructor
 public class Etl {
     @Id
-    @SequenceGenerator( name = "jpaSequence", sequenceName = "etl_id_seq", allocationSize = 1, initialValue = 1)
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "jpaSequence")
-    @Column(name = "id", updatable = false, nullable = false)
+    @SequenceGenerator( name = "mySeqGen", sequenceName = "etl_id_seq", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "mySeqGen")
+    @Column(name = "id", updatable = false)
+//    @Column(name = "id", updatable = false, columnDefinition="numeric(38) DEFAULT nextval(\'etl_id_seq\')")
+
     private BigInteger id;
     private String name;
     private Boolean active;
+    private Integer status; //1 - ready to start 2- started
     private String cronScheduling;
     private Integer interval; // in sec
     private String comment;

@@ -6,6 +6,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
  * A configuration class that declares one or more Bean methods and also
@@ -14,6 +15,7 @@ import org.springframework.context.annotation.Bean;
 @SpringBootApplication()
 @Slf4j
 @EnableCaching
+@EnableScheduling
 public class Application {
 
     @Bean

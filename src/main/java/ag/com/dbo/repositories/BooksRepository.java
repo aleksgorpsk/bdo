@@ -3,6 +3,8 @@ package ag.com.dbo.repositories;
 import java.util.List;
 import java.util.Optional;
 
+import org.jspecify.annotations.NonNull;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
@@ -11,11 +13,8 @@ import org.springframework.stereotype.Repository;
 import ag.com.dbo.models.Book;
 
 @Repository
-public interface BooksRepository extends CrudRepository<Book, String> {
-    /**
-     * Query creation from method names <br />
-     * https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#repositories.query-methods.query-creation
-     */
+public interface BooksRepository extends JpaRepository< @NonNull Book,  @NonNull String> {
+
     // Non-default methods in interfaces are not shown in coverage reports
     // https://www.jacoco.org/jacoco/trunk/doc/faq.html
     Optional<Book> findByIsbn(String isbn);

@@ -1,6 +1,6 @@
 package ag.com.dbo.repositories;
 
-import ag.com.dbo.models.Etl;
+import ag.com.dbo.models.Step;
 import org.jspecify.annotations.NonNull;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -11,10 +11,11 @@ import java.math.BigInteger;
 import java.util.List;
 
 @Repository
-//public interface EtlRepository extends CrudRepository < Etl, BigInteger> {
 
-public interface EtlRepository extends JpaRepository<  @NonNull Etl,  @NonNull BigInteger> {
+public interface StepRepository extends JpaRepository<@NonNull Step, @NonNull BigInteger> {
 
-    @Query("SELECT e FROM Etl e WHERE e.status = :status")
-    List<Etl> findByStatus(@Param("status") Integer status);
+    @Query("SELECT s FROM Step s WHERE s.etl = :etlId")
+    List<Step> findAllStepsByEtl(@Param("etlId") BigInteger etlId);
+
+
 }
