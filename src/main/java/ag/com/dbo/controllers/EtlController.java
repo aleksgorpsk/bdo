@@ -1,8 +1,10 @@
 package ag.com.dbo.controllers;
 
 import ag.com.dbo.models.Etl;
+import ag.com.dbo.models.EtlDTO;
 import ag.com.dbo.repositories.EtlRepository;
 import ag.com.dbo.services.EtlService;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -37,7 +39,7 @@ public class EtlController {
             pageNumber= 1;
         }
         PageRequest pageable = PageRequest.of( pageNumber-1, 10);
-        Page<Etl> etlPage = etlService.retrieveAll(pageable);
+        Page<@NonNull EtlDTO> etlPage = etlService.retrievePage(pageable);
         int totalPages = etlPage.getTotalPages();
         if(totalPages > 0) {
             List<Integer> pageNumbers = IntStream.rangeClosed(1,totalPages).boxed().collect(Collectors.toList());
@@ -62,13 +64,13 @@ public class EtlController {
     @RequestMapping(value = "/etl/detail/{etlId}")
     public ModelAndView etlEditor(@PathVariable("etlId") BigInteger etlId) {
         ModelAndView modelAndView = new ModelAndView("etlEditor");
-        Etl etl = etlService.retrieveById(etlId);
+        EtlDTO etl = etlService.retrieveById(etlId);
         modelAndView.addObject(etl);
         return modelAndView;
     }
     @PostMapping("/etl/addAction")
     public ModelAndView createEtl(
-            @ModelAttribute("etl") Etl model) {
+            @ModelAttribute("etl") EtlDTO model) {
         log.info("addEtl"+model);
         etlService.create(model);
         return browseEtl(null);
@@ -76,7 +78,7 @@ public class EtlController {
 
     @PostMapping("etl/saveAction")
     public ModelAndView saveEtl(
-            @ModelAttribute("etl") Etl model) {
+            @ModelAttribute("etl") EtlDTO model) {
         log.info("save etl:"+model);
         etlService.update(model);
 

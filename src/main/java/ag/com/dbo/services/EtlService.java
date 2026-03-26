@@ -1,15 +1,20 @@
 package ag.com.dbo.services;
 
 import ag.com.dbo.models.Etl;
+import ag.com.dbo.models.EtlDTO;
 import ag.com.dbo.repositories.EtlRepository;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
+//import org.springframework.data.domain.Page;
+//import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Service;
 
 import java.math.BigInteger;
@@ -30,64 +35,72 @@ public class EtlService {
      * -------------------------------------------------------------------------
      */
 
-    @CachePut(value = "etl", key = "#etl.id")
-    public boolean create(Etl etl) {
-            Etl result = etlRepository.save(etl);
-            log.info("Service: result "+result);
-            return true;
-
+    @CachePut(value = "etls", key = "#etlDTO.id")
+    public EtlDTO create(EtlDTO etlDTO) {
+            Etl etl = mapFrom(etlDTO);
+            Etl newEtl =etlRepository.saveAndFlush(etl);
+            return mapFrom(newEtl);
     }
 
-    public Page<Etl>  retrieveAll(PageRequest pageable){
-        Page<Etl> res = etlRepository.findAll(pageable);
-        return res;
-    }
     /*
      * -------------------------------------------------------------------------
      * Retrieve
      * -------------------------------------------------------------------------
      */
 
-    @Cacheable(value = "etl", key = "#id")
-    public Etl retrieveById(BigInteger id) {
+    @Cacheable(value = "etls", key = "#id")
+    public EtlDTO retrieveById(BigInteger id) {
         return etlRepository.findById(id)
+                .map(this::mapFrom)
                 .orElse(null);
     }
 
-    @Cacheable(value = "etl")
-    public List<Etl> retrieveAll() {
 
-        log.info("retrieveAll");
-        return StreamSupport.stream(etlRepository.findAll().spliterator(), false)
-//                .map(this::mapFrom)
+
+    public Page<@NonNull EtlDTO> retrievePage(PageRequest pageable){
+        Page<@NonNull Etl> entities = etlRepository.findAll(pageable);
+        return entities.map(e-> modelMapper.map(e, EtlDTO.class));
+
+    }
+
+    public List<EtlDTO> findByStatus(Integer status){
+        return etlRepository.findByStatus(status).stream()
+                .map(this::mapFrom)
+                .peek(x-> log.info("etl by status:"+ x.toString()))
+                .toList();
+
+    }
+
+    @Cacheable(value = "etls")
+    public List<EtlDTO> retrieveAll() {
+        return etlRepository.findAll().stream()
+                .map(this::mapFrom)
                 .peek(x-> log.info("etl:"+ x.toString()))
                 .toList();
     }
 
-    /*
-     * -------------------------------------------------------------------------
-     * Search
-     * -------------------------------------------------------------------------
-     */
-/*
-    public List<EtlDTO> searchByDescription(String keyword) {
-        return etlRepository.fi.findByDescriptionContainingIgnoreCase(keyword)
-                .stream()
+    @Cacheable(value = "etls")
+    public List<EtlDTO> retrievePage() {
+
+        log.info("retrievePage");
+        return StreamSupport.stream(etlRepository.findAll().spliterator(), false)
                 .map(this::mapFrom)
+                .peek(x-> log.info("etl:"+ x.toString()))
                 .toList();
     }
-*/
+
+
+
     /*
      * -------------------------------------------------------------------------
      * Update
      * -------------------------------------------------------------------------
      */
 
-    @CachePut(value = "elt", key = "#etl.id")
-    public boolean update(Etl etl) {
-        if (etlRepository.existsById(etl.getId())) {
-//            Etl etl = mapFrom(etlDTO);
-            etlRepository.save(etl);
+    @CachePut(value = "oks", key = "#bookDTO.isbn")
+    public boolean update(EtlDTO etlDTO) {
+        if (etlRepository.existsById(etlDTO.getId())) {
+            etlRepository.save(mapFrom(etlDTO));
             return true;
         } else {
             return false;
@@ -100,7 +113,7 @@ public class EtlService {
      * -------------------------------------------------------------------------
      */
 
-    @CacheEvict(value = "etl", key = "#id")
+    @CacheEvict(value = "books", key = "#id")
     public boolean delete(BigInteger id) {
         if (etlRepository.existsById(id)) {
             etlRepository.deleteById(id);
@@ -108,6 +121,15 @@ public class EtlService {
         } else {
             return false;
         }
+    }
+
+
+    private EtlDTO mapFrom(Etl etl) {
+        return modelMapper.map(etl, EtlDTO.class);
+    }
+
+    private Etl mapFrom(EtlDTO dto) {
+        return modelMapper.map(dto, Etl.class);
     }
 
 }
