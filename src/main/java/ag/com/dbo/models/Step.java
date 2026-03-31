@@ -22,7 +22,7 @@ public class Step {
 
     private BigInteger stepId;
     private Boolean stepActive;
-    private BigInteger[] parentSteps;
+    private BigInteger[] parentStepIds;
 
 
     @ManyToOne(fetch = FetchType.EAGER) // Many steps to one etl

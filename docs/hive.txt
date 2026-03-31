@@ -1,0 +1,5 @@
+docker run -d -p 10000:10000 \
+  --name hive-standalone \
+  --env SERVICE_NAME=hiveserver2 \
+  --mount source=hive-warehouse,target=/opt/hive/data/warehouse \
+  apache/hive:4.0.0

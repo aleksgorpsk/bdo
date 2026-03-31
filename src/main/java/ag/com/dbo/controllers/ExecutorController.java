@@ -1,6 +1,6 @@
 package ag.com.dbo.controllers;
 
-import ag.com.dbo.services.MultithreadExecutor;
+import ag.com.dbo.services.loadingservice.MultithreadExecutor;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.info.Contact;

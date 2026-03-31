@@ -18,9 +18,9 @@ public class EtlInstance {
     @SequenceGenerator( name = "jpaSequence", sequenceName = "etl_id_etl_instance_seq", allocationSize = 1,  initialValue=1000)
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "jpaSequence")
 //    @Column(name = "id_etl_instance", updatable = false, columnDefinition="numeric(38) DEFAULT nextval(\'etl_id_etl_instance_seq\')")
-    @Column(name = "id_etl_instance", updatable = false)
+    @Column(name = "etl_instance_id", updatable = false)
 
-    private BigInteger idEtlInstance;
+    private BigInteger etlInstanceId;
 
     private String status; //0 - , 1- in queue, 2- started, 3- finished on ,4- failed
     private OffsetDateTime startDate;

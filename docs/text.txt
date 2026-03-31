@@ -1,0 +1,45 @@
+
+
+
+124|336|65664|4294967435|74.72|42.47|true|bob davidson|2013-03-01 09:11:58.703302|45.40|yard duty
+19|442|65553|4294967380|26.43|37.77|true|alice zipper|2013-03-01 09:11:58.703217|29.62|history
+35|387|65619|4294967459|96.91|18.86|false|katie davidson|2013-03-01 09:11:58.703079|27.32|history
+111|372|65656|4294967312|13.01|34.95|false|xavier quirinius|2013-03-01 09:11:58.703310|23.91|topology
+54|317|65547|4294967409|60.71|2.09|false|nick robinson|2013-03-01 09:11:58.703103|90.21|geology
+-3|467|65575|4294967437|81.64|23.53|true|tom hernandez|2013-03-01 09:11:58.703188|32.85|study skills
+53|317|65702|4294967398|35.17|30.87|false|ulysses hernandez|2013-03-01 09:11:58.703164|79.50|industrial engineering
+122|356|65759|4294967379|92.61|18.82|true|priscilla ichabod|2013-03-01 09:11:58.703175|92.81|nap time
+18|407|65725|4294967362|82.52|5.30|true|quinn van buren|2013-03-01 09:11:58.703282|35.86|kindergarten
+66|484|65685|4294967387|45.99|6.81|false|luke laertes|2013-03-01 09:11:58.703317|63.27|mathematics
+
+
+CREATE TABLE IF NOT EXISTS student(
+Student_Name STRING,
+Student_Rollno INT,
+Student_Marks FLOAT)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ',';
+
+
+2013-03-01 09:11:58.703317
+
+
+
+CREATE TABLE test1 (
+    col1 Int,
+    col2 int,
+    col3 int,
+    col4 bigint,
+    col5 float,
+    col6 float,
+    col7 BOOLEAN.
+        col8 STRING,
+        col9 TIMESTAMP .
+        col10 float
+        col11 STRING
+)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY '|'
+STORED AS TEXTFILE;
+
+LOAD DATA LOCAL INPATH '/opt/srcdata/over10k' INTO TABLE test1;

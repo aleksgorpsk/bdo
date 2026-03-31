@@ -97,7 +97,7 @@ public class EtlService {
      * -------------------------------------------------------------------------
      */
 
-    @CachePut(value = "oks", key = "#bookDTO.isbn")
+    @CachePut(value = "etl", key = "#etlDTO.id")
     public boolean update(EtlDTO etlDTO) {
         if (etlRepository.existsById(etlDTO.getId())) {
             etlRepository.save(mapFrom(etlDTO));
@@ -113,7 +113,7 @@ public class EtlService {
      * -------------------------------------------------------------------------
      */
 
-    @CacheEvict(value = "books", key = "#id")
+    @CacheEvict(value = "etls", key = "#id")
     public boolean delete(BigInteger id) {
         if (etlRepository.existsById(id)) {
             etlRepository.deleteById(id);

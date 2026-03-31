@@ -1,6 +1,7 @@
-package ag.com.dbo.services;
+package ag.com.dbo.services.loadingservice;
 
-import ag.com.dbo.services.model.Task;
+import ag.com.dbo.services.loadingservice.model.HiveTask;
+import ag.com.dbo.services.loadingservice.model.Task;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,7 +28,7 @@ public class MultithreadExecutor implements InitializingBean {
     public String exec(String s){
         log.info(s+"start:");
         long start= System.currentTimeMillis();
-        Callable<String> task = new Task(s);
+        Callable<String> task = new HiveTask<>("");
         Future<String> future = poolExecutor.submit(task);
         try {
             String result = future.get();

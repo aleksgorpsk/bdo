@@ -25,9 +25,13 @@ public class StepInstance {
 
     private BigInteger[] parentStepInstanceIds;
 
-    private Integer status; // 1- start, 3- finished successfully, 4- failed
+    private Integer status; // 1- in progress, 3- finished successfully, 4- failed
 
     private OffsetDateTime startDate;
+
+    @ManyToOne(fetch = FetchType.EAGER) // Many steps to one etl
+    @JoinColumn(name = "etl_instance_id", nullable = false, columnDefinition="") // Specifies the FK column name
+    private EtlInstance etlInstance;
 
     @ManyToOne(fetch = FetchType.EAGER) // Many steps to one etl
     @JoinColumn(name = "step_id", nullable = false, columnDefinition="") // Specifies the FK column name
