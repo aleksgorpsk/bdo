@@ -1,0 +1,52 @@
+version: '3'
+
+services:
+  # 1. External Metastore Database (Postgres)
+  postgres-metastore:
+    image: postgres:13
+    container_name: postgres-metastore
+    restart: always
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data # Persist data
+    environment:
+      POSTGRES_USER: hiveuser
+      POSTGRES_PASSWORD: hivepassword
+      POSTGRES_DB: metastore_db
+    ports:
+      - "5432:5432"
+
+  # 2. Standalone Hive Metastore Service
+  hive-metastore:
+    image: apache/hive:4.0.0 # Use a specific version
+    container_name: hive-metastore
+    restart: always
+    depends_on:
+      - postgres-metastore
+    command: ["/opt/apache/hive/bin/hive", "--service", "metastore", "-p", "9083"]
+    environment:
+      # Configure HMS to use the external Postgres DB
+      SERVICE_NAME: metastore
+      SERVICE_OPTS: "-Dhive.metastore.uris=thrift://hive-metastore:9083"
+      # DB Connection properties (add JDBC driver if needed, but often included)
+      HIVE_METASTORE_DB_URL: "jdbc:postgresql://postgres-metastore:5432/metastore_db"
+      HIVE_METASTORE_DB_USER: "hiveuser"
+      HIVE_METASTORE_DB_PASSWORD: "hivepassword"
+    ports:
+      - "9083:9083" # Thrift port
+
+  # 3. HiveServer2 (Hive Client)
+  hiveserver2:
+    image: apache/hive:4.0.0
+    container_name: hiveserver2
+    restart: always
+    volumes:
+      - ./hive-warehouse:/opt/hive/data/warehouse 
+    depends_on:
+      - hive-metastore
+    environment:
+      # Point HS2 to the standalone HMS
+      SERVICE_NAME: hiveserver2
+      SERVICE_OPTS: "-Dhive.metastore.uris=thrift://hive-metastore:9083"
+    ports:
+      - "10000:10000" # JDBC port
+      - "10002:10002" # WebUI port

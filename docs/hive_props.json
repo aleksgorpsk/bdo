@@ -1,0 +1,11 @@
+{
+  "name": "csv to Hive loader",
+  "stepCount": 4,
+  "command": "docker exec -it hiveserver2 beeline -u 'jdbc:hive2://localhost:10000/'",
+  "props": {
+    "1": {"in": "Beeline"},
+    "2": {"out": "LOAD DATA LOCAL INPATH '${file}' INTO TABLE ${table};"},
+    "3": {"in": "Completed executing command"},
+    "4":{"out": "!q"}
+  }
+}

@@ -1,6 +1,8 @@
 package ag.com.dbo.controllers;
 
-import ag.com.dbo.services.loadingservice.MultithreadExecutor;
+import ag.com.dbo.models.StepInstance;
+import ag.com.dbo.repositories.StepInstanceRepository;
+import ag.com.dbo.services.loadingService.MultithreadExecutor;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.info.Contact;
@@ -12,6 +14,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigInteger;
+
 @RestController
 @Tag(name = "Executor")
 @Slf4j
@@ -19,9 +23,12 @@ import org.springframework.web.bind.annotation.*;
 public class ExecutorController {
 
     private final MultithreadExecutor executor;
+    private final StepInstanceRepository stepInstanceRepository;
 
-    public ExecutorController(MultithreadExecutor executor) {
+    public ExecutorController(MultithreadExecutor executor,
+                              StepInstanceRepository stepInstanceRepository) {
         this.executor = executor;
+        this.stepInstanceRepository = stepInstanceRepository;
     }
 
     /*
@@ -35,7 +42,9 @@ public class ExecutorController {
     @ApiResponses(value = {
     })
     public ResponseEntity<String> post(@RequestBody  String data ) {
-        String result =  executor.exec(data);
+        BigInteger id = new BigInteger(data);
+        StepInstance si = stepInstanceRepository.getReferenceById(id);
+        String result =  executor.exec(si);
         return ResponseEntity.ok(result);
     }
 }

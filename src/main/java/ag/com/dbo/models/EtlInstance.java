@@ -17,7 +17,6 @@ public class EtlInstance {
     @Id
     @SequenceGenerator( name = "jpaSequence", sequenceName = "etl_id_etl_instance_seq", allocationSize = 1,  initialValue=1000)
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "jpaSequence")
-//    @Column(name = "id_etl_instance", updatable = false, columnDefinition="numeric(38) DEFAULT nextval(\'etl_id_etl_instance_seq\')")
     @Column(name = "etl_instance_id", updatable = false)
 
     private BigInteger etlInstanceId;
@@ -31,11 +30,11 @@ public class EtlInstance {
     private String body;
 
     @ManyToOne(fetch = FetchType.LAZY) // Many steps to one etl
-    @JoinColumn(name = "etl_id", updatable = false, columnDefinition="") // Specifies the FK column name
+    @JoinColumn(name = "etl_id", updatable = false) // Specifies the FK column name
     private Etl etl;
 
     @ManyToOne(fetch = FetchType.LAZY) // Many steps to one etl
-    @JoinColumn(name = "step_id", updatable = false, columnDefinition="") // Specifies the FK column name
+    @JoinColumn(name = "step_id", updatable = false) // Specifies the FK column name
     private Step step;
 
 

@@ -3,3 +3,6 @@ docker run -d -p 10000:10000 \
   --env SERVICE_NAME=hiveserver2 \
   --mount source=hive-warehouse,target=/opt/hive/data/warehouse \
   apache/hive:4.0.0
+
+
+docker exec -it hiveserver2 beeline -u 'jdbc:hive2://localhost:10000/'

@@ -1,7 +1,7 @@
-package ag.com.dbo.services.loadingservice;
+package ag.com.dbo.services.loadingService;
 
-import ag.com.dbo.services.loadingservice.model.HiveTask;
-import ag.com.dbo.services.loadingservice.model.Task;
+import ag.com.dbo.models.StepInstance;
+import ag.com.dbo.services.loadingService.model.HiveTask;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,18 +25,18 @@ public class MultithreadExecutor implements InitializingBean {
 
     };
 
-    public String exec(String s){
-        log.info(s+"start:");
+    public String exec(StepInstance si){
+        log.info("start:"+si);
         long start= System.currentTimeMillis();
-        Callable<String> task = new HiveTask<>("");
+        Callable<String> task = LoadTaskFactory.getTask(si);
         Future<String> future = poolExecutor.submit(task);
         try {
             String result = future.get();
-            log.info(s +" finish:"+(System.currentTimeMillis()-start));
+            log.info(si +" finish:"+(System.currentTimeMillis()-start));
             return result;
 
         } catch (InterruptedException | ExecutionException e) {
-            log.info(s +" error finish:"+(System.currentTimeMillis()-start));
+            log.info(si +" error finish:"+(System.currentTimeMillis()-start));
             return  "s:"+ e.toString();
 
         }

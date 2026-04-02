@@ -1,0 +1,7 @@
+{
+  "name": "csv to Hive loader",
+  "props": {
+       "file": "/tmp/data/over10k",
+       "table": "test1"
+    }
+}
