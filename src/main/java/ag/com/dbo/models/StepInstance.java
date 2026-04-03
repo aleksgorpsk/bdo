@@ -25,7 +25,7 @@ public class StepInstance {
 
     private BigInteger[] parentStepInstanceIds;
 
-    private Integer status; // 1- in progress, 3- finished successfully, 4- failed
+    private Integer status; // 1- in progress, 3- finished successfully, 4- failed, 5 - in Queue
 
     private OffsetDateTime startDate;
 

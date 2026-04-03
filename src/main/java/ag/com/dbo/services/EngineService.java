@@ -1,18 +1,15 @@
 package ag.com.dbo.services;
 
-import ag.com.dbo.models.Etl;
-import ag.com.dbo.models.EtlInstance;
-import ag.com.dbo.models.Step;
-import ag.com.dbo.models.StepInstance;
+import ag.com.dbo.models.*;
 import ag.com.dbo.repositories.EtlInstanceRepository;
 import ag.com.dbo.repositories.EtlRepository;
 import ag.com.dbo.repositories.StepInstanceRepository;
 import ag.com.dbo.repositories.StepRepository;
+import ag.com.dbo.services.loadingService.MultithreadExecutor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.thymeleaf.util.SetUtils;
 
 import java.math.BigInteger;
 import java.util.*;
@@ -23,21 +20,25 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 public class EngineService {
-
     private final EtlRepository etlRepository;
     private final EtlInstanceRepository etlInstanceRepository;
     private final StepRepository stepRepository;
     private final StepInstanceRepository stepInstanceRepository;
+    private final MultithreadExecutor multithreadExecutor;
 
 
-    public EngineService(EtlRepository etlRepository, EtlInstanceRepository etlInstanceRepository, StepRepository stepRepository, StepInstanceRepository stepInstanceRepository) {
+    public EngineService(EtlRepository etlRepository, EtlInstanceRepository etlInstanceRepository,
+                          StepRepository stepRepository, StepInstanceRepository stepInstanceRepository,
+                          MultithreadExecutor multithreadExecutor) {
         this.etlRepository = etlRepository;
         this.etlInstanceRepository = etlInstanceRepository;
         this.stepRepository = stepRepository;
         this.stepInstanceRepository = stepInstanceRepository;
+        this.multithreadExecutor = multithreadExecutor;
     }
 
-    @Scheduled (fixedRateString = "${scheduler.testInterval}", timeUnit = TimeUnit.SECONDS)
+
+//    @Scheduled(fixedRateString = "${scheduler.testInterval}", timeUnit = TimeUnit.SECONDS)
     public void schedule(){
         log.info("sh!");
         List<Etl> started = etlRepository.findByStatus(1);
@@ -100,68 +101,81 @@ public class EngineService {
     private void makeStep(EtlInstance etlInstance){
 
         log.info("etlInstance id:"+etlInstance.getEtlInstanceId());
-
+//  select all steps from etl
         List<StepInstance> steps= stepInstanceRepository.findAllStepInstancesByEtlInstanceId(etlInstance.getEtlInstanceId());
-       Map<BigInteger, StepInstance> siBase =   steps.stream().collect(
-               Collectors.toMap(StepInstance::getStepInstanceId, Function.identity())
-       );
+        // build map id -> stepInstances
+        Map<BigInteger, StepInstance> siRootBase =   steps.stream().collect(
+                Collectors.toMap(StepInstance::getStepInstanceId, Function.identity())
+        );
 
-       Map<BigInteger, Set<BigInteger>> parentToChildrenStep= new HashMap<>();
-       for(StepInstance si : steps) {
-           if (ArrayUtils.isNotEmpty(si.getParentStepInstanceIds())){
-               for (BigInteger parentId : si.getParentStepInstanceIds()) {
-                   Set<BigInteger> children = parentToChildrenStep.get(parentId);
-                   if (children == null) {
-                       children = new HashSet<>(Collections.singletonList(si.getStepInstanceId()));
-                       parentToChildrenStep.put(parentId, children);
-                   } else {
-                       children.add(si.getStepInstanceId());
-                   }
-               }
-           }
-       }
+        // make a map: parens Step instance to list of children
+        Map<BigInteger, Set<BigInteger>> parentToChildrenStep= new HashMap<>();
+        for(StepInstance si : steps) {
+            if (ArrayUtils.isNotEmpty(si.getParentStepInstanceIds())){
+                for (BigInteger parentId : si.getParentStepInstanceIds()) {
+                    Set<BigInteger> children = parentToChildrenStep.get(parentId);
+                    if (children == null) {
+                        children = new HashSet<>(Collections.singletonList(si.getStepInstanceId()));
+                        parentToChildrenStep.put(parentId, children);
+                    } else {
+                        children.add(si.getStepInstanceId());
+                    }
+                }
+            }
+        }
 
-       log.info("list tree:"+siBase);
+        log.info("list tree:"+siRootBase);
 
-       List<StepInstance> rootSteps = steps.stream().filter(x-> ArrayUtils.isEmpty(x.getParentStepInstanceIds())).toList();
-       for (StepInstance si : rootSteps){
+        // try to run recursive from root
+        List<StepInstance> rootSteps = steps.stream().filter(x-> ArrayUtils.isEmpty(x.getParentStepInstanceIds())).toList();
+        for (StepInstance si : rootSteps){
+            runRecursive(parentToChildrenStep, si, siRootBase);
+            /*
            if (si.getStatus() == null){
                startStep(si);
-           }else if ( si.getStatus()==1 ){  // in progress do nothing
-
-           } else if (si.getStatus() == 4) { // failed do nothing
-
-           } else if (si.getStatus() == 3) { // success
-               runRecursive(parentToChildrenStep, si, siBase);
+           }else if ( si.getStatus()== StepStatus.InProgres.getStatus() ){  // in progress do nothing
+           } else if (si.getStatus() == StepStatus.Failed.getStatus() ) { // failed do nothing
+           } else if (si.getStatus() == StepStatus.Queue.getStatus() ) { // in queue do nothing
+           } else if (si.getStatus() == StepStatus.Success.getStatus()) { // success
+               runRecursive(parentToChildrenStep, si, siRootBase);
            }
-
-       }
-
+            */
+        }
 
     }
 
-    private void runRecursive(Map<BigInteger, Set<BigInteger>> parentToChildrenStep, StepInstance root, Map<BigInteger, StepInstance> siBase){
-        Set<BigInteger> steps = parentToChildrenStep.get(root.getStepInstanceId());
+    private void runRecursive(Map<BigInteger, Set<BigInteger>> parentToChildrenStep, StepInstance currentSi, Map<BigInteger, StepInstance> siBase){
 
-        if (SetUtils.isEmpty(steps)){ // finish !
+        if (currentSi.getStatus()==null) { // not started yet
+            startStep(currentSi);
+        } else if (currentSi.getStatus() == StepStatus.InProgres.getStatus()) {// in progress do nothing
             return;
-        }
-        for (BigInteger siId: steps){
-            StepInstance si = siBase.get(siId);
-            if (si.getStatus() == null){
-                startStep(si);
-        }
+        } else if (currentSi.getStatus() == StepStatus.Failed.getStatus()) {
+            return;
+        } else if (currentSi.getStatus() == StepStatus.Queue.getStatus()) { // in queue do nothing
+            return;
+        } else if (currentSi.getStatus() == StepStatus.Success.getStatus()) { // success
+            List<StepInstance> chils = parentToChildrenStep.get(currentSi).stream()
+                    .map(siBase::get)
+                    .filter(Objects::nonNull)
+                    .toList();
 
-
+            log.info ("Child list: {}",chils);
         }
-
     }
+
+
 
     private void startStep(StepInstance si){
         log.info("startStep"+si);
-        si.setStatus(1);
-
-        stepInstanceRepository.saveAndFlush(si);
+        if (si.getStep().getStepActive()) {
+            si.setStatus(5);
+            stepInstanceRepository.saveAndFlush(si);
+            multithreadExecutor.exec(si);
+        }else{
+            log.info("startStep:{} inactive",si);
+        }
 
     }
+
 }

@@ -2,6 +2,7 @@ package ag.com.dbo.controllers;
 
 import ag.com.dbo.models.StepInstance;
 import ag.com.dbo.repositories.StepInstanceRepository;
+import ag.com.dbo.services.EngineService;
 import ag.com.dbo.services.loadingService.MultithreadExecutor;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.Operation;
@@ -11,6 +12,7 @@ import io.swagger.v3.oas.annotations.info.License;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NonNull;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,11 +26,13 @@ public class ExecutorController {
 
     private final MultithreadExecutor executor;
     private final StepInstanceRepository stepInstanceRepository;
+    private final EngineService engineService;
 
     public ExecutorController(MultithreadExecutor executor,
-                              StepInstanceRepository stepInstanceRepository) {
+                              StepInstanceRepository stepInstanceRepository, EngineService engineService) {
         this.executor = executor;
         this.stepInstanceRepository = stepInstanceRepository;
+        this.engineService = engineService;
     }
 
     /*
@@ -41,10 +45,18 @@ public class ExecutorController {
     @Operation(summary = "executor")
     @ApiResponses(value = {
     })
-    public ResponseEntity<String> post(@RequestBody  String data ) {
+    public ResponseEntity<@NonNull String> post(@RequestBody  String data ) {
         BigInteger id = new BigInteger(data);
         StepInstance si = stepInstanceRepository.getReferenceById(id);
         String result =  executor.exec(si);
         return ResponseEntity.ok(result);
     }
+
+    @GetMapping("/schedule")
+    @Operation(summary = "schedule")
+    public  ResponseEntity<@NonNull String>  schedule( ) {
+        engineService.schedule();
+        return ResponseEntity.ok("Run");
+    }
+
 }

@@ -1,11 +1,7 @@
 {
   "name": "csv to Hive loader",
-  "stepCount": 4,
-  "command": "docker exec -it hiveserver2 beeline -u 'jdbc:hive2://localhost:10000/'",
+  "stepCount": 0,
+  "command": "docker exec -i hiveserver2 beeline -u 'jdbc:hive2://localhost:10000/' -e \"CREATE TABLE IF NOT exists test2 (    col1 Int,  col2 int,  col3 int, col4 bigint, col5 float, col6 float, col7 boolean, col8 STRING, col9 TIMESTAMP, col10 float, col11 STRING) ROW FORMAT DELIMITED \nFIELDS TERMINATED BY '|'\nSTORED AS TEXTFILE;LOAD DATA LOCAL INPATH '${file}' INTO TABLE ${table}; INSERT OVERWRITE TABLE ${table2} SELECT * FROM ${table} WHERE col7;\"",
   "props": {
-    "1": {"in": "Beeline"},
-    "2": {"out": "LOAD DATA LOCAL INPATH '${file}' INTO TABLE ${table};"},
-    "3": {"in": "Completed executing command"},
-    "4":{"out": "!q"}
   }
 }
