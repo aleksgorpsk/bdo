@@ -79,6 +79,10 @@ public class EtlService {
                 .toList();
     }
 
+    public List<Etl> retrieveAll0() {
+        return etlRepository.findAll();
+    }
+
     @Cacheable(value = "etls")
     public List<EtlDTO> retrievePage() {
 
@@ -124,11 +128,11 @@ public class EtlService {
     }
 
 
-    private EtlDTO mapFrom(Etl etl) {
+    public EtlDTO mapFrom(Etl etl) {
         return modelMapper.map(etl, EtlDTO.class);
     }
 
-    private Etl mapFrom(EtlDTO dto) {
+    public Etl mapFrom(EtlDTO dto) {
         return modelMapper.map(dto, Etl.class);
     }
 

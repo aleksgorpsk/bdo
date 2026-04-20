@@ -8,12 +8,10 @@ import ag.com.dbo.repositories.StepRepository;
 import ag.com.dbo.services.loadingService.MultithreadExecutor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.math.BigInteger;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -47,7 +45,7 @@ public class EngineService {
             createEtlInstance(etl);
         }
     }
-    private EtlInstance createEtlInstance(Etl etl){
+    public EtlInstance createEtlInstance(Etl etl){
         log.info("get one:"+etl);
         EtlInstance ei = new EtlInstance();
         ei.setEtl(etl);

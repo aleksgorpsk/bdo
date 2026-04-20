@@ -41,10 +41,14 @@
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
             <version>3.0.1</version>
         </dependency>
-        <dependency>
+        <!--dependency>
             <groupId>org.thymeleaf</groupId>
-            <artifactId>thymeleaf-spring6</artifactId> <!-- Or thymeleaf-spring5, etc., depending on Spring version -->
-            <version>${thymeleaf.version}</version> <!-- Use the latest version -->
+            <artifactId>thymeleaf-spring6</artifactId>
+            <version>${thymeleaf.version}</version>
+        </dependency-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-thymeleaf</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -106,6 +110,12 @@
             <artifactId>spring-security-core</artifactId>
             <!-- Specify the version you need, e.g., 6.4.2 or 5.2.1.RELEASE -->
             <version>7.0.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jetbrains</groupId>
+            <artifactId>annotations</artifactId>
+            <version>24.1.0</version>
+            <scope>compile</scope>
         </dependency>
         <!--dependency>
             <groupId>org.springframework.boot</groupId>

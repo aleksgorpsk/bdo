@@ -1,39 +1,27 @@
-<div class="row" th:fragment="etl-list" th:if="${etlList != null && !etlList.isEmpty()}">
-    <div class="col-md-2"></div>
-    <div class="col-md-8">
-        <table id="link-list" class="table table-striped table-bordered" style="width:100%">
-            <thead>
-            <tr>
-                <th>ID</th>
-                <th>URL</th>
-                <th>Status</th>
-                <th>Detail</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr th:each="etl: ${etlList}">
-                <td th:text="${{etl.id}}">1</td>
-                <td th:text="${{etl.name}}">http://thegame.org</td>
-                <td th:text="${{etl.comment}}">PENDING</td>
-                <td><a th:href="@{/etl/detail/{etlId}(etlId=${etl.id})}">Detail</a></td>
-            </tr>
-            </tbody>
-        </table>
-    </div>
-    <a th:href="@{/etl/createEtlForm}">Create</a>
-    <div class="col-md-2"></div>
-</div>
+<table border="1">
+    <thead>
+    <tr>
+        <th th:text="ID" />
+        <th th:text="Name" />
+        <th th:text="Comment" />
+        <th th:text="Actions" />
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="etl, iStat : ${etlPage.content}"
+        th:style="${iStat.odd}? 'font-weight: bold;'"
+        th:alt-title="${iStat.even}? 'even' : 'odd'">
+        <td th:text="${etl.id}" />
+        <td th:text="${etl.name}" />
+        <td th:text="${{etl.comment}}">PENDING</td>
+        <td><a th:href="@{/etl/detail/{etlId}(etlId=${etl.id})}">Detail</a> <a th:href="@{/etl/start/{etlId}(etlId=${etl.id})}">Start</a></td>
 
-<div class="row" th:fragment="pagination">
-    <div class="col-md-2"></div>
-    <div class="col-md-8">
-        <nav aria-label="Pagination">
-            <ul class="pagination justify-content-center">
-                <li class="page-item" th:each="pageNumber : ${pageNumbers}" >
-                    <a class="page-link" th:href="@{|/etl-list/page/${pageNumber}|}" th:text=${pageNumber}>1</a>
-                </li>
-            </ul>
-        </nav>
-    </div>
-    <div class="col-md-2"></div>
+    </tr>
+    </tbody>
+</table>
+<div th:if="${etlPage.totalPages > 0}" class="pagination"
+     th:each="pageNumber : ${pageNumbers}">
+    <a th:href="@{/etl/browser(size=${etlPage.size}, page=${pageNumber})}"
+       th:text=${pageNumber}
+       th:class="${pageNumber==etlPage.number + 1} ? active"></a>
 </div>

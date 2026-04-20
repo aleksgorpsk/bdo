@@ -11,7 +11,7 @@ import org.thymeleaf.spring6.view.ThymeleafViewResolver;
 
 
 @Configuration
-@RegisterReflectionForBinding({JwtResponse.class})
+//@RegisterReflectionForBinding({JwtResponse.class})
 public class RestConfig {
 
     @Bean
@@ -19,7 +19,7 @@ public class RestConfig {
         return new RestTemplate();
     }
 
-
+/*
     @Bean
     public ThymeleafViewResolver viewResolver() {
         ThymeleafViewResolver viewResolver = new ThymeleafViewResolver();
@@ -36,4 +36,5 @@ public class RestConfig {
         viewResolver.setTemplateEngine(templateEngine);
         return viewResolver;
     }
+ */
 }
