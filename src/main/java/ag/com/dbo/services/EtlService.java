@@ -10,15 +10,16 @@ import org.modelmapper.ModelMapper;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
-//import org.springframework.data.domain.Page;
-//import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.repository.query.Param;
+import org.springframework.data.domain.Pageable;
+
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
 import java.math.BigInteger;
 import java.util.List;
+import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.StreamSupport;
 
 @Service
@@ -61,6 +62,25 @@ public class EtlService {
         Page<@NonNull Etl> entities = etlRepository.findAll(pageable);
         return entities.map(e-> modelMapper.map(e, EtlDTO.class));
 
+    }
+
+    public Page<@NonNull EtlDTO> retrievePage(Pageable pageable){
+        Page<@NonNull Etl> entities = etlRepository.findAll(pageable);
+        return entities.map(e-> modelMapper.map(e, EtlDTO.class));
+
+    }
+
+    public Page<@NonNull EtlDTO> findByEtlContainingIgnoreCase(String keyword, Pageable pageable){
+        Page<@NonNull Etl> etlPage = etlRepository.findByNameContainingIgnoreCase( keyword,  pageable);
+        return convert(etlPage);
+
+    }
+    public Optional<EtlDTO> findById(BigInteger id){
+        Optional<Etl> e=etlRepository.findById(id);
+        if (e.isPresent()) {
+            return Optional.of(mapFrom(e.get()));
+        }
+        return Optional.empty();
     }
 
     public List<EtlDTO> findByStatus(Integer status){
@@ -125,6 +145,17 @@ public class EtlService {
         } else {
             return false;
         }
+    }
+
+    public Page<EtlDTO> convert( Page<Etl> etlp){
+        Page<EtlDTO> dtoPage = etlp.map(new Function<Etl, EtlDTO>() {
+            @Override
+            public EtlDTO apply(Etl entity) {
+                return mapFrom(entity);
+            }
+        });
+        return dtoPage;
+
     }
 
 

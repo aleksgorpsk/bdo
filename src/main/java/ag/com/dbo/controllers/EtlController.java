@@ -1,120 +1,149 @@
 package ag.com.dbo.controllers;
 
-import ag.com.dbo.models.Etl;
-import ag.com.dbo.models.EtlDTO;
-import ag.com.dbo.models.EtlInstance;
-import ag.com.dbo.models.EtlStatus;
-import ag.com.dbo.repositories.EtlRepository;
-import ag.com.dbo.services.EngineService;
-import ag.com.dbo.services.EtlService;
-import lombok.NonNull;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.ModelAndView;
-
 import java.math.BigInteger;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
-@Slf4j
+import ag.com.dbo.models.EtlDTO;
+import ag.com.dbo.services.EtlService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.domain.Sort.Order;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+
 @Controller
 public class EtlController {
 
-    private final EtlService etlService;
-    private final EngineService engineService;
+//  @Autowired
+  private final  EtlService etlService;
 
-    public EtlController(EtlRepository etlRepository, EtlService etlService, EngineService engineService) {
+    public EtlController(EtlService etlService) {
         this.etlService = etlService;
-        this.engineService = engineService;
     }
 
+    @GetMapping("/etl_browser")
+  public String getAll(Model model, @RequestParam(required = false) String keyword,
+      @RequestParam(defaultValue = "1") int page,
+      @RequestParam(defaultValue = "6") int size,
+      @RequestParam(defaultValue = "id,asc") String[] sort) {
+    try {
 
-    @GetMapping("etl/start")
-    public ModelAndView start(
-            Model model,
-            @RequestParam(value= "etlId", required = true ) BigInteger etlId
-    ) {
-        log.info("Manual start: {}", etlId);
-        EtlDTO etlToStart = etlService.retrieveById(etlId);
-        etlToStart.setStatus(EtlStatus.AutoStart.getStatus());
-        if (etlService.update(etlToStart)) {
-            log.info("Manual start dto: {}", etlToStart);
-            EtlInstance etlInst = engineService.createEtlInstance(etlService.mapFrom(etlToStart));
-            log.info("EtlInstance start : {}", etlInst);
+      String sortField = sort[0];
+      String sortDirection = sort[1];
+      
+      Direction direction = sortDirection.equals("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
+      Order order = new Order(direction, sortField);
+      
+      Pageable pageable = PageRequest.of(page - 1, size, Sort.by(order));
+
+      Page<EtlDTO> pageTuts;
+      if (keyword == null) {
+        pageTuts = etlService.retrievePage(pageable);
+      } else {
+        pageTuts = etlService.findByEtlContainingIgnoreCase(keyword, pageable);
+        model.addAttribute("keyword", keyword);
+      }
+
+        List<EtlDTO> etlDto = pageTuts.getContent();
+      
+      model.addAttribute("etlList", etlDto);
+      model.addAttribute("currentPage", pageTuts.getNumber() + 1);
+      model.addAttribute("totalItems", pageTuts.getTotalElements());
+      model.addAttribute("totalPages", pageTuts.getTotalPages());
+      model.addAttribute("pageSize", size);
+      model.addAttribute("sortField", sortField);
+      model.addAttribute("sortDirection", sortDirection);
+      model.addAttribute("reverseSortDirection", sortDirection.equals("asc") ? "desc" : "asc");
+    } catch (Exception e) {
+      model.addAttribute("message", e.getMessage());
+    }
+
+    return "etl_browser";
+  }
+
+  @GetMapping("/etl/new")
+  public String addTutorial(Model model) {
+    EtlDTO etl = new EtlDTO();
+      etl.setActive(true);
+
+    model.addAttribute("etl", etl);
+    model.addAttribute("pageTitle", "Create new Tutorial");
+
+    return "etl_form";
+  }
+
+  @PostMapping("/etl/save")
+  public String saveTutorial(EtlDTO tutorial, RedirectAttributes redirectAttributes) {
+    try {
+        if (tutorial.getId()!=null) {
+            etlService.update(tutorial);
         }else{
-            log.error("ETL not found :{}", etlToStart);
+            etlService.create(tutorial);
         }
-        return browseEtl(Optional.empty(), Optional.empty());
-
+      redirectAttributes.addFlashAttribute("message", "The Etl has been saved successfully!");
+    } catch (Exception e) {
+      redirectAttributes.addAttribute("message", e.getMessage());
     }
 
-    @GetMapping("etl/browser")
-    public ModelAndView browser(
-            Model model,
-            @RequestParam(value= "page", required = false, defaultValue = "1" ) Optional<Integer> page,
-            @RequestParam(value = "size",  required = false, defaultValue = "5") Optional<Integer> size
-    ) {
-        return  browseEtl(page, size);
+    return "redirect:/etl_browser";
+  }
+
+  @GetMapping("/etl/{id}")
+  public String editTutorial(@PathVariable("id") BigInteger id, Model model, RedirectAttributes redirectAttributes) {
+    try {
+      Optional<EtlDTO> etl = etlService.findById(id);
+      model.addAttribute("etl", etl);
+      model.addAttribute("pageTitle", "Edit Tutorial (ID: " + id + ")");
+      return "etl_form";
+    } catch (Exception e) {
+      redirectAttributes.addFlashAttribute("message", e.getMessage());
+
+      return "redirect:/etl_browser";
+    }
+  }
+
+  @GetMapping("/etl/delete/{id}")
+  public String deleteTutorial(@PathVariable("id") BigInteger id, Model model, RedirectAttributes redirectAttributes) {
+    try {
+        etlService.delete(id);
+
+      redirectAttributes.addFlashAttribute("message", "The Tutorial with id=" + id + " has been deleted successfully!");
+    } catch (Exception e) {
+      redirectAttributes.addFlashAttribute("message", e.getMessage());
     }
 
-    public ModelAndView browseEtl(Optional<Integer> page, Optional<Integer> size){
-        ModelAndView modelAndView = new ModelAndView("etlBrowser");
-        int currentPage = page.orElse(1);
-        int pageSize = size.orElse(5);
+    return "redirect:/etl_browser";
+  }
 
-        PageRequest pageable = PageRequest.of( currentPage-1, pageSize, Sort.by("Id").ascending());
-        Page<@NonNull EtlDTO> etlPage = etlService.retrievePage(pageable);
-        modelAndView.addObject("etlPage", etlPage);
-
-        int totalPages = etlPage.getTotalPages();
-
-        if(totalPages > 0) {
-            List<Integer> pageNumbers = IntStream.rangeClosed(1,totalPages).boxed().collect(Collectors.toList());
-            modelAndView.addObject("pageNumbers", pageNumbers);
+  @GetMapping("/etl/{id}/published/{status}")
+  public String updateTutorialPublishedStatus(@PathVariable("id") BigInteger id, @PathVariable("status") boolean published,
+      Model model, RedirectAttributes redirectAttributes) {
+    try {
+        Optional<EtlDTO> etl = etlService.findById(id);
+        if (etl.isPresent()){
+            EtlDTO edto= etl.get();
+            edto.setActive(published);
+            etlService.update(edto);
         }
-      //  modelAndView.addObject("activeEtlList", true);
-        return modelAndView;
+
+      String status = published ? "published" : "disabled";
+      String message = "The Tutorial id=" + id + " has been " + status;
+
+      redirectAttributes.addFlashAttribute("message", message);
+    } catch (Exception e) {
+      redirectAttributes.addFlashAttribute("message", e.getMessage());
     }
 
-    @GetMapping("etl/createEtlForm")
-    public String createEtlForm( Model model) {
-        model.addAttribute("etl",new Etl());
-        return "addEtlForm";
-    }
-
-
-    @RequestMapping(value = "/etl/detail/{etlId}")
-    public ModelAndView etlEditor(@PathVariable("etlId") BigInteger etlId) {
-        ModelAndView modelAndView = new ModelAndView("etlEditor");
-        EtlDTO etl = etlService.retrieveById(etlId);
-        modelAndView.addObject(etl);
-        modelAndView.addObject("etl",etl);
-        log.info("Edit:{}", etl );
-        return modelAndView;
-    }
-    @PostMapping("/etl/addAction")
-    public ModelAndView createEtl(
-            @ModelAttribute("etl") EtlDTO model) {
-        log.info("addEtl"+model);
-        etlService.create(model);
-        return browseEtl(Optional.empty(), Optional.empty());
-    }
-
-    @PostMapping("etl/saveAction")
-    public ModelAndView saveEtl(
-            @ModelAttribute("etl") EtlDTO model) {
-        log.info("save etl: {}", model);
-        boolean success = etlService.update(model);
-
-        log.info("save etl success: {}", success);
-
-        return browseEtl(Optional.empty(), Optional.empty());
-    }
+    return "redirect:/etl_browser";
+  }
 }
