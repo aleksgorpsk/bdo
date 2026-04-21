@@ -5,7 +5,9 @@ import java.util.List;
 import java.util.Optional;
 
 import ag.com.dbo.models.EtlDTO;
+import ag.com.dbo.services.EngineService;
 import ag.com.dbo.services.EtlService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -20,15 +22,18 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-
+@Slf4j
 @Controller
 public class EtlController {
 
 //  @Autowired
   private final  EtlService etlService;
+    private final EngineService engineService;
 
-    public EtlController(EtlService etlService) {
+
+    public EtlController(EtlService etlService, EngineService engineService) {
         this.etlService = etlService;
+        this.engineService = engineService;
     }
 
     @GetMapping("/etl_browser")
@@ -72,23 +77,23 @@ public class EtlController {
   }
 
   @GetMapping("/etl/new")
-  public String addTutorial(Model model) {
+  public String addEtl(Model model) {
     EtlDTO etl = new EtlDTO();
       etl.setActive(true);
 
     model.addAttribute("etl", etl);
-    model.addAttribute("pageTitle", "Create new Tutorial");
+    model.addAttribute("pageTitle", "Create new Etl");
 
     return "etl_form";
   }
 
   @PostMapping("/etl/save")
-  public String saveTutorial(EtlDTO tutorial, RedirectAttributes redirectAttributes) {
+  public String saveEtl(EtlDTO etlDto, RedirectAttributes redirectAttributes) {
     try {
-        if (tutorial.getId()!=null) {
-            etlService.update(tutorial);
+        if (etlDto.getId()!=null) {
+            etlService.update(etlDto);
         }else{
-            etlService.create(tutorial);
+            etlService.create(etlDto);
         }
       redirectAttributes.addFlashAttribute("message", "The Etl has been saved successfully!");
     } catch (Exception e) {
@@ -99,11 +104,11 @@ public class EtlController {
   }
 
   @GetMapping("/etl/{id}")
-  public String editTutorial(@PathVariable("id") BigInteger id, Model model, RedirectAttributes redirectAttributes) {
+  public String editEtl(@PathVariable("id") BigInteger id, Model model, RedirectAttributes redirectAttributes) {
     try {
       Optional<EtlDTO> etl = etlService.findById(id);
       model.addAttribute("etl", etl);
-      model.addAttribute("pageTitle", "Edit Tutorial (ID: " + id + ")");
+      model.addAttribute("pageTitle", "Edit Etl (ID: " + id + ")");
       return "etl_form";
     } catch (Exception e) {
       redirectAttributes.addFlashAttribute("message", e.getMessage());
@@ -113,11 +118,11 @@ public class EtlController {
   }
 
   @GetMapping("/etl/delete/{id}")
-  public String deleteTutorial(@PathVariable("id") BigInteger id, Model model, RedirectAttributes redirectAttributes) {
+  public String deleteEtl(@PathVariable("id") BigInteger id, Model model, RedirectAttributes redirectAttributes) {
     try {
         etlService.delete(id);
 
-      redirectAttributes.addFlashAttribute("message", "The Tutorial with id=" + id + " has been deleted successfully!");
+      redirectAttributes.addFlashAttribute("message", "The Etl with id=" + id + " has been deleted successfully!");
     } catch (Exception e) {
       redirectAttributes.addFlashAttribute("message", e.getMessage());
     }
@@ -125,20 +130,19 @@ public class EtlController {
     return "redirect:/etl_browser";
   }
 
-  @GetMapping("/etl/{id}/published/{status}")
-  public String updateTutorialPublishedStatus(@PathVariable("id") BigInteger id, @PathVariable("status") boolean published,
+  @GetMapping("/etl/{id}/active/{status}")
+  public String updateEtlPublishedStatus(@PathVariable("id") BigInteger id, @PathVariable("status") boolean active,
       Model model, RedirectAttributes redirectAttributes) {
     try {
         Optional<EtlDTO> etl = etlService.findById(id);
         if (etl.isPresent()){
-            EtlDTO edto= etl.get();
-            edto.setActive(published);
-            etlService.update(edto);
+            EtlDTO etlDto= etl.get();
+            etlDto.setActive(active);
+            etlService.update(etlDto);
         }
 
-      String status = published ? "published" : "disabled";
-      String message = "The Tutorial id=" + id + " has been " + status;
-
+      String status = active ? "published" : "disabled";
+      String message = "The Etl id=" + id + " has been " + status;
       redirectAttributes.addFlashAttribute("message", message);
     } catch (Exception e) {
       redirectAttributes.addFlashAttribute("message", e.getMessage());
@@ -146,4 +150,23 @@ public class EtlController {
 
     return "redirect:/etl_browser";
   }
+
+    @GetMapping("/etl/start/{id}")
+    public String StartEtl(@PathVariable("id") BigInteger id, Model model, RedirectAttributes redirectAttributes) {
+        log.info("start!!!! {}", model);
+        try {
+            Optional<EtlDTO> etldto = etlService.findById(id);
+            if (etldto.isPresent()){
+                engineService.createEtlInstance(etlService.mapFrom(etldto.get()));
+                redirectAttributes.addFlashAttribute("message", "The Etl with id=" + id + " has been deleted successfully!");
+            }else{
+                redirectAttributes.addFlashAttribute("message", "The Etl with id=" + id + " does not exist!");
+            }
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("message", e.getMessage());
+        }
+
+        return "redirect:/etl_browser";
+    }
+
 }

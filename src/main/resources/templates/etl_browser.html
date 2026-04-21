@@ -75,16 +75,17 @@
             <td>[[${etl.comment}]]</td>
             <td>
               <a th:if="${etl.active == true}" class="fa-regular fa-square-check"
-                th:href="@{'/etl/' + ${etl.id} + '/published/false'}" title="Disable this etl"></a>
+                th:href="@{'/etl/' + ${etl.id} + '/active/false'}" title="Disable this etl"></a>
               <a th:if="${etl.active == false}" class="fa-regular fa-square icon-dark"
-                th:href="@{'/etl/' + ${etl.id} + '/published/true'}" title="Enable this etl"></a>
+                th:href="@{'/etl/' + ${etl.id} + '/active/true'}" title="Enable this etl"></a>
             </td>
             <td>
               <a th:href="@{'/etl/' + ${etl.id}}" title="Edit this etl"
                 class="fa-regular fa-pen-to-square icon-dark"></a>
-              &nbsp;
-              <a th:href="@{'/etl/delete/' + ${etl.id}}" th:tutorialTitle="${etl.name}" id="btnDelete"
+              <a th:href="@{'/etl/delete/' + ${etl.id}}" th:etlTitle="${etl.name}" id="btnDelete"
                 title="Delete this etl" class="fa-regular fa-trash-can icon-dark btn-delete"></a>
+                <a th:href="@{'/etl/start/' + ${etl.id}}" th:etlTitle="${etl.name}" id="btnStart"
+                   title="Start this etl" class="fa-solid fa-play"></a>
             </td>
           </tr>
         </tbody>
@@ -153,9 +154,9 @@
         e.preventDefault();
         link = $(this);
 
-        tutorialTitle = link.attr("tutorialTitle");
+        etlTitle = link.attr("etlTitle");
         $("#yesBtn").attr("href", link.attr("href"));
-        $("#confirmText").html("Do you want to delete the Etl \<strong\>" + tutorialTitle + "\<\/strong\>?");
+        $("#confirmText").html("Do you want to delete the Etl \<strong\>" + etlTitle + "\<\/strong\>?");
         $("#confirmModal").modal();
       });
 
