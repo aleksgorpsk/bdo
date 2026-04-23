@@ -1,0 +1,64 @@
+<head>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden; /* Prevents scrollbars */
+        }
+        .fullscreen-svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+<svg id="dynamicSvg" width="1400" height="600" style="border:1px solid black">
+</svg>
+</body>
+<script th:inline="javascript">
+    // 1. Get data from backend (passed via Thymeleaf)
+    const rectData = [[${data}]];
+    const svgns = "http://www.w3.org/2000/svg";
+    const svg = document.getElementById('dynamicSvg');
+
+    // 2. Loop through data to create rectangles
+    rectData.forEach(data => {
+        if (data.type =='rectangle'){
+            let rect = document.createElementNS(svgns, 'rect');
+            rect.setAttribute('x', data.x);
+            rect.setAttribute('y', data.y);
+            rect.setAttribute('width', data.w);
+            rect.setAttribute('height', data.h);
+            rect.setAttribute('fill', data.color);
+            rect.setAttribute('rx', data.rx);
+            rect.setAttribute('ry', data.ry);
+
+            // Optional: Add interactivity
+            rect.addEventListener('click', () => alert('Clicked: ' + data.color));
+            let text = document.createElementNS(svgns, 'text');
+            text.setAttribute('x', data.x+20 );
+            text.setAttribute('y', data.y+60);
+            text.textContent='text  text:'+data.id;
+
+            svg.appendChild(rect);
+                        svg.appendChild(text);
+
+        }
+
+        if (data.type =='line'){
+            const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            line.setAttribute('x1', data.x1);
+            line.setAttribute('y1', data.y1);
+            line.setAttribute('x2', data.x2);
+            line.setAttribute('y2', data.y2);
+            line.setAttribute('stroke', data.stroke);
+            line.setAttribute('stroke-width', data.strokeWidth);
+            svg.appendChild(line);
+    }
+
+    });
+</script>

@@ -71,8 +71,7 @@
         <tbody>
           <tr th:each="etl : ${etlList}">
             <th scope="row">[[${etl.id}]]</th>
-            <td>[[${etl.name}]]</td>
-            <td>[[${etl.comment}]]</td>
+            <td><a th:href="@{/etl_step/{id}(id=${etl.id})}"  th:text="${etl.comment}"></a> </td>
             <td>
               <a th:if="${etl.active == true}" class="fa-regular fa-square-check"
                 th:href="@{'/etl/' + ${etl.id} + '/active/false'}" title="Disable this etl"></a>

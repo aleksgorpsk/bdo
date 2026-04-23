@@ -57,6 +57,7 @@ public class EngineService {
         createStepInstances(ei);
         return ei;
     }
+
     private void createStepInstances(EtlInstance etl){
         log.info("steps:"+etl);
         List<Step> steps= stepRepository.findAllStepsByEtl(etl.getEtl().getId());
@@ -128,16 +129,6 @@ public class EngineService {
         List<StepInstance> rootSteps = steps.stream().filter(x-> ArrayUtils.isEmpty(x.getParentStepInstanceIds())).toList();
         for (StepInstance si : rootSteps){
             runRecursive(parentToChildrenStep, si, siRootBase);
-            /*
-           if (si.getStatus() == null){
-               startStep(si);
-           }else if ( si.getStatus()== StepStatus.InProgres.getStatus() ){  // in progress do nothing
-           } else if (si.getStatus() == StepStatus.Failed.getStatus() ) { // failed do nothing
-           } else if (si.getStatus() == StepStatus.Queue.getStatus() ) { // in queue do nothing
-           } else if (si.getStatus() == StepStatus.Success.getStatus()) { // success
-               runRecursive(parentToChildrenStep, si, siRootBase);
-           }
-            */
         }
 
     }
