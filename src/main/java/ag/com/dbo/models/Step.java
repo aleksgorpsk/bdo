@@ -22,6 +22,7 @@ public class Step {
     private BigInteger stepId;
     private Boolean stepActive;
     private BigInteger[] parentStepIds;
+    private String name;
     @ManyToOne(fetch = FetchType.EAGER) // Many steps to one etl
     @JoinColumn(name = "etl_id", nullable = false) // Specifies the FK column name
     private Etl etl;
