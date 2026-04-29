@@ -29,6 +29,8 @@ public class StepInstance {
 
     private OffsetDateTime startDate;
 
+    private Integer resultStatus;
+
     @ManyToOne(fetch = FetchType.EAGER) // Many steps to one etl
     @JoinColumn(name = "etl_instance_id", nullable = false, columnDefinition="") // Specifies the FK column name
     private EtlInstance etlInstance;

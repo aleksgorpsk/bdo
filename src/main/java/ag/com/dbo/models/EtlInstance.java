@@ -24,6 +24,7 @@ public class EtlInstance {
     private String status; //0 - , 1- in queue, 2- started, 3- finished on ,4- failed
     private OffsetDateTime startDate;
     private Integer attempt;
+    private Integer lastResult; //0- ok
 
     private String comment;
     @Column(columnDefinition = "TEXT")

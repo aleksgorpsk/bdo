@@ -2,7 +2,7 @@ package ag.com.dbo.services.loadingService;
 
 import ag.com.dbo.models.StepInstance;
 import ag.com.dbo.repositories.StepInstanceRepository;
-import ag.com.dbo.services.loadingService.model.HiveTask;
+import ag.com.dbo.services.loadingService.model.PropData;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
@@ -33,19 +33,18 @@ public class MultithreadExecutor implements InitializingBean {
 
     };
 
-    public String exec(StepInstance si){
+    public PropData exec(StepInstance si){
         log.info("start:"+si);
         long start= System.currentTimeMillis();
-        Callable<String> task = LoadTaskFactory.getTask(si, env, stepInstanceRepository);
-        Future<String> future = poolExecutor.submit(task);
+        Callable<PropData> task = LoadTaskFactory.getTask(si, env, stepInstanceRepository);
+        Future<PropData> future = poolExecutor.submit(task);
         try {
-            String result = future.get();
+            PropData result = future.get();
             log.info(si +" finish:"+(System.currentTimeMillis()-start));
             return result;
-
         } catch (InterruptedException | ExecutionException e) {
             log.info(si +" error finish:"+(System.currentTimeMillis()-start));
-            return  "s:"+ e.toString();
+            return  new PropData(-99,"s:"+ e.toString());
 
         }
     }

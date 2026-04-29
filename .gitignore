@@ -40,3 +40,5 @@ build/
 /trash
 /hiveserver2/hive-warehouse/
 /hiveserver2/postgres-data/
+/docker/vault/
+/hiveserver2/data/

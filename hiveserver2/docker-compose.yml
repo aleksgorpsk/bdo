@@ -40,7 +40,8 @@ services:
     container_name: hiveserver2
     restart: always
     volumes:
-      - ./hive-warehouse:/opt/hive/data/warehouse 
+      - ./hive-warehouse:/opt/hive/data/warehouse
+      - ./data:/data
     depends_on:
       - hive-metastore
     environment:

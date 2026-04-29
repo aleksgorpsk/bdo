@@ -8,20 +8,20 @@ import java.util.concurrent.Callable;
 @Slf4j
 @Data
 
-public class  Task <String> implements Callable<String> {
+public class  Task implements Callable<PropData>  {
     private String inn;
     private String out;
     public Task(String data){
         this.inn = data;
     }
     @Override
-    public String call() throws Exception {
+    public PropData call() throws Exception {
         try {
             Thread.sleep(5000);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
-        out = (String) (inn + " Result");
-        return out;
+        out = inn + " Result";
+        return new PropData(0, out );
     }
 }

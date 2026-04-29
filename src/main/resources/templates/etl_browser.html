@@ -8,12 +8,10 @@
 
   <link rel="stylesheet" type="text/css" th:href="@{/css/bootstrap.min.css}" />
   <link rel="stylesheet" type="text/css" th:href="@{/css/style.css}" />
-    <link rel="stylesheet" type="text/css" th:href="@{/css/style.css}" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css"
-    integrity="sha512-xh6O/CkQoPOWDdYTDqeRdPCVd1SpvCA9XXcUnZS2FmJNp1coAFzvtCN9BmamE+4aHK8yyUHUSCcJHgXloTyT2A=="
-    crossorigin="anonymous" referrerpolicy="no-referrer" />
-  <script type="text/javascript" th:src="@{/webjars/jquery/jquery.min.js}"></script>
-  <script type="text/javascript" th:src="@{/css/bootstrap.min.js}"></script>
+  <link rel="stylesheet" type="text/css" th:href="@{/css/style.css}" />
+  <link rel="stylesheet" th:href="@{/css/all.min.css}"/>
+  <script type="text/javascript" th:href="@{/css/jquery.min.js}"></script>
+  <script type="text/javascript" th:href="@{/css/bootstrap.min.js}"></script>
 </head>
 
 <body>
@@ -65,7 +63,7 @@
             <th th:replace="~{fragments/sorting :: sorting('name','Name')}"></th>
             <th th:replace="~{fragments/sorting :: sorting('comment','Comment')}"></th>
             <th>Published</th>
-            <th>Actions</th>
+            <th>Last status</th>
           </tr>
         </thead>
         <tbody>
@@ -73,20 +71,34 @@
             <th scope="row">[[${etl.id}]]</th>
             <td><a th:href="@{/etl_step/{id}(id=${etl.id})}"  th:text="${etl.comment}"></a> </td>
             <td>
-              <a th:if="${etl.active == true}" class="fa-regular fa-square-check"
-                th:href="@{'/etl/' + ${etl.id} + '/active/false'}" title="Disable this etl"></a>
-              <a th:if="${etl.active == false}" class="fa-regular fa-square icon-dark"
-                th:href="@{'/etl/' + ${etl.id} + '/active/true'}" title="Enable this etl"></a>
+              <a th:if="${etl.active == true}"  th:href="@{'/etl/' + ${etl.id} + '/active/false'}" title="Disable this etl">
+                  <img th:src="@{/images/icons8-check-24.png}"/>
+              </a>
+              <a th:if="${etl.active == false}"   th:href="@{'/etl/' + ${etl.id} + '/active/true'}" title="Enable this etl">
+                  <img th:src="@{/images/icons8-indeterminate-checkbox-24.png}"/>
+
+              </a>
             </td>
             <td>
-              <a th:href="@{'/etl/' + ${etl.id}}" title="Edit this etl"
-                class="fa-regular fa-pen-to-square icon-dark"></a>
+              <a th:href="@{'/etl/' + ${etl.id}}" title="Edit this etl" >
+                  <img th:src="@{/images/icons8-edit-24.png}" />
+              </a>
               <a th:href="@{'/etl/delete/' + ${etl.id}}" th:etlTitle="${etl.name}" id="btnDelete"
-                title="Delete this etl" class="fa-regular fa-trash-can icon-dark btn-delete"></a>
+                title="Delete this etl" >
+                  <img th:src="@{/images/icons8-delete-24.png}"/>
+              </a>
                 <a th:href="@{'/etl/start/' + ${etl.id}}" th:etlTitle="${etl.name}" id="btnStart"
-                   title="Start this etl" class="fa-solid fa-play"></a>
+                   title="Start this etl" >
+                    <img th:src="@{/images/icons8-play-24.png}" />
+
+                </a>
             </td>
+              <td >
+                  <img th:if="${etl.lastResult ==0 }" th:src="@{/images/icons8-ok-24.png}" />
+                  <img th:if="${etl.lastResult !=0 }" th:src="@{/images/icons8-fail-24.png}" />
+              </td>
           </tr>
+
         </tbody>
       </table>
     </div>

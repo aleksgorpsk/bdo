@@ -6,6 +6,7 @@ import ag.com.dbo.repositories.EtlRepository;
 import ag.com.dbo.repositories.StepInstanceRepository;
 import ag.com.dbo.repositories.StepRepository;
 import ag.com.dbo.services.loadingService.MultithreadExecutor;
+import ag.com.dbo.services.loadingService.model.PropData;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.stereotype.Service;
@@ -99,10 +100,8 @@ public class EngineService {
 
     private void makeStep(EtlInstance etlInstance){
 
-        log.info("etlInstance id:"+etlInstance.getEtlInstanceId());
-//  select all steps from etl
+        log.info("make step etlInstance id:"+etlInstance.getEtlInstanceId());
         List<StepInstance> steps= stepInstanceRepository.findAllStepInstancesByEtlInstanceId(etlInstance.getEtlInstanceId());
-        // build map id -> stepInstances
         Map<BigInteger, StepInstance> siRootBase =   steps.stream().collect(
                 Collectors.toMap(StepInstance::getStepInstanceId, Function.identity())
         );
@@ -156,11 +155,15 @@ public class EngineService {
 
 
     private void startStep(StepInstance si){
-        log.info("startStep"+si);
+        log.info("startStep: "+si);
         if (si.getStep().getStepActive()) {
             si.setStatus(5);
             stepInstanceRepository.saveAndFlush(si);
-            multithreadExecutor.exec(si);
+            PropData data = multithreadExecutor.exec(si);
+            si.setResultStatus(data.getResultStatus());
+            stepInstanceRepository.saveAndFlush(si);
+            si.getEtl().setLastResult(data.getResultStatus());
+            etlRepository.saveAndFlush(si.getEtl());
         }else{
             log.info("startStep:{} inactive",si);
         }

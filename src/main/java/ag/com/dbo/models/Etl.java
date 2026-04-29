@@ -26,5 +26,6 @@ public class Etl {
     private String cronScheduling;
     private Integer interval; // in sec
     private String comment;
+    private Integer lastResult;
 
 }

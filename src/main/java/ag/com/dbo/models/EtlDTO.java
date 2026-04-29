@@ -17,4 +17,5 @@ public class EtlDTO {
     private String cronScheduling;
     private Integer interval; // in sec
     private String comment;
+    private Integer lastResult;
 }

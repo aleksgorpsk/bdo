@@ -4,6 +4,7 @@ import ag.com.dbo.models.StepInstance;
 import ag.com.dbo.repositories.StepInstanceRepository;
 import ag.com.dbo.services.EngineService;
 import ag.com.dbo.services.loadingService.MultithreadExecutor;
+import ag.com.dbo.services.loadingService.model.PropData;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.info.Contact;
@@ -45,10 +46,10 @@ public class ExecutorController {
     @Operation(summary = "executor")
     @ApiResponses(value = {
     })
-    public ResponseEntity<@NonNull String> post(@RequestBody  String data ) {
+    public ResponseEntity<@NonNull PropData> post(@RequestBody  String data ) {
         BigInteger id = new BigInteger(data);
         StepInstance si = stepInstanceRepository.getReferenceById(id);
-        String result =  executor.exec(si);
+        PropData result =  executor.exec(si);
         return ResponseEntity.ok(result);
     }
 
