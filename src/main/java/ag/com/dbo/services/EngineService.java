@@ -155,7 +155,7 @@ public class EngineService {
 
 
     private void startStep(StepInstance si){
-        log.info("startStep: "+si);
+        log.info("startStep: {}",si);
         if (si.getStep().getStepActive()) {
             si.setStatus(5);
             stepInstanceRepository.saveAndFlush(si);

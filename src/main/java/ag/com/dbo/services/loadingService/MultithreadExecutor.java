@@ -28,7 +28,7 @@ public class MultithreadExecutor implements InitializingBean {
     }
 
     public void afterPropertiesSet() {
-        log.info("!! afterPropertiesSet2 !");
+        log.info("afterPropertiesSet2 !");
         this.poolExecutor = Executors.newFixedThreadPool(this.threadCount);
 
     };
@@ -40,10 +40,10 @@ public class MultithreadExecutor implements InitializingBean {
         Future<PropData> future = poolExecutor.submit(task);
         try {
             PropData result = future.get();
-            log.info(si +" finish:"+(System.currentTimeMillis()-start));
+            log.info("{} finish: {}", si, (System.currentTimeMillis()-start));
             return result;
         } catch (InterruptedException | ExecutionException e) {
-            log.info(si +" error finish:"+(System.currentTimeMillis()-start));
+            log.info("{} error finish: {}", si, (System.currentTimeMillis()-start));
             return  new PropData(-99,"s:"+ e.toString());
 
         }

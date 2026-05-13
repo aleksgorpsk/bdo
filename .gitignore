@@ -38,7 +38,6 @@ build/
 /.idea/**
 *.tar.gz
 /trash
-/hiveserver2/hive-warehouse/
-/hiveserver2/postgres-data/
+/hiveserver2
 /docker/vault/
-/hiveserver2/data/
+/docker

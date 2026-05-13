@@ -6,12 +6,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 
-import java.sql.*;
-
 import java.util.concurrent.Callable;
 
 @Slf4j
-public class HiveJdbcTask extends TaskProperties implements Callable<PropData> {
+public class HiveToJdbcTask extends TaskProperties implements Callable<PropData> {
 
 
     @Value("${test1jdbc.username}")
@@ -42,7 +40,7 @@ public class HiveJdbcTask extends TaskProperties implements Callable<PropData> {
     private final  Environment env;
     private final StepInstanceRepository stepInstanceRepository;
 
-    public HiveJdbcTask  (StepInstance data, Environment env, StepInstanceRepository stepInstanceRepository){
+    public HiveToJdbcTask(StepInstance data, Environment env, StepInstanceRepository stepInstanceRepository){
         super(env);
         inn= data;
         this.env = env;
