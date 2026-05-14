@@ -46,6 +46,7 @@ public class EngineService {
             createEtlInstance(etl);
         }
     }
+
     public EtlInstance createEtlInstance(Etl etl){
         log.info("get one:"+etl);
         EtlInstance ei = new EtlInstance();
@@ -82,9 +83,7 @@ public class EngineService {
         for (StepInstance si :sisout){
             stepInstanceRelation.put(si.getStep().getStepId(), si.getStepInstanceId());
         }
-        log.info("1!!!!:"+stepInstanceRelation);
         for (StepInstance si :sisout){
-            log.info("1!!!!si:"+si);
 
             BigInteger[] parents = si.getStep().getParentStepIds();
             if (parents != null) {
@@ -101,8 +100,11 @@ public class EngineService {
     private void makeStep(EtlInstance etlInstance){
 
         log.info("make step etlInstance id:"+etlInstance.getEtlInstanceId());
+        //get all step instances from etl instances
         List<StepInstance> steps= stepInstanceRepository.findAllStepInstancesByEtlInstanceId(etlInstance.getEtlInstanceId());
-        Map<BigInteger, StepInstance> siRootBase =   steps.stream().collect(
+
+        // map Si.id-> Si for one etl instance
+        Map<BigInteger, StepInstance> stepInstancesEltInstance =   steps.stream().collect(
                 Collectors.toMap(StepInstance::getStepInstanceId, Function.identity())
         );
 
@@ -122,20 +124,28 @@ public class EngineService {
             }
         }
 
-        log.info("list tree:"+siRootBase);
-
+        log.info("list tree:{}", stepInstancesEltInstance);
+        List<BigInteger> finishSteps = stepInstancesEltInstance.keySet().stream().filter( k-> !parentToChildrenStep.containsKey(k)).toList();
+        log.info("finishSteps: {}", finishSteps);
         // try to run recursive from root
-        List<StepInstance> rootSteps = steps.stream().filter(x-> ArrayUtils.isEmpty(x.getParentStepInstanceIds())).toList();
-        for (StepInstance si : rootSteps){
-            runRecursive(parentToChildrenStep, si, siRootBase);
+        List<StepInstance> startSteps = steps.stream().filter(x-> ArrayUtils.isEmpty(x.getParentStepInstanceIds())).toList();
+        for (StepInstance si : startSteps){
+            runRecursive(parentToChildrenStep, si, stepInstancesEltInstance, finishSteps);
         }
 
     }
 
-    private void runRecursive(Map<BigInteger, Set<BigInteger>> parentToChildrenStep, StepInstance currentSi, Map<BigInteger, StepInstance> siBase){
+    private void runRecursive(Map<BigInteger, Set<BigInteger>> parentToChildrenStep, StepInstance currentSi, Map<BigInteger, StepInstance> siBase,  List<BigInteger> finishSteps){
 
+        log.info("Step");
         if (currentSi.getStatus()==null) { // not started yet
-            startStep(currentSi);
+            startStepInstance(currentSi);
+
+            List<StepInstance> candidateStartChildren = getChildren(currentSi,parentToChildrenStep,siBase).stream().filter( s->s.getStatus()==null).toList();
+//            List<StepInstance> candidateStartChildren = getChildren(currentSi,parentToChildrenStep,siBase).stream().toList().stream().filter( s->s.getStatus()==null).toList();
+            for(StepInstance si : candidateStartChildren) {
+                runRecursive(parentToChildrenStep, si, siBase, finishSteps);
+            }
         } else if (currentSi.getStatus() == StepStatus.InProgres.getStatus()) {// in progress do nothing
             return;
         } else if (currentSi.getStatus() == StepStatus.Failed.getStatus()) {
@@ -143,29 +153,56 @@ public class EngineService {
         } else if (currentSi.getStatus() == StepStatus.Queue.getStatus()) { // in queue do nothing
             return;
         } else if (currentSi.getStatus() == StepStatus.Success.getStatus()) { // success
-            List<StepInstance> chils = parentToChildrenStep.get(currentSi).stream()
-                    .map(siBase::get)
-                    .filter(Objects::nonNull)
-                    .toList();
-
-            log.info ("Child list: {}",chils);
+            return;
         }
     }
 
+    /**
+     *  get StepInstances children of StepInstance
+     * @param currentSi
+     * @param parentToChildrenStep
+     * @param siBase
+     * @return
+     */
+  private List<StepInstance>  getChildren(StepInstance currentSi,
+                                          Map<BigInteger, Set<BigInteger>> parentToChildrenStep,
+                                          Map<BigInteger, StepInstance> siBase){
 
+      return parentToChildrenStep
+              .getOrDefault(currentSi.getStepInstanceId(), Collections.<BigInteger>emptySet())
+              .stream()
+              .map(siBase::get)
+              .filter(Objects::nonNull)
+              .toList();
+  }
 
-    private void startStep(StepInstance si){
-        log.info("startStep: {}",si);
+    /**
+     * Strart StepInstance and return
+     * @param si
+     * @return
+     */
+    private boolean startStepInstance(StepInstance si){
+        log.info("-------!!!!!!startStep: {}",si);
         if (si.getStep().getStepActive()) {
-            si.setStatus(5);
-            stepInstanceRepository.saveAndFlush(si);
-            PropData data = multithreadExecutor.exec(si);
-            si.setResultStatus(data.getResultStatus());
-            stepInstanceRepository.saveAndFlush(si);
-            si.getEtl().setLastResult(data.getResultStatus());
-            etlRepository.saveAndFlush(si.getEtl());
+            try {
+                si.setStatus(5);
+                stepInstanceRepository.saveAndFlush(si);
+                PropData data = multithreadExecutor.exec(si);
+                si.setResultStatus(data.getResultStatus());
+                stepInstanceRepository.saveAndFlush(si);
+                si.getEtl().setLastResult(data.getResultStatus());
+                etlRepository.saveAndFlush(si.getEtl());
+                log.info("R-------!!!!!!startStep : {} return {}", si, data.getResultStatus());
+                return data.getResultStatus() == 0;
+            }catch (Throwable e){
+                si.setResultStatus(-99);
+                si.setResultMessage(e.getMessage());
+                return true;
+            }
         }else{
             log.info("startStep:{} inactive",si);
+            si.setResultStatus(-101);  // just inactive
+            return true;
         }
 
     }

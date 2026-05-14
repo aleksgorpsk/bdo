@@ -1,8 +1,6 @@
 package ag.com.dbo.controllers;
 
 import ag.com.dbo.models.graf.Figure;
-import ag.com.dbo.models.graf.Line;
-import ag.com.dbo.models.graf.Rectangle;
 import ag.com.dbo.services.GrafBuilderService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
@@ -12,7 +10,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigInteger;
-import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j

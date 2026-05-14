@@ -12,5 +12,6 @@ public class Figure {
     private BigInteger id;
     @Setter(AccessLevel.NONE)
     private  String  type;
+    private  String  name;
 
 }

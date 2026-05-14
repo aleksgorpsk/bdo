@@ -16,7 +16,7 @@ import java.util.List;
 
 @Slf4j
 @Service()
-public class HttpBinService implements InitializingBean {
+public class HttpBinService  {
 
     @Value("${app.restUrl}")
     private String restUrl ;
@@ -26,17 +26,7 @@ public class HttpBinService implements InitializingBean {
         this.restTemplate = restTemplate;
     }
 
-
-    public void afterPropertiesSet() {
-        log.info("!! afterPropertiesSet !");
-
-    };
-
-
     @PostConstruct
-    public void init(){
-        log.info("!! Init !");
-    }
 
     public String getJson(){
         log.info("restUrl:"+restUrl);

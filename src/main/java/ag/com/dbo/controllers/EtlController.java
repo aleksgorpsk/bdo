@@ -153,7 +153,7 @@ public class EtlController {
 
     @GetMapping("/etl/start/{id}")
     public String StartEtl(@PathVariable("id") BigInteger id, Model model, RedirectAttributes redirectAttributes) {
-        log.info("start!!!! {}", model);
+        log.info("start: model {}", model);
         try {
             Optional<EtlDTO> etldto = etlService.findById(id);
             if (etldto.isPresent()){
@@ -164,6 +164,7 @@ public class EtlController {
             }
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("message", e.getMessage());
+            e.printStackTrace();
         }
 
         return "redirect:/etl_browser";

@@ -71,10 +71,16 @@ public class GrafBuilderService {
         }
     }
 
-
     private int getMaxHeight(List<List<BigInteger>> stepPlan){
         return stepPlan.stream().map(List::size).max(Comparator.naturalOrder()).orElse(0);
     }
+
+    /**
+     *
+     * @param stepPlan
+     * @param stepMap
+     * @return
+     */
     private  List<Figure> getFigure(List<List<BigInteger>> stepPlan, Map<BigInteger, Step> stepMap ){
 
         Map<BigInteger, Figure> figureStore = new HashMap<>();
@@ -91,6 +97,7 @@ public class GrafBuilderService {
 
             vD = vDistance+ shift ;
             for (BigInteger etl: leaf){
+                Step st= stepMap.get(etl);
                 Rectangle r = new Rectangle();
                 r.setX(hD);
                 r.setY(vD);
@@ -99,6 +106,7 @@ public class GrafBuilderService {
                 r.setColor("green");
                 vD = vD + vDistance + height;
                 r.setId(etl);
+                r.setName(st.getName());
                 result.add(r);
                 figureStore.put(etl, r);
             }

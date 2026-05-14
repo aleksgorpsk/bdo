@@ -22,5 +22,7 @@ public class DataLoading {
     private Boolean active;
     @Column(columnDefinition = "TEXT")
     private  String props;
+    @Column(columnDefinition = "TEXT")
+    private  String comments;
 
 }

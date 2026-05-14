@@ -41,7 +41,7 @@
           let text = document.createElementNS(svgns, 'text');
           text.setAttribute('x', data.x+20 );
           text.setAttribute('y', data.y+60);
-          text.textContent='text  text:'+data.id;
+          text.textContent="Step:"+data.id+": "+ data.name ;
 
           svg.appendChild(rect);
                       svg.appendChild(text);

@@ -39,5 +39,4 @@ build/
 *.tar.gz
 /trash
 /hiveserver2
-/docker/vault/
 /docker

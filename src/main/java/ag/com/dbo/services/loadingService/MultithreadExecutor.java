@@ -45,7 +45,6 @@ public class MultithreadExecutor implements InitializingBean {
         } catch (InterruptedException | ExecutionException e) {
             log.info("{} error finish: {}", si, (System.currentTimeMillis()-start));
             return  new PropData(-99,"s:"+ e.toString());
-
         }
     }
 
