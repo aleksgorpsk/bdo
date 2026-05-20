@@ -1,12 +1,11 @@
 package ag.com.dbo.services;
 
-import ag.com.dbo.models.*;
-import ag.com.dbo.repositories.EtlInstanceRepository;
-import ag.com.dbo.repositories.EtlRepository;
-import ag.com.dbo.repositories.StepInstanceRepository;
-import ag.com.dbo.repositories.StepRepository;
-import ag.com.dbo.services.loadingService.MultithreadExecutor;
-import ag.com.dbo.services.loadingService.model.PropData;
+import ag.com.dbo.models.management.*;
+import ag.com.dbo.repositories.management.EtlInstanceRepository;
+import ag.com.dbo.repositories.management.EtlRepository;
+import ag.com.dbo.repositories.management.StepInstanceRepository;
+import ag.com.dbo.repositories.management.StepRepository;
+//import ag.com.dbo.services.loadingService.MultithreadExecutor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.stereotype.Service;
@@ -23,17 +22,18 @@ public class EngineService {
     private final EtlInstanceRepository etlInstanceRepository;
     private final StepRepository stepRepository;
     private final StepInstanceRepository stepInstanceRepository;
-    private final MultithreadExecutor multithreadExecutor;
+//    private final MultithreadExecutor multithreadExecutor;
 
 
     public EngineService(EtlRepository etlRepository, EtlInstanceRepository etlInstanceRepository,
-                          StepRepository stepRepository, StepInstanceRepository stepInstanceRepository,
-                          MultithreadExecutor multithreadExecutor) {
+                          StepRepository stepRepository, StepInstanceRepository stepInstanceRepository
+//            , MultithreadExecutor multithreadExecutor
+    ) {
         this.etlRepository = etlRepository;
         this.etlInstanceRepository = etlInstanceRepository;
         this.stepRepository = stepRepository;
         this.stepInstanceRepository = stepInstanceRepository;
-        this.multithreadExecutor = multithreadExecutor;
+  //      this.multithreadExecutor = multithreadExecutor;
     }
 
 
@@ -187,13 +187,14 @@ public class EngineService {
             try {
                 si.setStatus(5);
                 stepInstanceRepository.saveAndFlush(si);
-                PropData data = multithreadExecutor.exec(si);
+/*                PropData data = multithreadExecutor.exec(si);
                 si.setResultStatus(data.getResultStatus());
                 stepInstanceRepository.saveAndFlush(si);
                 si.getEtl().setLastResult(data.getResultStatus());
                 etlRepository.saveAndFlush(si.getEtl());
                 log.info("R-------!!!!!!startStep : {} return {}", si, data.getResultStatus());
-                return data.getResultStatus() == 0;
+ */
+                return true; //data.getResultStatus() == 0;
             }catch (Throwable e){
                 si.setResultStatus(-99);
                 si.setResultMessage(e.getMessage());

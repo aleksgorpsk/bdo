@@ -4,7 +4,7 @@ import java.math.BigInteger;
 import java.util.List;
 import java.util.Optional;
 
-import ag.com.dbo.models.EtlDTO;
+import ag.com.dbo.models.management.EtlDTO;
 import ag.com.dbo.services.EngineService;
 import ag.com.dbo.services.EtlService;
 import lombok.extern.slf4j.Slf4j;

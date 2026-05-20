@@ -1,8 +1,8 @@
 package ag.com.dbo.services;
 
-import ag.com.dbo.models.Etl;
-import ag.com.dbo.models.EtlDTO;
-import ag.com.dbo.repositories.EtlRepository;
+import ag.com.dbo.models.management.Etl;
+import ag.com.dbo.models.management.EtlDTO;
+import ag.com.dbo.repositories.management.EtlRepository;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

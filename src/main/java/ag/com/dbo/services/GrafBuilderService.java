@@ -1,11 +1,11 @@
 package ag.com.dbo.services;
 
-import ag.com.dbo.models.EtlDTO;
-import ag.com.dbo.models.Step;
+import ag.com.dbo.models.management.EtlDTO;
+import ag.com.dbo.models.management.Step;
 import ag.com.dbo.models.graf.Figure;
 import ag.com.dbo.models.graf.Line;
 import ag.com.dbo.models.graf.Rectangle;
-import ag.com.dbo.repositories.StepRepository;
+import ag.com.dbo.repositories.management.StepRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.stereotype.Service;
