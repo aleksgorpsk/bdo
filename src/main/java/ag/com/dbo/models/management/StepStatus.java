@@ -1,16 +1,12 @@
 package ag.com.dbo.models.management;
 
 public enum StepStatus {
-    InProgres(1),
-    Success(3),
-    Failed(4),
-    Queue(5);
+    InProgres,
+    Success,
+    Failed,
+    ReadyToQueue,
+    Queue,
+    Missed;
 
-    private final int status;
-    StepStatus(int status){
-        this.status=status;
-    }
-    public int getStatus(){
-        return this.status;
-    }
+
 }

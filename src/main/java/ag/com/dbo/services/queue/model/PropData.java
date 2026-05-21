@@ -1,5 +1,6 @@
 package ag.com.dbo.services.queue.model;
 
+import ag.com.dbo.models.queue.QueueStorage;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -10,6 +11,6 @@ import lombok.NoArgsConstructor;
 public class PropData {
 
     private int ResultStatus = -100;
-//    private Object obj;
+    private QueueStorage qs;
     private String message;
 }

@@ -7,6 +7,7 @@ import ag.com.dbo.models.queue.TaskParameters;
 import ag.com.dbo.services.queue.MultithreadExecutor;
 import ag.com.dbo.services.queue.QueueService;
 import ag.com.dbo.services.queue.TaskProperties;
+import ag.com.dbo.utils.Utils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.Nullable;
@@ -42,7 +43,7 @@ public class QueueController {
 
         req.setCommandProfile(taskRequest.getCommandProfile());
         if (taskRequest.getParameters() !=null) {
-            req.setParameters(TaskProperties.objectToString(taskRequest.getParameters()));
+            req.setParameters(Utils.objectToString(taskRequest.getParameters()));
         }
         req.setCalculateType(taskRequest.getCalculateType());
         req.setMaxAttempts(taskRequest.getMaxAttempts());

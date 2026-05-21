@@ -72,9 +72,9 @@ public class HiveToJdbcTask extends TaskProperties implements Callable<PropData>
 
         } catch (Throwable e) {
             e.printStackTrace();
-            return new PropData(10,  ExceptionUtils.getStackTrace(e) + System.lineSeparator()+ e.getMessage());
+            return new PropData(10,  new QueueStorage(), ExceptionUtils.getStackTrace(e) + System.lineSeparator()+ e.getMessage());
         }
 
-        return new PropData(0, "tests");
+        return new PropData(0, new QueueStorage(), "tests");
     }
 }

@@ -1,5 +1,6 @@
 package ag.com.dbo.services.queue.model;
 
+import ag.com.dbo.models.queue.QueueStorage;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
@@ -22,6 +23,6 @@ public class  Task implements Callable<PropData>  {
             Thread.currentThread().interrupt();
         }
         out = inn + " Result";
-        return new PropData(0,out);
+        return new PropData(0, new QueueStorage(), out);
     }
 }

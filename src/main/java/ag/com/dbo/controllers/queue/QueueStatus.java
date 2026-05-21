@@ -4,5 +4,6 @@ public enum QueueStatus {
     QUEUS,
     IN_PROGRES,
     SUCCESS,
-    FAIL
+    FAIL,
+    SYS_ERROR
 }

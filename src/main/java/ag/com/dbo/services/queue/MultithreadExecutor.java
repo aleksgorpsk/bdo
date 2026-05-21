@@ -1,7 +1,7 @@
 package ag.com.dbo.services.queue;
 
+import ag.com.dbo.controllers.queue.QueueStatus;
 import ag.com.dbo.models.queue.QueueStorage;
-import ag.com.dbo.repositories.management.StepInstanceRepository;
 import ag.com.dbo.repositories.queue.QueueStorageRepository;
 import ag.com.dbo.services.queue.utils.LoadTaskFactory;
 import ag.com.dbo.services.queue.model.PropData;
@@ -21,10 +21,12 @@ public class MultithreadExecutor implements InitializingBean {
     private int  threadCount;
 
     private ThreadPoolExecutor poolExecutor;
+    private final ManagerService managerService;
     private final Environment env;
     private final QueueStorageRepository queueStorageRepository;
 
-    public MultithreadExecutor(Environment env, QueueStorageRepository queueStorageRepository) {
+    public MultithreadExecutor(ManagerService managerService, Environment env, QueueStorageRepository queueStorageRepository) {
+        this.managerService = managerService;
         this.env = env;
 
         this.queueStorageRepository = queueStorageRepository;
@@ -44,23 +46,21 @@ public class MultithreadExecutor implements InitializingBean {
     };
 
     public void setRun(QueueStorage request){
+        log.info("setRun: {}",request);
         Callable<PropData> task = LoadTaskFactory.getTask(request, env, queueStorageRepository);
-        poolExecutor.submit(task);
-    }
-/*
-    public PropData exec(StepInstance si){
-        log.info("start:"+si);
-        long start= System.currentTimeMillis();
-        Callable<PropData> task = LoadTaskFactory.getTask(si, env, stepInstanceRepository);
-        Future<PropData> future = poolExecutor.submit(task);
+        Future <PropData> fPdata = poolExecutor.submit(task);
         try {
-            PropData result = future.get();
-            log.info("{} finish: {}", si, (System.currentTimeMillis()-start));
-            return result;
+            PropData pData = fPdata.get();
+            // send response
+            log.info("pData: {}", pData);
+            managerService.sendResult(pData.getQs());
         } catch (InterruptedException | ExecutionException e) {
-            log.info("{} error finish: {}", si, (System.currentTimeMillis()-start));
-            return  new PropData(-99,"s:"+ e.toString());
+            log.error("Error in task : {0}, {1}", task, e);
+            request.setStatus(QueueStatus.SYS_ERROR.name());
+            queueStorageRepository.saveAndFlush(request);
+            managerService.sendResult(request);
+
         }
     }
-*/
+
 }

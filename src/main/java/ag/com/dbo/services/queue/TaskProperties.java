@@ -45,14 +45,6 @@ public class TaskProperties {
         return fullLog;
     }
 
-    public static Map<String,Object> getMap(String jsonString) throws JsonProcessingException {
-        ObjectMapper objectMapper = new ObjectMapper();
-        return objectMapper.readValue(jsonString, new TypeReference<>() {});
-    }
-    public static String objectToString( Object input) throws JsonProcessingException {
-        ObjectMapper objectMapper = new ObjectMapper();
-        return objectMapper.writeValueAsString(input);
-    }
     protected Integer getInt(Map<String,Object> map, String varName){
         Object value=map.get(varName);
         if (value == null){

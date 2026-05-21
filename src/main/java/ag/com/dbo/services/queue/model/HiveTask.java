@@ -4,6 +4,7 @@ import ag.com.dbo.controllers.queue.QueueStatus;
 import ag.com.dbo.models.queue.QueueStorage;
 import ag.com.dbo.repositories.queue.QueueStorageRepository;
 import ag.com.dbo.services.queue.TaskProperties;
+import ag.com.dbo.utils.Utils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.BufferedReader;
@@ -51,15 +52,15 @@ public class HiveTask extends TaskProperties implements Callable<PropData> {
                 task.setStatus(QueueStatus.FAIL.name());
                 task.setStop(LocalDateTime.now());
                 queueStorageRepository.saveAndFlush(task);
-                return new PropData(-105,  error);
+                return new PropData(-105, task, error);
             }
             task.setStart(LocalDateTime.now());
             queueStorageRepository.saveAndFlush(task);
 
             String sVars=task.getParameters();
-            Map<String, Object > vars = new HashMap<>();
+            Map<String, String > vars = new HashMap<>();
             if (sVars!= null){
-                vars = TaskProperties.getMap(sVars);
+                vars = Utils.getMap(sVars);
             }
 
             String logic = task.getCommandProfile();
@@ -68,7 +69,7 @@ public class HiveTask extends TaskProperties implements Callable<PropData> {
             if (logic==null){
                 log.error("No logic !");
                 PropData pd = new PropData();
-                return new PropData(-106, "Error in command: "+logic);
+                return new PropData(-106,  task,"Error in command: "+logic);
             }
             int exitCode=-100;
 
@@ -78,7 +79,7 @@ public class HiveTask extends TaskProperties implements Callable<PropData> {
             Process process = processBuilder.start();
             BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
             OutputStream output = process.getOutputStream();
-            out=applyVars(out, (Map<String, String>) vars.get("props"));
+            out=applyVars(out,  vars);
 
 
             String log = fullReadStr(reader);
@@ -95,7 +96,7 @@ public class HiveTask extends TaskProperties implements Callable<PropData> {
             task.setLog(log);
             task.setStop(LocalDateTime.now());
             queueStorageRepository.saveAndFlush(task);
-            return new PropData(processCode, out);
+            return new PropData(processCode, task, out);
 
 
         } catch (IOException | InterruptedException e) {
@@ -103,7 +104,7 @@ public class HiveTask extends TaskProperties implements Callable<PropData> {
             task = addLog(task, System.lineSeparator()+ ExceptionUtils.getStackTrace(e) + e.getMessage());
             task.setStop(LocalDateTime.now());
             queueStorageRepository.saveAndFlush(task);
-            return new PropData(-106, System.lineSeparator()+ ExceptionUtils.getStackTrace(e) + e.getMessage());
+            return new PropData(-106, task, System.lineSeparator()+ ExceptionUtils.getStackTrace(e) + e.getMessage());
         }
     }
 

@@ -1,4 +1,4 @@
-package ag.com.dbo.utils;
+package ag.com.dbo;
 
 import java.util.concurrent.*;
 public class Test {

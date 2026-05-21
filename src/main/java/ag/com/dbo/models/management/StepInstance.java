@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigInteger;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 
 @Entity
@@ -16,22 +17,13 @@ import java.time.OffsetDateTime;
 public class StepInstance {
 
     @Id
-    @SequenceGenerator( name = "mySeqGen", sequenceName = "etl_step_instance_id_seq", initialValue=1000, allocationSize = 1)
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "mySeqGen")
-//    @Column(name = "step_instance_id", updatable = false, columnDefinition="numeric(38) DEFAULT nextval(\'etl_step_instance_id_seq\')")
-    @Column(name = "step_instance_id", updatable = false)
+    @Column(columnDefinition = "varchar(40)", name = "step_instance_id", updatable = false)
+    private String stepInstanceId;
 
-    private BigInteger stepInstanceId;
+    @Column( name = "parent_Step_Instance_Ids")
+    private String[] parentStepInstanceIds;
 
-    private BigInteger[] parentStepInstanceIds;
-
-    private Integer status; // 1- in progress, 3- finished successfully, 4- failed, 5 - in Queue
-
-    private OffsetDateTime startDate;
-
-    private Integer resultStatus;
-
-    private String resultMessage;
+    private String status; // StepStatus
 
     @ManyToOne(fetch = FetchType.EAGER) // Many steps to one etl
     @JoinColumn(name = "etl_instance_id", nullable = false, columnDefinition="") // Specifies the FK column name
@@ -41,9 +33,18 @@ public class StepInstance {
     @JoinColumn(name = "step_id", nullable = false, columnDefinition="") // Specifies the FK column name
     private Step step;
 
-
     @ManyToOne(fetch = FetchType.LAZY) // Many steps to one etl
     @JoinColumn(name = "etl_id", nullable = false, columnDefinition="") // Specifies the FK column name
     private Etl etl;
+
+    @Column(columnDefinition = "Text")
+    private String log;
+    @Column(columnDefinition = "Text")
+    private String vars;
+    private Integer maxAttempts;
+    private Integer attempts;
+    private Boolean active;
+    private LocalDateTime start;
+    private LocalDateTime stop;
 
 }

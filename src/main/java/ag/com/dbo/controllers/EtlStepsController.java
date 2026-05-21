@@ -1,7 +1,7 @@
 package ag.com.dbo.controllers;
 
 import ag.com.dbo.models.graf.Figure;
-import ag.com.dbo.services.GrafBuilderService;
+import ag.com.dbo.services.management.GrafBuilderService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
