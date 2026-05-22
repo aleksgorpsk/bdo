@@ -5,7 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 
 @Entity
@@ -35,8 +35,8 @@ public class QueueStorage {
     @Column(columnDefinition = "TEXT")
     private String log;
 
-    private LocalDateTime start;
-    private LocalDateTime stop;
+    private OffsetDateTime start;
+    private OffsetDateTime stop;
 
 
 }

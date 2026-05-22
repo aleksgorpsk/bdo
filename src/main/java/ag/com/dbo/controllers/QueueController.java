@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -49,8 +50,13 @@ public class QueueController {
         req.setMaxAttempts(taskRequest.getMaxAttempts());
         req.setStatus(QueueStatus.QUEUS.name());
         queueService.save(req);
-        multithreadExecutor.setRun(req);
+        runLogic(req);
+//        multithreadExecutor.setRun(req);
        return ResponseEntity.status(HttpStatus.OK).header("Content-Type","application/json").body(req);
     }
 
+    @Async
+    private void runLogic(QueueStorage req){
+        multithreadExecutor.setRun(req);
+    }
 }

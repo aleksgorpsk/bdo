@@ -5,6 +5,7 @@ import ag.com.dbo.models.queue.QueueStorage;
 import ag.com.dbo.repositories.queue.QueueStorageRepository;
 import ag.com.dbo.services.queue.TaskProperties;
 import ag.com.dbo.utils.Utils;
+import io.jsonwebtoken.lang.Collections;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.BufferedReader;
@@ -20,7 +21,7 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.core.env.Environment;
 
 @Slf4j
-public class HiveTask extends TaskProperties implements Callable<PropData> {
+public class SimpleBashTask extends TaskProperties implements Callable<PropData> {
     /**
      *  errors:
      *  -105 : too many attempts
@@ -31,7 +32,7 @@ public class HiveTask extends TaskProperties implements Callable<PropData> {
     private final  Environment env;
     private final QueueStorageRepository queueStorageRepository;
 
-    public HiveTask(QueueStorage data, Environment env, QueueStorageRepository queueStorageRepository){
+    public SimpleBashTask(QueueStorage data, Environment env, QueueStorageRepository queueStorageRepository){
         super(env);
         this.queueStorageRepository = queueStorageRepository;
         task = data;
@@ -66,11 +67,19 @@ public class HiveTask extends TaskProperties implements Callable<PropData> {
             String logic = task.getCommandProfile();
             log.info("Start hiveServer2 vars:{} {} logic:{}", vars,System.lineSeparator(),logic);
 
-            if (logic==null){
+            if (logic == null){
                 log.error("No logic !");
                 PropData pd = new PropData();
                 return new PropData(-106,  task,"Error in command: "+logic);
             }
+
+            if (!Collections.isEmpty(vars)){
+                for (Map.Entry<String, String> entry: vars.entrySet()){
+                    logic = logic.replace("{"+entry.getKey()+"}",entry.getValue());
+                }
+            }
+
+            log.info("logic: {}", logic);
             int exitCode=-100;
 
             ProcessBuilder processBuilder = new ProcessBuilder();

@@ -1,15 +1,11 @@
 package ag.com.dbo.models.management;
 
 public enum EtlStatus {
-    Ready(1),
-    AutoStart(2),
-    ManualStart(3);
+    Ready,
+    AutoStart,
+    ManualStart,
+    Started,
+    Success,
+    Fail;
 
-    private final int status;
-    EtlStatus(int status){
-        this.status=status;
-    }
-    public int getStatus(){
-        return this.status;
-    }
 }

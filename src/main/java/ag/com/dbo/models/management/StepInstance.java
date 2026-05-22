@@ -5,8 +5,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.math.BigInteger;
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 
 @Entity
@@ -44,7 +42,7 @@ public class StepInstance {
     private Integer maxAttempts;
     private Integer attempts;
     private Boolean active;
-    private LocalDateTime start;
-    private LocalDateTime stop;
+    private OffsetDateTime start;
+    private OffsetDateTime stop;
 
 }

@@ -22,21 +22,17 @@ public class EtlInstance {
     private BigInteger etlInstanceId;
 
     private String status; //0 - , 1- in queue, 2- started, 3- finished on ,4- failed
-    private OffsetDateTime startDate;
-    private Integer attempt;
-    private Integer lastResult; //0- ok
-
+    private OffsetDateTime start;
+    private OffsetDateTime stop;
     private String comment;
-    @Column(columnDefinition = "TEXT")
-    private String body;
 
     @ManyToOne(fetch = FetchType.LAZY) // Many steps to one etl
     @JoinColumn(name = "etl_id", updatable = false) // Specifies the FK column name
     private Etl etl;
-
+/*
     @ManyToOne(fetch = FetchType.LAZY) // Many steps to one etl
     @JoinColumn(name = "step_id", updatable = false) // Specifies the FK column name
     private Step step;
-
+*/
 
 }
