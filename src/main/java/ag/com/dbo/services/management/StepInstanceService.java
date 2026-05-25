@@ -31,7 +31,7 @@ public class StepInstanceService {
             }else {
                 si.setStatus(StepStatus.Failed.name());
             }
-            si.setLog(result.getLog());
+            si.addLog("From queue:"+result.getLog());
             si.setStart(result.getStart());
             si.setStop(result.getStop());
             si.setAttempts(result.getAttempt());

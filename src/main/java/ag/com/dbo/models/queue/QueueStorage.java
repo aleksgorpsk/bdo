@@ -38,5 +38,18 @@ public class QueueStorage {
     private OffsetDateTime start;
     private OffsetDateTime stop;
 
+    /**
+     * Add String to log
+     * @param message message to add
+     * @return
+     */
+    public void addLog(String message){
+        if (log==null){
+            log ="";
+        }else{
+            log=  log +System.lineSeparator();
+        }
+        log = log + message;
+    }
 
 }

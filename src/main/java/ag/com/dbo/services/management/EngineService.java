@@ -1,4 +1,4 @@
-package ag.com.dbo.services;
+package ag.com.dbo.services.management;
 
 import ag.com.dbo.controllers.FullEtlInstance;
 import ag.com.dbo.controllers.model.TaskRequest;
@@ -259,7 +259,7 @@ public class EngineService {
             si.setStatus(StepStatus.Missed.name());
             si.setStart(OffsetDateTime.now());
             si.setStop(OffsetDateTime.now());
-            si.setLog("deactivated");
+            si.addLog("Deactivated by status.");
             stepInstanceRepository.saveAndFlush(si);
             return true;
         }
@@ -267,7 +267,7 @@ public class EngineService {
 
 
     private void sendToQueue(StepInstance si) throws JsonProcessingException {
-
+        log.info("sendToQueue:{}", si);
         TaskRequest taskRequest = new TaskRequest();
         taskRequest.setTaskId(si.getStepInstanceId());
         taskRequest.setCommandProfile(si.getStep().getDataLoading().getProps());

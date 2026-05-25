@@ -18,10 +18,12 @@ public class Step {
     @SequenceGenerator( name = "jpaSequence", sequenceName = "etl_step_id_seq", allocationSize = 1, initialValue=1000)
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "jpaSequence")
     @Column(name = "step_id", updatable = false)
-
     private BigInteger stepId;
     private Boolean stepActive;
+
+    @Column(name = "parent_step_ids")
     private BigInteger[] parentStepIds;
+
     private String name;
     @ManyToOne(fetch = FetchType.EAGER) // Many steps to one etl
     @JoinColumn(name = "etl_id", nullable = false) // Specifies the FK column name

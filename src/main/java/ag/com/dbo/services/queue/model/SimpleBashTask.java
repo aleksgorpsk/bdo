@@ -27,7 +27,7 @@ public class SimpleBashTask extends TaskProperties implements Callable<PropData>
      *  -105 : too many attempts
      *  -106 : process error
      */
-    private QueueStorage task;
+    private final QueueStorage task;
     private String out;
     private final  Environment env;
     private final QueueStorageRepository queueStorageRepository;
@@ -48,8 +48,7 @@ public class SimpleBashTask extends TaskProperties implements Callable<PropData>
             task.setAttempt( (task.getAttempt()==null)?1:task.getAttempt()+1 );
             if (task.getAttempt() > task.getMaxAttempts()){
                 String error = "too many attempts:"+task.getAttempt();
-                String log = (task.getLog()==null)?error:task.getLog() + System.lineSeparator() + error;
-                task.setLog(log);
+                task.addLog(error);
                 task.setStatus(QueueStatus.FAIL.name());
                 task.setStop(OffsetDateTime.now());
                 queueStorageRepository.saveAndFlush(task);
@@ -102,7 +101,7 @@ public class SimpleBashTask extends TaskProperties implements Callable<PropData>
                 task.setStatus(QueueStatus.FAIL.name());
             }
 
-            task.setLog(log);
+            task.addLog(log);
             task.setStop(OffsetDateTime.now());
             queueStorageRepository.saveAndFlush(task);
             return new PropData(processCode, task, out);
@@ -110,15 +109,10 @@ public class SimpleBashTask extends TaskProperties implements Callable<PropData>
 
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
-            task = addLog(task, System.lineSeparator()+ ExceptionUtils.getStackTrace(e) + e.getMessage());
+            task.addLog("Error: " + e.getMessage());
             task.setStop(OffsetDateTime.now());
             queueStorageRepository.saveAndFlush(task);
             return new PropData(-106, task, System.lineSeparator()+ ExceptionUtils.getStackTrace(e) + e.getMessage());
         }
-    }
-
-    private QueueStorage addLog(QueueStorage task, String addLog){
-        task.setLog((task.getLog()== null)?addLog: task.getLog()+System.lineSeparator()+addLog);
-        return task;
     }
 }

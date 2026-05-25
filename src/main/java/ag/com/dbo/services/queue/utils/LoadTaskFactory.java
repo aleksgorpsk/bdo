@@ -20,7 +20,7 @@ public class LoadTaskFactory {
         if (calculateType.equals(TaskName.HIVE_TO_DB.name())) {
             return new HiveToJdbcTask(task, env, queueStorageRepository);
         }
-        if (calculateType.equals(TaskName.MESSAGE.name())) {
+        if (calculateType.equals(TaskName.SIMPLE.name())) {
             return new SimpleBashTask(task, env, queueStorageRepository);
         }
         return null;

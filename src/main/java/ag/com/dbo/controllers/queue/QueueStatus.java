@@ -1,7 +1,7 @@
 package ag.com.dbo.controllers.queue;
 
 public enum QueueStatus {
-    QUEUS,
+    QUEUE,
     IN_PROGRES,
     SUCCESS,
     FAIL,

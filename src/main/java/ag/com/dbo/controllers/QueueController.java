@@ -16,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 
@@ -37,7 +38,6 @@ public class QueueController {
     public ResponseEntity<@Nullable QueueStorage> enqueue(
             @RequestBody TaskRequest taskRequest) throws JsonProcessingException {
         log.info("QueueService :{}", taskRequest);
-        // Demo validation (replace with DB check in real apps)
         QueueStorage req = new QueueStorage();
         String taskId= (taskRequest.getTaskId()==null)? UUID.randomUUID().toString():  taskRequest.getTaskId();
         req.setTaskId(taskId);
@@ -48,10 +48,11 @@ public class QueueController {
         }
         req.setCalculateType(taskRequest.getCalculateType());
         req.setMaxAttempts(taskRequest.getMaxAttempts());
-        req.setStatus(QueueStatus.QUEUS.name());
+        req.setStatus(QueueStatus.QUEUE.name());
+        req.setStart(OffsetDateTime.now());
         queueService.save(req);
         runLogic(req);
-//        multithreadExecutor.setRun(req);
+        multithreadExecutor.setRun(req);
        return ResponseEntity.status(HttpStatus.OK).header("Content-Type","application/json").body(req);
     }
 

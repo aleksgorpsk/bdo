@@ -16,7 +16,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @SpringBootApplication()
 @Slf4j
 @EnableCaching
-//@EnableScheduling
+@EnableScheduling
 @EnableAsync
 public class Application {
 

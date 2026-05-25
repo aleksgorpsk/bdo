@@ -5,9 +5,10 @@ import java.util.List;
 import java.util.Optional;
 
 import ag.com.dbo.models.management.EtlDTO;
-import ag.com.dbo.services.EngineService;
+import ag.com.dbo.services.management.EngineService;
 import ag.com.dbo.services.management.EtlService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -24,6 +25,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Slf4j
 @Controller
+@ConditionalOnProperty(name = "dbo.management", havingValue = "true")
 public class EtlController {
 
 //  @Autowired

@@ -48,7 +48,7 @@ public class HiveTask extends TaskProperties implements Callable<PropData> {
             if (task.getAttempt() > task.getMaxAttempts()){
                 String error = "too many attempts:"+task.getAttempt();
                 String log = (task.getLog()==null)?error:task.getLog() + System.lineSeparator() + error;
-                task.setLog(log);
+                task.addLog( error);
                 task.setStatus(QueueStatus.FAIL.name());
                 task.setStop(OffsetDateTime.now());
                 queueStorageRepository.saveAndFlush(task);
@@ -93,7 +93,7 @@ public class HiveTask extends TaskProperties implements Callable<PropData> {
                 task.setStatus(QueueStatus.FAIL.name());
             }
 
-            task.setLog(log);
+            task.addLog("task done: " + log);
             task.setStop(OffsetDateTime.now());
             queueStorageRepository.saveAndFlush(task);
             return new PropData(processCode, task, out);
@@ -101,15 +101,11 @@ public class HiveTask extends TaskProperties implements Callable<PropData> {
 
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
-            task = addLog(task, System.lineSeparator()+ ExceptionUtils.getStackTrace(e) + e.getMessage());
+            task.addLog("Interrupt " + e.getMessage());
             task.setStop(OffsetDateTime.now());
             queueStorageRepository.saveAndFlush(task);
             return new PropData(-106, task, System.lineSeparator()+ ExceptionUtils.getStackTrace(e) + e.getMessage());
         }
     }
 
-    private QueueStorage addLog(QueueStorage task, String addLog){
-        task.setLog((task.getLog()== null)?addLog: task.getLog()+System.lineSeparator()+addLog);
-        return task;
-    }
 }

@@ -24,15 +24,15 @@ public class StepInstance {
     private String status; // StepStatus
 
     @ManyToOne(fetch = FetchType.EAGER) // Many steps to one etl
-    @JoinColumn(name = "etl_instance_id", nullable = false, columnDefinition="") // Specifies the FK column name
+    @JoinColumn(name = "etl_instance_id", nullable = false) // Specifies the FK column name
     private EtlInstance etlInstance;
 
     @ManyToOne(fetch = FetchType.EAGER) // Many steps to one etl
-    @JoinColumn(name = "step_id", nullable = false, columnDefinition="") // Specifies the FK column name
+    @JoinColumn(name = "step_id", nullable = false) // Specifies the FK column name
     private Step step;
 
     @ManyToOne(fetch = FetchType.LAZY) // Many steps to one etl
-    @JoinColumn(name = "etl_id", nullable = false, columnDefinition="") // Specifies the FK column name
+    @JoinColumn(name = "etl_id", nullable = false) // Specifies the FK column name
     private Etl etl;
 
     @Column(columnDefinition = "Text")
@@ -44,5 +44,17 @@ public class StepInstance {
     private Boolean active;
     private OffsetDateTime start;
     private OffsetDateTime stop;
-
+    /**
+     * Add String to log
+     * @param message message to add
+     * @return return this object
+     */
+    public void addLog(String message){
+        if (log==null){
+            log ="";
+        }else{
+            log=  log +System.lineSeparator();
+        }
+        log = log + message;
+    }
 }

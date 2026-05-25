@@ -1,9 +1,6 @@
 package ag.com.dbo.services.queue;
 
 import org.springframework.core.env.Environment;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.BufferedReader;
@@ -23,26 +20,22 @@ public class TaskProperties {
         String fullLine= "";
         String line;
         while ((line = reader.readLine()) != null) {
-            log.info("line:{}", line);
             fullLine =  (fullLine + line+System.lineSeparator());
             if (line.contains(expected)) {
                 return true;
             }
         }
-        log.info("full line:{}", line);
 
         return false;
     }
     protected String fullReadStr(BufferedReader reader) throws IOException {
-        String fullLog= "";
+        StringBuilder fullLog= new StringBuilder();
         String line;
 
         while ((line = reader.readLine()) != null) {
-            fullLog+= System.lineSeparator() + line;
-            // TODO remove ???
-            log.info("line:{}", line);
+            fullLog.append(System.lineSeparator()).append(line);
         }
-        return fullLog;
+        return fullLog.toString();
     }
 
     protected Integer getInt(Map<String,Object> map, String varName){
