@@ -86,6 +86,7 @@ public class EngineService {
             si.setVars(step.getVars());
             si.setActive(step.getStepActive());
             si.setMaxAttempts(step.getMaxAttempts());
+            si.setName(step.getName());
             log.info("si:"+si);
             sis.add(si);
         }

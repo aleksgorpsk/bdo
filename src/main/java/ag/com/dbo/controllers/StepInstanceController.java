@@ -1,7 +1,7 @@
 package ag.com.dbo.controllers;
 
-import ag.com.dbo.models.management.EtlInstanceDTO;
-import ag.com.dbo.services.management.EtlInstanceService;
+import ag.com.dbo.models.management.StepInstanceDTO;
+import ag.com.dbo.services.management.StepInstanceService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.domain.Page;
@@ -12,7 +12,10 @@ import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.domain.Sort.Order;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigInteger;
@@ -22,31 +25,30 @@ import java.util.List;
 @Slf4j
 @Controller
 @ConditionalOnProperty(name = "dbo.management", havingValue = "true")
-public class EtlInstanceController {
+public class StepInstanceController {
 
-    private final EtlInstanceService etlInstanceService;
+    private final StepInstanceService stepInstanceService;
 
 
-    public EtlInstanceController(EtlInstanceService etlInstanceService
-    ) {
-        this.etlInstanceService = etlInstanceService;
+    public StepInstanceController(StepInstanceService stepInstanceService) {
+        this.stepInstanceService = stepInstanceService;
     }
 
-    @GetMapping("/etl_instance_browser/{etlId}")
+    @GetMapping("/step_instance_browser/{etlInstanceId}")
     public String getInstanceAll(
-            @PathVariable("etlId") BigInteger etlId,
+            @PathVariable("etlInstanceId") BigInteger etlId,
             RedirectAttributes redirectAttributes,
             Model model
     ) {
-        redirectAttributes.addFlashAttribute("etlId", etlId);
-        return "redirect:/etl_instance_browser";
+        redirectAttributes.addFlashAttribute("etlInstanceId", etlId);
+        return "redirect:/step_instance_browser";
     }
 
 
-    @GetMapping("/etl_instance_browser")
+    @GetMapping("/step_instance_browser")
     public String getAll(
             Model model,
-            @ModelAttribute("etlId") String etlId2,
+            @ModelAttribute("etlInstanceId") String etlInstanceId2,
             RedirectAttributes redirectAttributes,
             @RequestParam(required = false) String keyword,
             @RequestParam(defaultValue = "1") int page,
@@ -56,43 +58,44 @@ public class EtlInstanceController {
 
             String sortField = sort[0];
             String sortDirection = sort[1];
-            BigInteger etlId = getEtlId(model.getAttribute("etlId"));
+            BigInteger etlInstanceId = getEtlId(model.getAttribute("etlInstanceId"));
 
-            Direction direction = sortDirection.equals("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
+            Direction direction = sortDirection.equals("desc") ? Direction.DESC : Direction.ASC;
             Order order = new Order(direction, sortField);
 
             Pageable pageable = PageRequest.of(page - 1, size, Sort.by(order));
 
-            if (etlId == null) {
+            if (etlInstanceId == null) {
                 return "redirect:/etl_browser";
             }
-            Page<EtlInstanceDTO> etlInstances;
+            Page<StepInstanceDTO> stepInstances;
             if (keyword == null) {
-                etlInstances = etlInstanceService.retrievePage(etlId, pageable);
+                stepInstances = stepInstanceService.retrievePage(etlInstanceId, pageable);
             } else {
-                etlInstances = etlInstanceService.findByEtlContainingIgnoreCase(etlId, keyword, pageable);
+                stepInstances = stepInstanceService.findByEtlContainingIgnoreCase(etlInstanceId, keyword, pageable);
                 model.addAttribute("keyword", keyword);
             }
 
-            List<EtlInstanceDTO> etlDto = etlInstances.getContent();
+            List<StepInstanceDTO> stepInstanceList = stepInstances.getContent();
 
-            model.addAttribute("etlInstanceList", etlDto);
-            model.addAttribute("etlId", etlId);
-            model.addAttribute("currentPage", etlInstances.getNumber() + 1);
-            model.addAttribute("totalItems", etlInstances.getTotalElements());
-            model.addAttribute("totalPages", etlInstances.getTotalPages());
+            model.addAttribute("stepInstanceList", stepInstanceList);
+            model.addAttribute("etlInstanceId", etlInstanceId);
+            model.addAttribute("currentPage", stepInstances.getNumber() + 1);
+            model.addAttribute("totalItems", stepInstances.getTotalElements());
+            model.addAttribute("totalPages", stepInstances.getTotalPages());
             model.addAttribute("pageSize", size);
             model.addAttribute("sortField", sortField);
             model.addAttribute("sortDirection", sortDirection);
             model.addAttribute("reverseSortDirection", sortDirection.equals("asc") ? "desc" : "asc");
             model.addAttribute("pageTitle", "Eit instance");
 
+//            redirectAttributes.addFlashAttribute("etlId", etlId);
         } catch (Exception e) {
             e.printStackTrace();
             model.addAttribute("message", e.getMessage());
         }
 
-        return "etl_instance_browser";
+        return "step_instance_browser";
     }
 
     private BigInteger getEtlId(Object data) {
