@@ -48,9 +48,6 @@
               <option th:each="s : ${ {3, 6, 9} }" th:value="${s}" th:text="${s}" th:selected="${s == pageSize}"></option>
             </select>
           </div>
-          <div class="col-md-1 mt-2">
-            <button id="btnClear" class="btn btn-info">Clear</button>
-          </div>
         </div>
       </form>
     </div>
@@ -68,8 +65,8 @@
         </thead>
         <tbody>
           <tr th:each="etl : ${etlList}">
-            <th scope="row">[[${etl.id}]]</th>
-            <td><a th:href="@{/etl_step/{id}(id=${etl.id})}"  th:text="${etl.comment}"></a> </td>
+              <td><a th:href="@{/etl_instance_browser/{id}(id=${etl.id})}"  th:text="${etl.id}"></a> </td>
+              <td><a th:href="@{/etl_step/{id}(id=${etl.id})}"  th:text="${etl.comment}"></a> </td>
             <td>
               <a th:if="${etl.active == true}"  th:href="@{'/etl/' + ${etl.id} + '/active/false'}" title="Disable this etl">
                   <img th:src="@{/images/icons8-check-24.png}"/>

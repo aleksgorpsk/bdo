@@ -61,7 +61,7 @@ public class EtlController {
         model.addAttribute("keyword", keyword);
       }
 
-        List<EtlDTO> etlDto = pageTuts.getContent();
+      List<EtlDTO> etlDto = pageTuts.getContent();
       
       model.addAttribute("etlList", etlDto);
       model.addAttribute("currentPage", pageTuts.getNumber() + 1);

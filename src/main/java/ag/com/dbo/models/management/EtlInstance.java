@@ -25,10 +25,14 @@ public class EtlInstance {
     private OffsetDateTime start;
     private OffsetDateTime stop;
     private String comment;
+    private String name;
 
     @ManyToOne(fetch = FetchType.LAZY) // Many steps to one etl
     @JoinColumn(name = "etl_id", updatable = false) // Specifies the FK column name
     private Etl etl;
+
+    private Boolean active;
+
 /*
     @ManyToOne(fetch = FetchType.LAZY) // Many steps to one etl
     @JoinColumn(name = "step_id", updatable = false) // Specifies the FK column name
