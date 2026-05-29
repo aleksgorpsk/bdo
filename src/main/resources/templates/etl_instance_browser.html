@@ -35,7 +35,7 @@
                     <div class="search">
                         <i class="fa fa-search"></i>
                         <input type="hidden" name="etlId" th:value="${etlId}">
-                        <input id="keyword" type="search" name="keyword" th:value="${keyword}" required class="form-control"
+                        <input id="keyword" type="search" name="keyword" th:value="${keyword}" class="form-control"
                                placeholder="Enter keyword">
                         <button type="submit" class="btn btn-secondary">Search</button>
                     </div>
@@ -71,6 +71,8 @@
             </thead>
             <tbody>
             <tr th:each="etlInstance : ${etlInstanceList}">
+                <td><a th:href="@{/step_instance_browser/{id}(id=${etlInstance.etlInstanceId})}"  th:text="${etlInstance.etlInstanceId}"></a> </td>
+
                 <td> [[${etlInstance.etlInstanceId}]] </td>
                 <td> [[${etlInstance.name}]] </td>
                 <td><a th:href="@{/etl_step/{id}(id=${etlInstance.etlInstanceId})}"  th:text="${etlInstance.comment}"></a> </td>
