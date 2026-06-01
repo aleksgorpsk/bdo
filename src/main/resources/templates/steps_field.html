@@ -1,0 +1,96 @@
+<HEAD>
+</HEAD>
+<body>
+
+<div id="test" style="display: flex; justify-content: center; width: 400;" overflow="auto"> </div>
+
+</body>
+<script th:inline="javascript">
+    // 1. Get data from backend (passed via Thymeleaf)
+
+
+    const stepInstances = [[${data}]];
+    console.log(typeof stepInstances)
+    const stepIds = [[${stepIds}]];
+    const etlInstanceIds = [[${etlInstanceIds}]];
+    const etlInstances =[[${etlInstances}]];
+    const steps =[[${steps}]];
+
+    const high =  stepIds.length;
+    const width =  etlInstanceIds.length;
+    const svg = document.getElementById('test');
+    const tbl = document.createElement("table");
+    const tblBody = document.createElement("tbody");
+    tblBody.style.border = "1px solid black";
+    tblBody.style.borderCollapse = "collapse";
+
+    for(let h =0;h< high; h++){
+        if (h==0){
+            const rowh = document.createElement("tr");
+            const col= document.createElement("td");
+            const colText =document.createTextNode("header");
+            col.appendChild(colText);
+            rowh.appendChild(col);
+            tblBody.appendChild(rowh);
+            for(let c = 0 ; c<width ; c++ ){
+                const col= document.createElement("td");
+
+                const colHead=etlInstances[etlInstanceIds[c]];
+                const startDate = colHead.start;
+                const myDt = new Date(colHead.start)
+
+                //2026-05-26T06:38:37.404Z
+                const colText = document.createTextNode( myDt.toLocaleString() );
+                const container = document.createElement("span");
+                container.appendChild(colText);
+                container.style.display = 'inline-block';
+                container.style.transform = "rotate(-175deg)";
+                container.style.writingMode = 'vertical-rl';
+                col.appendChild(container);
+                rowh.appendChild(col);
+            }
+        }
+        const rowh = document.createElement("tr");
+        const col= document.createElement("td");
+        const colText =document.createTextNode(steps[stepIds[h]].name);
+        col.appendChild(colText);
+        rowh.appendChild(col);
+        for(let c = 0 ; c<width ; c++ ){
+            const col= document.createElement("td");
+            col.style.border = "1px solid black"; // Applies inline border
+            const stepInstance= stepInstances[etlInstanceIds[c]+":"+stepIds[h]];
+            if(stepInstance.status == 'Success' ||
+            stepInstance.status == 'Failed' ||
+            stepInstance.status == 'Queue' ||
+            stepInstance.status == 'Missed' ||
+            stepInstance.status == 'InProcess'
+            ){
+            const imgElement = document.createElement('img');
+            if(stepInstance.status == 'Success'){
+              imgElement.src = '/images/icons8-check-box-with-check-48.png';
+            }else if(stepInstance.status =='Failed' ){
+              imgElement.src = '/images/icons8-cross-mark-button-48.png';
+            }else if(stepInstance.status =='Queue' ){
+              imgElement.src = '/images/icons8-queue-50.png';
+            }else if(stepInstance.status =='Missed' ){
+              imgElement.src = '/images/icons8-goal-post-30.png';
+            }else if(stepInstance.status =='InProcess' ){
+              imgElement.src = '/images/icons8-data-pending-40.png';
+            }
+              imgElement.style.width = '24px';
+              imgElement.style.height = '24px';
+              col.appendChild(imgElement)
+            }
+
+            rowh.appendChild(col);
+        }
+        tblBody.appendChild(rowh);
+    }
+    const row = document.createElement("tr");
+    const td = document.createElement("td");
+row.appendChild(td)
+    tblBody.appendChild(row);
+    tbl.appendChild(tblBody);
+    svg.appendChild(tbl);
+
+</script>

@@ -1,10 +1,16 @@
 package ag.com.dbo.services.management;
 
+import ag.com.dbo.controllers.model.FieldPlace;
+import ag.com.dbo.controllers.model.StepData;
 import ag.com.dbo.models.management.EtlDTO;
+import ag.com.dbo.models.management.EtlInstance;
 import ag.com.dbo.models.management.Step;
 import ag.com.dbo.models.graf.Figure;
 import ag.com.dbo.models.graf.Line;
 import ag.com.dbo.models.graf.Rectangle;
+import ag.com.dbo.models.management.StepInstance;
+import ag.com.dbo.repositories.management.EtlInstanceRepository;
+import ag.com.dbo.repositories.management.StepInstanceRepository;
 import ag.com.dbo.repositories.management.StepRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
@@ -27,10 +33,14 @@ public class GrafBuilderService {
 
     private final EtlService etlService;
     private final StepRepository stepRepository;
+    private final StepInstanceRepository stepInstanceRepository;
+    private final EtlInstanceRepository etlInstanceRepository;
 
-    public GrafBuilderService(EtlService etlService, StepRepository stepRepository) {
+    public GrafBuilderService(EtlService etlService, StepRepository stepRepository, StepInstanceRepository stepInstanceRepository, EtlInstanceRepository etlInstanceRepository) {
         this.etlService = etlService;
         this.stepRepository = stepRepository;
+        this.stepInstanceRepository = stepInstanceRepository;
+        this.etlInstanceRepository = etlInstanceRepository;
     }
 
 
@@ -160,6 +170,39 @@ public class GrafBuilderService {
             leaf = leaf2;
         }
         return plan;
+    }
+
+    public StepData  getStepsField(BigInteger etlId) {
+        log.info("getStepsField:{}", etlId);
+        StepData stepDate = new StepData();
+
+        Optional<EtlDTO> etlDto = etlService.findById(etlId);
+        if (etlDto.isEmpty()) {
+            log.error("etn {} not found !", etlId);
+            return stepDate;
+        } else {
+            List<StepInstance> steps = stepInstanceRepository.findByEtl(etlId);
+            for (StepInstance step : steps){
+                String key = step.getEtlInstance().getEtlInstanceId()+":"+step.getStep().getStepId();
+                stepDate.getEtlInstanceIds().add(step.getEtlInstance().getEtlInstanceId());
+                stepDate.getStepIds().add(step.getStep().getStepId());
+                stepDate.getData().put(key, step);
+            }
+            stepDate.setSteps(stepDate.getStepIds()
+                    .stream()
+                    .map(stepRepository::getReferenceById)
+                    .collect(Collectors.toMap(Step::getStepId, Function.identity())
+                    ));
+            stepDate.setEtlInstances(
+                    stepDate.getEtlInstanceIds()
+                            .stream()
+                            .map(x-> etlInstanceRepository.getReferenceById(x))
+                            .collect(Collectors.toMap(EtlInstance::getEtlInstanceId, Function.identity())
+            ));
+            return stepDate;
+        }
+
+
     }
 
 

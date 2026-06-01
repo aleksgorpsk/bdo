@@ -28,6 +28,9 @@ public interface StepInstanceRepository extends JpaRepository<@NonNull StepInsta
     @Query("SELECT si FROM StepInstance si WHERE upper(si.name) like upper(CONCAT('%', :keyword, '%')) and si.etlInstance.etlInstanceId = :stepInstanceId " )
     Page<@NonNull StepInstance> findByNameContainingIgnoreCase( @Param("keyword") String keyword, @Param("stepInstanceId") BigInteger  stepInstanceId, Pageable pageable);
 
+    @Query("SELECT si FROM StepInstance si WHERE si.etl.id = :etlid")
+    List<StepInstance> findByEtl(@Param("etlid") BigInteger etlId);
+
     /*
 
   @Query("SELECT ei FROM EtlInstance ei WHERE ei.etl.id = :etlid")
