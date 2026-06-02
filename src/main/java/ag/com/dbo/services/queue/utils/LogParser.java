@@ -1,40 +1,40 @@
-package ag.com.dbo;
+package ag.com.dbo.services.queue.utils;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import ag.com.dbo.services.queue.utils.LogParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static ag.com.dbo.utils.Utils.getObjectMapper;
 
-
-public class Test {
-
-    public static void main(String[] args) throws Exception {
-/*
-       String row= test3();
-       List<String> names = List.of("a","cnt");
-        parseTableAndSearchData(row,0, names);
-
- */
-        String test = "+---------+\n" +
-                "| cnt | a |  xxxxx---|\n" +
-                "+------------+\n" +
-                "| 349965 |555|fgdfhsgfhdfscs|\n" +
-                "+------------+\n"+
-                "| 1111115 |333|frereeeeeee|\n" +
-                "+------------+";
-        LogParser.parseTableAndSearchData(test, 0, List.of("b","cnt"));
+public class LogParser {
+    /**
+     *
+     * @param table
+     * table like
+     * [ {
+     *   "cnt" : "349965",
+     *   "a" : "555",
+     *   "xxxxx---" : "fgdfhsgfhdfscs"
+     * }, {
+     *   "cnt" : "1111115",
+     *   "a" : "333",
+     *   "xxxxx---" : "frereeeeeee"
+     * } ]
+     * @param row 0 - first  row
+     * @param colName name of column
+     * @return data
+     */
+    public static String parseTableAndSearchData(String table, int row, List<String> colName) throws Exception {
+        String jsonTable =parseTable(table);
+        Map result =  searchData(jsonTable,row, colName );
+        return getObjectMapper().writeValueAsString(result);
     }
 
-    public static String parseTable(String tableString) {
+    private static String parseTable(String tableString) throws JsonProcessingException {
         String[] lines = tableString.split("\n");
         List<String> headers = new ArrayList<>();
         List<Map<String, String>> rows = new ArrayList<>();
@@ -44,7 +44,7 @@ public class Test {
 
         for (String line : lines) {
             // Skip the borders like "+---------+" and "+------------+"
-            if (line.trim().startsWith("+")) continue;
+            if (line.trim().startsWith("+-")) continue;
 
             Matcher matcher = rowPattern.matcher(line);
             List<String> cells = new ArrayList<>();
@@ -65,15 +65,12 @@ public class Test {
             }
         }
 
-        try {
-            // Convert to JSON
-            return getObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(rows);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "[]";
-        }
+        return getObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(rows);
+
     }
-    private static String test3(){
+
+
+    public static String test() throws JsonProcessingException {
         String asciiData = "+---------+\n" +
                 "| cnt | a |  xxxxx---|\n" +
                 "+------------+\n" +
@@ -81,7 +78,7 @@ public class Test {
                 "+------------+\n"+
                 "| 1111115 |333|frereeeeeee|\n" +
                 "+------------+";
-                ;
+        ;
 
         String parsed = parseTable(asciiData);
 
@@ -89,26 +86,25 @@ public class Test {
         return parsed;
     }
 
+    private static Map<String, String> searchData(String jsonString, int row, List<String> names) throws Exception{
 
-    public static Map<String,String> parseTableAndSearchData(String table, int row, List<String> colName) throws Exception {
         Map<String,String> result = new HashMap<>();
-        String jsonTable =parseTable(table);
-        for(String name: colName){
-            result.put(name, searchData(jsonTable,row, name ));
-        }
-        return  result;
-    }
-
-
-
-
-    private static String searchData(String jsonString, int row, String name) throws Exception{
         ObjectMapper mapper = getObjectMapper();
         JsonNode rootNode = mapper.readTree(jsonString);
-        return  rootNode.get(row).get(name).asText();
+        JsonNode rowNode =rootNode.get(row);
+
+        for(String name: names){
+            JsonNode node= rowNode.get(name);
+            if (node== null){
+                result.put(name, null);
+            }else{
+                result.put(name, node.textValue());
+            }
+        }
+
+        return  result;
+
 
     }
-
-
 
 }

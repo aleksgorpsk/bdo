@@ -2,10 +2,7 @@ package ag.com.dbo.services.queue.utils;
 
 import ag.com.dbo.models.queue.QueueStorage;
 import ag.com.dbo.repositories.queue.QueueStorageRepository;
-import ag.com.dbo.services.queue.model.HiveToJdbcTask;
-import ag.com.dbo.services.queue.model.HiveTask;
-import ag.com.dbo.services.queue.model.PropData;
-import ag.com.dbo.services.queue.model.SimpleBashTask;
+import ag.com.dbo.services.queue.model.*;
 import org.springframework.core.env.Environment;
 
 import java.util.concurrent.Callable;
@@ -23,6 +20,13 @@ public class LoadTaskFactory {
         if (calculateType.equals(TaskName.SIMPLE.name())) {
             return new SimpleBashTask(task, env, queueStorageRepository);
         }
+        if (calculateType.equals(TaskName.SIMPLE.name())) {
+            return new SimpleBashTask(task, env, queueStorageRepository);
+        }
+        if (calculateType.equals(TaskName.HIVEOPERATOR.name())) {
+            return new HiveOperatorTask(task, env, queueStorageRepository);
+        }
+
         return null;
     }
 }

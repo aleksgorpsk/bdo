@@ -54,16 +54,16 @@ public class TaskProperties {
         }
         return  value.toString();
     }
-    protected String applyVars(String property, Map<String,String> vars){
+    protected String applyVars(String property, Map<String,Object> vars){
         if (property==null){
             return null;
         }
         String result = property;
-        for (Map.Entry<String, String> entry: vars.entrySet()){
+        for (Map.Entry<String, Object> entry: vars.entrySet()){
             String template = "\\$\\{" + entry.getKey() + "\\}";
 
-            if(entry.getValue().toUpperCase().startsWith("ENV")){
-                String varTemplate =  entry.getValue().replaceAll("ENV.","");
+            if(entry.getValue().toString().toUpperCase().startsWith("ENV")){
+                String varTemplate =  entry.getValue().toString().replaceAll("ENV.","");
                 log.info("varTemplate : {}", varTemplate);
                 String varValue= env.getProperty(varTemplate);
                 log.info("varValue : {}", varValue);
@@ -73,7 +73,7 @@ public class TaskProperties {
                     log.warn("varValue : is null");
                 }
             }else {
-                result = result.replaceAll(template, entry.getValue());
+                result = result.replaceAll(template, entry.getValue().toString());
             }
         }
         return result;

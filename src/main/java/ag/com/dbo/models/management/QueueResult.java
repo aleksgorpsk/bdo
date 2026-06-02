@@ -31,6 +31,8 @@ public class QueueResult {
 
     private OffsetDateTime start;
     private OffsetDateTime stop;
+    @Column(columnDefinition = "Text")
+    private String etlVars;
 
 
 }

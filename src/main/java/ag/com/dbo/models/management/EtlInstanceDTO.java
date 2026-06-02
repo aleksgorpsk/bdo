@@ -18,5 +18,8 @@ public class EtlInstanceDTO {
     private String name;
     private Etl etl;
     private Boolean active;
+    private String etlVars;
+    private OffsetDateTime executionDate;
+    private Boolean saveCalculate;
 
 }

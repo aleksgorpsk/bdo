@@ -59,6 +59,8 @@ public class MultithreadExecutor implements InitializingBean {
         }
 
         try {
+            request.setStatus(QueueStatus.IN_PROGRES.name());
+            queueStorageRepository.saveAndFlush(request);
             Future<PropData> fPdata = poolExecutor.submit(task);
             PropData pData = fPdata.get();
             // send response

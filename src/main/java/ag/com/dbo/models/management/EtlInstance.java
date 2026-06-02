@@ -33,10 +33,10 @@ public class EtlInstance {
 
     private Boolean active;
 
-/*
-    @ManyToOne(fetch = FetchType.LAZY) // Many steps to one etl
-    @JoinColumn(name = "step_id", updatable = false) // Specifies the FK column name
-    private Step step;
-*/
+    @Column(columnDefinition ="TEXT")
+    private String etlVars;
+    private OffsetDateTime executionDate;
+    private Boolean saveCalculate;
+
 
 }

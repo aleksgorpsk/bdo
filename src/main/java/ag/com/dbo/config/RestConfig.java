@@ -1,5 +1,8 @@
 package ag.com.dbo.config;
 
+import com.fasterxml.jackson.core.StreamReadFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Bean;
@@ -18,4 +21,10 @@ public class RestConfig {
                 .build();
     }
 
+    @Bean
+    public ObjectMapper jsonCustomizer() {
+        return JsonMapper.builder()
+                .enable(StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION)
+                .build();
+    }
 }

@@ -29,7 +29,7 @@ public class StepInstanceDTO {
      * @param message message to add
      * @return return this object
      */
-    /*
+
     public void addLog(String message){
         if (log==null){
             log ="";
@@ -39,5 +39,5 @@ public class StepInstanceDTO {
         log = log + message;
     }
 
-     */
+
 }

@@ -45,6 +45,10 @@ public class StepInstance {
     private OffsetDateTime start;
     private OffsetDateTime stop;
     private String name;
+    private Boolean saveCalculate;
+    @Column(columnDefinition = "Text")
+    private String etlVars;
+
     /**
      * Add String to log
      * @param message message to add

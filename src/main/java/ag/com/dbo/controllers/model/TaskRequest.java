@@ -6,17 +6,16 @@ import java.util.Map;
 
 @Data
 public class TaskRequest {
-
     //save
     private String taskId;
     // save
     private String commandProfile;
     // save
-    private Map<String, String> parameters;
+    private Map<String, Object> parameters;
     // save
     private String calculateType;
+    // save
+    private Boolean saveCalculate;
 
     private Integer maxAttempts = 1;
-
-
 }

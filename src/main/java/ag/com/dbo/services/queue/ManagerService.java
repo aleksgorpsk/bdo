@@ -7,9 +7,6 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
-import java.util.List;
-
-import static org.springframework.http.MediaType.APPLICATION_JSON;
 
 @Slf4j
 @Service

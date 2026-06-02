@@ -9,6 +9,7 @@ import ag.com.dbo.repositories.management.StepInstanceRepository;
 import ag.com.dbo.repositories.management.StepRepository;
 
 import ag.com.dbo.utils.Utils;
+import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
@@ -87,6 +88,7 @@ public class EngineService {
             si.setActive(step.getStepActive());
             si.setMaxAttempts(step.getMaxAttempts());
             si.setName(step.getName());
+            si.setSaveCalculate(step.getSaveCalculate());
             log.info("si:"+si);
             sis.add(si);
         }
@@ -245,14 +247,16 @@ public class EngineService {
         log.info("-------!!!!!!startStep: {}",si);
         if (si.getStep().getStepActive()) {
             try {
-                si.setStatus(StepStatus.ReadyToQueue.name());
+                si.setStatus(StepStatus.InProcess.name());
                 stepInstanceRepository.saveAndFlush(si);
                 sendToQueue(si);
-                log.info("sent toqueue:{}", si.getStepInstanceId());
+                log.info("sent to queue:{}", si.getStepInstanceId());
                 return true;
             }catch (Throwable e){
                 String error = OffsetDateTime.now()+ ": cannot send to queue: "+e.getMessage();
-                String log = (si.getLog()==null) ? error: si.getLog()+ System.lineSeparator()+ error;
+                si.addLog(error);
+                si.setStatus(StepStatus.Failed.name());
+                stepInstanceRepository.saveAndFlush(si);
                 return true;
             }
         }else{
@@ -275,6 +279,8 @@ public class EngineService {
         taskRequest.setCalculateType(si.getStep().getCalculateMethod());
         taskRequest.setMaxAttempts(si.getStep().getMaxAttempts());
         taskRequest.setParameters(Utils.getMap(si.getStep().getVars()));
+        taskRequest.setSaveCalculate(si.getSaveCalculate());
+
         try {
             this.restClient.put().uri(enqueuePath)
                     .contentType(MediaType.APPLICATION_JSON)

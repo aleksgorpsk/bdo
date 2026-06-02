@@ -1,16 +1,18 @@
 package ag.com.dbo.services.management;
 
 import ag.com.dbo.controllers.queue.QueueStatus;
-import ag.com.dbo.models.management.QueueResult;
+import ag.com.dbo.models.management.EtlInstance;
 import ag.com.dbo.models.management.StepInstance;
 import ag.com.dbo.models.management.StepInstanceDTO;
 import ag.com.dbo.models.management.StepStatus;
+import ag.com.dbo.models.queue.QueueStorage;
+import ag.com.dbo.repositories.management.EtlInstanceRepository;
 import ag.com.dbo.repositories.management.StepInstanceRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
@@ -21,16 +23,20 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.StreamSupport;
 
+import static ag.com.dbo.services.queue.utils.VarSupport.merge;
+
 @Slf4j
 @Service
 public class StepInstanceService {
 
     private final StepInstanceRepository stepInstanceRepository;
     private final ModelMapper modelMapper;
+    private final EtlInstanceRepository etlInstanceRepository;
 
-    public StepInstanceService(StepInstanceRepository stepInstanceRepository, ModelMapper modelMapper) {
+    public StepInstanceService(StepInstanceRepository stepInstanceRepository, ModelMapper modelMapper, EtlInstanceRepository etlInstanceRepository) {
         this.stepInstanceRepository = stepInstanceRepository;
         this.modelMapper = modelMapper;
+        this.etlInstanceRepository = etlInstanceRepository;
     }
 
     /*
@@ -167,7 +173,9 @@ public class StepInstanceService {
     public StepInstance mapFrom(StepInstanceDTO dto) {
         return modelMapper.map(dto, StepInstance.class);
     }
-    public void updateStepInstance(QueueResult result){
+
+
+    public Optional<StepInstance> updateStepInstance(QueueStorage result)  {
         Optional<StepInstance> oSi = stepInstanceRepository.findById(result.getTaskId());
         if (oSi.isPresent()){
             StepInstance si = oSi.get();
@@ -181,10 +189,20 @@ public class StepInstanceService {
             si.setStart(result.getStart());
             si.setStop(result.getStop());
             si.setAttempts(result.getAttempt());
+            si.setEtlVars(result.getEtlVars());
             stepInstanceRepository.save(si);
+            EtlInstance ei = si.getEtlInstance();
+            try {
+                ei.setEtlVars(merge(ei.getEtlVars(), si.getEtlVars()));
+            }catch (Exception e){
+                si.setStatus(StepStatus.Failed.name());
+                si.addLog("Error:"+e.getMessage());
+                stepInstanceRepository.save(si);
+            }
+            return Optional.of(si);
         }else{
             log.error("{} not found !!!", result.getTaskId());
         }
-
+    return oSi;
     }
 }

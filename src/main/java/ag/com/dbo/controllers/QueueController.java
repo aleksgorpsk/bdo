@@ -47,12 +47,13 @@ public class QueueController {
             req.setParameters(Utils.objectToString(taskRequest.getParameters()));
         }
         req.setCalculateType(taskRequest.getCalculateType());
-        req.setMaxAttempts(taskRequest.getMaxAttempts());
+        req.setMaxAttempts((taskRequest.getMaxAttempts()==null)?2:taskRequest.getMaxAttempts());
         req.setStatus(QueueStatus.QUEUE.name());
         req.setStart(OffsetDateTime.now());
+        req.setSaveCalculate( taskRequest.getSaveCalculate());
+
         queueService.save(req);
         runLogic(req);
-        multithreadExecutor.setRun(req);
        return ResponseEntity.status(HttpStatus.OK).header("Content-Type","application/json").body(req);
     }
 

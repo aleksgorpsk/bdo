@@ -58,7 +58,7 @@ public class HiveTask extends TaskProperties implements Callable<PropData> {
             queueStorageRepository.saveAndFlush(task);
 
             String sVars=task.getParameters();
-            Map<String, String > vars = new HashMap<>();
+            Map<String, Object > vars = new HashMap<>();
             if (sVars!= null){
                 vars = Utils.getMap(sVars);
             }

@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigInteger;
+import java.time.OffsetDateTime;
 
 @Entity
 @Table(name = "etl", schema = "etl" )

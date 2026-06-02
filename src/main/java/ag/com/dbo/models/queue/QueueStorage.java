@@ -38,6 +38,11 @@ public class QueueStorage {
     private OffsetDateTime start;
     private OffsetDateTime stop;
 
+    private Boolean saveCalculate;
+
+    @Column(columnDefinition = "Text")
+    private String etlVars;
+
     /**
      * Add String to log
      * @param message message to add
