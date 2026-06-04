@@ -38,5 +38,16 @@ public class EtlInstance {
     private OffsetDateTime executionDate;
     private Boolean saveCalculate;
 
+    @Column(columnDefinition ="TEXT")
+    private String log;
+
+    public void addLog(String message){
+        if (log==null){
+            log = "";
+        }else{
+            log = log +System.lineSeparator();
+        }
+        log = log + message;
+    }
 
 }

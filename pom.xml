@@ -116,6 +116,19 @@
             <artifactId>spring-boot-starter-restclient</artifactId>
             <version>4.0.6</version>
         </dependency>
+        <!-- Groovy json -->
+        <dependency>
+            <groupId>org.apache.groovy</groupId>
+            <artifactId>groovy</artifactId>
+            <version>5.0.6</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.groovy</groupId>
+            <artifactId>groovy-json</artifactId>
+            <version>4.0.21</version> <!-- Use the version that matches your core Groovy version -->
+        </dependency>
+
     </dependencies>
     <build>
         <plugins>

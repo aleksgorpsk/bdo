@@ -51,6 +51,7 @@ public class QueueController {
         req.setStatus(QueueStatus.QUEUE.name());
         req.setStart(OffsetDateTime.now());
         req.setSaveCalculate( taskRequest.getSaveCalculate());
+        req.setGroovyScript(taskRequest.getGroovyScript());
 
         queueService.save(req);
         runLogic(req);

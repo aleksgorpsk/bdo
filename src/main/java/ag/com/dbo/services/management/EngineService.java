@@ -89,6 +89,7 @@ public class EngineService {
             si.setMaxAttempts(step.getMaxAttempts());
             si.setName(step.getName());
             si.setSaveCalculate(step.getSaveCalculate());
+            si.setGroovyScript(step.getGroovyScript());
             log.info("si:"+si);
             sis.add(si);
         }
@@ -280,6 +281,7 @@ public class EngineService {
         taskRequest.setMaxAttempts(si.getStep().getMaxAttempts());
         taskRequest.setParameters(Utils.getMap(si.getStep().getVars()));
         taskRequest.setSaveCalculate(si.getSaveCalculate());
+        taskRequest.setGroovyScript(si.getGroovyScript());
 
         try {
             this.restClient.put().uri(enqueuePath)

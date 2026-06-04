@@ -16,18 +16,7 @@ public class TaskProperties {
         this.env = env;
     }
 
-    protected boolean readStr(BufferedReader reader, String expected) throws IOException {
-        String fullLine= "";
-        String line;
-        while ((line = reader.readLine()) != null) {
-            fullLine =  (fullLine + line+System.lineSeparator());
-            if (line.contains(expected)) {
-                return true;
-            }
-        }
 
-        return false;
-    }
     protected String fullReadStr(BufferedReader reader) throws IOException {
         StringBuilder fullLog= new StringBuilder();
         String line;
@@ -38,22 +27,7 @@ public class TaskProperties {
         return fullLog.toString();
     }
 
-    protected Integer getInt(Map<String,Object> map, String varName){
-        Object value=map.get(varName);
-        if (value == null){
-            log.error("cannot find {}", varName);
-            return null;
-        }
-        return Integer.parseInt(value.toString());
-    }
-    protected String getString(Map<String,Object> map, String varName){
-        Object value=map.get(varName);
-        if (value == null){
-            log.error("cannot find {}", varName);
-            return null;
-        }
-        return  value.toString();
-    }
+
     protected String applyVars(String property, Map<String,Object> vars){
         if (property==null){
             return null;

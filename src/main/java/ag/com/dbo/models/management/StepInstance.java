@@ -46,8 +46,11 @@ public class StepInstance {
     private OffsetDateTime stop;
     private String name;
     private Boolean saveCalculate;
+
     @Column(columnDefinition = "Text")
     private String etlVars;
+    @Column(columnDefinition = "TEXT")
+    private String groovyScript;
 
     /**
      * Add String to log

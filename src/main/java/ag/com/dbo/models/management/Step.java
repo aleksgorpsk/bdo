@@ -39,4 +39,8 @@ public class Step {
     private Integer maxAttempts;
     private Boolean saveCalculate;
 
+    @Column(columnDefinition = "TEXT")
+    private String groovyScript;
+
+
 }

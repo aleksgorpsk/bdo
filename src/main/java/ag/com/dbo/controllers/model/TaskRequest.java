@@ -1,5 +1,6 @@
 package ag.com.dbo.controllers.model;
 
+import jakarta.persistence.Column;
 import lombok.Data;
 
 import java.util.Map;
@@ -18,4 +19,7 @@ public class TaskRequest {
     private Boolean saveCalculate;
 
     private Integer maxAttempts = 1;
+
+    private String groovyScript;
+
 }

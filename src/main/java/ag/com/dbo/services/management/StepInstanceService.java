@@ -194,11 +194,12 @@ public class StepInstanceService {
             EtlInstance ei = si.getEtlInstance();
             try {
                 ei.setEtlVars(merge(ei.getEtlVars(), si.getEtlVars()));
+                ei.addLog(si.getLog());
             }catch (Exception e){
                 si.setStatus(StepStatus.Failed.name());
-                si.addLog("Error:"+e.getMessage());
-                stepInstanceRepository.save(si);
+                si.addLog("Error:" + e.getMessage());
             }
+            stepInstanceRepository.save(si);
             return Optional.of(si);
         }else{
             log.error("{} not found !!!", result.getTaskId());

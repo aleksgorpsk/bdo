@@ -1,114 +1,19 @@
 package ag.com.dbo;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-import ag.com.dbo.services.queue.utils.LogParser;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import java.util.*;
-
-import static ag.com.dbo.utils.Utils.getObjectMapper;
 
 
 public class Test {
 
     public static void main(String[] args) throws Exception {
-/*
-       String row= test3();
-       List<String> names = List.of("a","cnt");
-        parseTableAndSearchData(row,0, names);
+        String test ="{\"cnt\":[\"349965\"],\"mean\":[\"65665.00440044004\"]}";
 
- */
-        String test = "+---------+\n" +
-                "| cnt | a |  xxxxx---|\n" +
-                "+------------+\n" +
-                "| 349965 |555|fgdfhsgfhdfscs|\n" +
-                "+------------+\n"+
-                "| 1111115 |333|frereeeeeee|\n" +
-                "+------------+";
-        LogParser.parseTableAndSearchData(test, 0, List.of("b","cnt"));
-    }
-
-    public static String parseTable(String tableString) {
-        String[] lines = tableString.split("\n");
-        List<String> headers = new ArrayList<>();
-        List<Map<String, String>> rows = new ArrayList<>();
-
-        // Match table rows: | value1 | value2 |
-        Pattern rowPattern = Pattern.compile("\\|\\s*([^|]+)\\s*");
-
-        for (String line : lines) {
-            // Skip the borders like "+---------+" and "+------------+"
-            if (line.trim().startsWith("+")) continue;
-
-            Matcher matcher = rowPattern.matcher(line);
-            List<String> cells = new ArrayList<>();
-            while (matcher.find()) {
-                cells.add(matcher.group(1).trim());
-            }
-
-            if (!cells.isEmpty()) {
-                if (headers.isEmpty()) {
-                    headers.addAll(cells); // First data row with '|' is the header
-                } else {
-                    Map<String, String> row = new LinkedHashMap<>();
-                    for (int i = 0; i < headers.size() && i < cells.size(); i++) {
-                        row.put(headers.get(i), cells.get(i));
-                    }
-                    rows.add(row);
-                }
-            }
-        }
-
-        try {
-            // Convert to JSON
-            return getObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(rows);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "[]";
-        }
-    }
-    private static String test3(){
-        String asciiData = "+---------+\n" +
-                "| cnt | a |  xxxxx---|\n" +
-                "+------------+\n" +
-                "| 349965 |555|fgdfhsgfhdfscs|\n" +
-                "+------------+\n"+
-                "| 1111115 |333|frereeeeeee|\n" +
-                "+------------+";
-                ;
-
-        String parsed = parseTable(asciiData);
-
-        System.out.println("Row " + parsed);
-        return parsed;
-    }
-
-
-    public static Map<String,String> parseTableAndSearchData(String table, int row, List<String> colName) throws Exception {
-        Map<String,String> result = new HashMap<>();
-        String jsonTable =parseTable(table);
-        for(String name: colName){
-            result.put(name, searchData(jsonTable,row, name ));
-        }
-        return  result;
-    }
-
-
-
-
-    private static String searchData(String jsonString, int row, String name) throws Exception{
-        ObjectMapper mapper = getObjectMapper();
-        JsonNode rootNode = mapper.readTree(jsonString);
-        return  rootNode.get(row).get(name).asText();
+        ObjectMapper mapper = new ObjectMapper();
+        Object x =mapper.readTree(test);
+        System.out.println(x);
 
     }
-
-
 
 }

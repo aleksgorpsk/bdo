@@ -3,11 +3,8 @@ package ag.com.dbo.services.queue.model;
 import ag.com.dbo.controllers.queue.QueueStatus;
 import ag.com.dbo.models.queue.QueueStorage;
 import ag.com.dbo.repositories.queue.QueueStorageRepository;
-import ag.com.dbo.services.queue.TaskProperties;
 import ag.com.dbo.utils.Utils;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import groovy.lang.Binding;
-import groovy.lang.GroovyShell;
 import io.jsonwebtoken.lang.Collections;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -23,23 +20,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
+import static ag.com.dbo.services.queue.utils.LogParser.parseTableAndSearchData;
+import static ag.com.dbo.services.queue.utils.VarSupport.merge;
+
 @Slf4j
-public class HiveOperatorTask extends TaskProperties implements Callable<PropData> {
+public class HiveCountFilesTask extends HiveOperatorTask implements Callable<PropData> {
     /**
      *  errors:
      *  -105 : too many attempts
      *  -106 : process error
      */
-    protected final QueueStorage task;
-    protected String out;
-    protected final Environment env;
-    protected final QueueStorageRepository queueStorageRepository;
 
-    public HiveOperatorTask(QueueStorage data, Environment env, QueueStorageRepository queueStorageRepository){
-        super(env);
-        this.queueStorageRepository = queueStorageRepository;
-        this.task = data;
-        this.env = env;
+    public HiveCountFilesTask(QueueStorage data, Environment env, QueueStorageRepository queueStorageRepository){
+        super(data, env, queueStorageRepository);
     }
 
     @Override
@@ -126,19 +119,46 @@ public class HiveOperatorTask extends TaskProperties implements Callable<PropDat
     public String calculateResult(String taskLog, Map<String, Object > vars) throws JsonProcessingException {
         String result=null;
         if (Boolean.TRUE.equals(task.getSaveCalculate())) {
-
-            Binding binding = new Binding();
-            List<String> ls = List.of("cnt", "mean");
-            binding.setVariable("taskLog", taskLog);
-            GroovyShell shell = new GroovyShell(binding);
-            Object  oResult =  shell.evaluate(task.getGroovyScript());
-            result= oResult.toString();
-            task.setEtlVars(result);
-            queueStorageRepository.saveAndFlush(task);
+            result = getResult(taskLog, vars);
+            log.info("result:{}", result);
+            task.setEtlVars(merge(task.getEtlVars(), result));
 
         }
         return result;
     }
+    /**
+     *
+     * @param fullOut full out data
+     * @param vars vars must have rowNum (0 by default) and vat with name columnName
+     * @return value
+     */
 
+    public String getResult(String fullOut, Map<String, Object > vars){
+       int start = fullOut.indexOf("+-");
+        int stop = fullOut.lastIndexOf("-+");
+        String sRowNum= vars.getOrDefault("rowNum", "0").toString();
+        int rowNum =0;
+        List<String> columnName = (List<String>) vars.getOrDefault("columnName", List.of());
+        try{
+            rowNum = Integer.parseInt(sRowNum);
+        }catch(NumberFormatException e){
+            task.addLog("Incorrect sRowNum . Must be int or not present:" + sRowNum);
+            return null;
+        }
+
+        if(start ==-1 || stop==-1 || columnName==null){
+            log.error("No response in log");
+            task.addLog("".repeat(20));
+            task.addLog("No data for parse response: start('+-'):"+start+", stop('-+'):"+stop+", columnName:" + columnName);
+            return null;
+        }
+        String table= fullOut.substring(start, stop+2);
+        try{
+            return parseTableAndSearchData(table, rowNum, columnName);
+        }catch(Exception e){
+            task.addLog("Incorrect parsing result data! "+e.getMessage());
+            return null;
+        }
+    }
 
 }

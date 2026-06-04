@@ -43,6 +43,10 @@ public class QueueStorage {
     @Column(columnDefinition = "Text")
     private String etlVars;
 
+    @Column(columnDefinition = "TEXT")
+    private String groovyScript;
+
+
     /**
      * Add String to log
      * @param message message to add
