@@ -8,7 +8,6 @@ import ag.com.dbo.models.management.StepStatus;
 import ag.com.dbo.models.queue.QueueStorage;
 import ag.com.dbo.repositories.management.EtlInstanceRepository;
 import ag.com.dbo.repositories.management.StepInstanceRepository;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
@@ -89,15 +88,7 @@ public class StepInstanceService {
         }
         return Optional.empty();
     }
-/*
-    public List<StepInstanceDTO> findByStatus(BigInteger etlInstanceId, String status){
-        return stepInstanceRepository.findByEtlInstanceIdAndStatus(etlInstanceId, status).stream()
-                .map(this::mapFrom)
-                .peek(x-> log.info("etl by status:"+ x.toString()))
-                .toList();
 
-    }
-*/
     //    @Cacheable(value = "etlInstances")
     public List<StepInstanceDTO> retrieveAll() {
         return stepInstanceRepository.findAll().stream()
@@ -193,7 +184,7 @@ public class StepInstanceService {
             stepInstanceRepository.save(si);
             EtlInstance ei = si.getEtlInstance();
             try {
-                ei.setEtlVars(merge(ei.getEtlVars(), si.getEtlVars()));
+                ei.setEtlVars(merge(ei.getEtlVars(), si.getEtlVars(),si.getName()));
                 ei.addLog(si.getLog());
             }catch (Exception e){
                 si.setStatus(StepStatus.Failed.name());

@@ -21,6 +21,9 @@ public class StepInstance {
     @Column( name = "parent_Step_Instance_Ids")
     private String[] parentStepInstanceIds;
 
+    @Transient
+    private String[] activeParentStepInstanceIds;
+
     private String status; // StepStatus
 
     @ManyToOne(fetch = FetchType.EAGER) // Many steps to one etl

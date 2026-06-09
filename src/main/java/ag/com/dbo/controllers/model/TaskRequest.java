@@ -1,9 +1,7 @@
 package ag.com.dbo.controllers.model;
 
-import jakarta.persistence.Column;
 import lombok.Data;
 
-import java.util.Map;
 
 @Data
 public class TaskRequest {
@@ -12,7 +10,7 @@ public class TaskRequest {
     // save
     private String commandProfile;
     // save
-    private Map<String, Object> parameters;
+    private String parameters;
     // save
     private String calculateType;
     // save

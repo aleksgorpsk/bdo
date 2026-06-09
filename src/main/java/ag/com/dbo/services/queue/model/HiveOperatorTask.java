@@ -23,6 +23,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
+import static ag.com.dbo.utils.Utils.saveError;
+
 @Slf4j
 public class HiveOperatorTask extends TaskProperties implements Callable<PropData> {
     /**
@@ -106,8 +108,7 @@ public class HiveOperatorTask extends TaskProperties implements Callable<PropDat
                     task.setStatus(QueueStatus.FAIL.name());
                 }
             }catch(Throwable e){
-                log.error("Error !", e);
-                task.setStatus(QueueStatus.FAIL.name());
+                saveError(task,queueStorageRepository, e, "Error");
             }
 
             task.setStop(OffsetDateTime.now());
@@ -115,10 +116,7 @@ public class HiveOperatorTask extends TaskProperties implements Callable<PropDat
             return new PropData(processCode, task, out);
 
         } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
-            task.addLog("Error: " + e.getMessage());
-            task.setStop(OffsetDateTime.now());
-            queueStorageRepository.saveAndFlush(task);
+            saveError(task,queueStorageRepository, e, "Error process");
             return new PropData(-106, task, System.lineSeparator()+ ExceptionUtils.getStackTrace(e) + e.getMessage());
         }
     }
@@ -126,10 +124,9 @@ public class HiveOperatorTask extends TaskProperties implements Callable<PropDat
     public String calculateResult(String taskLog, Map<String, Object > vars) throws JsonProcessingException {
         String result=null;
         if (Boolean.TRUE.equals(task.getSaveCalculate())) {
-
             Binding binding = new Binding();
-            List<String> ls = List.of("cnt", "mean");
             binding.setVariable("taskLog", taskLog);
+            binding.setVariable("vars", vars);
             GroovyShell shell = new GroovyShell(binding);
             Object  oResult =  shell.evaluate(task.getGroovyScript());
             result= oResult.toString();

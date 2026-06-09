@@ -35,12 +35,14 @@ public class Step {
 
     @Column(columnDefinition = "TEXT")
     private String vars;
-    private String calculateMethod; // method of loading.... from ag.com.dbo.services.loadingService.TaskName
+//    private String calculateMethod; // method of loading.... from ag.com.dbo.services.loadingService.TaskName
     private Integer maxAttempts;
     private Boolean saveCalculate;
 
     @Column(columnDefinition = "TEXT")
     private String groovyScript;
 
+    @Column(columnDefinition = "TEXT")
+    private String branchCondition;
 
 }

@@ -1,11 +1,14 @@
 package ag.com.dbo.services.queue.utils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.StreamReadFeature;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.json.JsonMapper;
 import org.thymeleaf.util.StringUtils;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static ag.com.dbo.utils.Utils.getObjectMapper;
 
@@ -24,7 +27,7 @@ public class VarSupport {
         return null;
     }
 
-    public static String merge(String existsData,String newData) throws JsonProcessingException {
+    public static String merge(String existsData, String newData, String chindName) throws JsonProcessingException {
         if(StringUtils.isEmpty(existsData)){
             existsData ="{}";
         }
@@ -33,9 +36,42 @@ public class VarSupport {
         }
         ObjectMapper objectMapper = getObjectMapper();
         JsonNode targetNode = objectMapper.readTree(existsData);
-//        JsonNode sourceNode = objectMapper.readTree(newData);
+        String wrapper =  "{\""+ chindName+"\":"+newData+"}";
+        JsonNode mergedNode = objectMapper.readerForUpdating(targetNode).readTree(wrapper);
+        return objectMapper.writeValueAsString(mergedNode);
+    }
+
+    @Deprecated // neet to use stepName
+    public static String merge(String existsData, String newData) throws JsonProcessingException {
+        if(StringUtils.isEmpty(existsData)){
+            existsData ="{}";
+        }
+        if (StringUtils.isEmpty(newData)){
+            return existsData;
+        }
+        ObjectMapper objectMapper = getObjectMapper();
+        JsonNode targetNode = objectMapper.readTree(existsData);
         JsonNode mergedNode = objectMapper.readerForUpdating(targetNode).readTree(newData);
         return objectMapper.writeValueAsString(mergedNode);
     }
 
+    public static Map<String,Object> stringToJsonVar(String s) throws JsonProcessingException {
+        if (StringUtils.isEmpty(s)){
+            return null;
+        }
+        TypeReference<HashMap<String,Object>> typeRef = new TypeReference<HashMap<String,Object>>() {};
+        return getObjectMapper().readValue(s, typeRef);
+    }
+
+    public static List<String> stringBranchVars(Object o) throws JsonProcessingException {
+        if (o==null){
+            return null;
+        }
+        String s = o.toString();
+        if (s.isEmpty()){
+            return null;
+        }
+        TypeReference<List<String>> typeRef = new TypeReference<>() { };
+        return getObjectMapper().readValue(s, typeRef);
+    }
 }

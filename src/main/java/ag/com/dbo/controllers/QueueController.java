@@ -44,10 +44,10 @@ public class QueueController {
 
         req.setCommandProfile(taskRequest.getCommandProfile());
         if (taskRequest.getParameters() !=null) {
-            req.setParameters(Utils.objectToString(taskRequest.getParameters()));
+            req.setParameters(taskRequest.getParameters());
         }
         req.setCalculateType(taskRequest.getCalculateType());
-        req.setMaxAttempts((taskRequest.getMaxAttempts()==null)?2:taskRequest.getMaxAttempts());
+        req.setMaxAttempts((taskRequest.getMaxAttempts()==null)? 2: taskRequest.getMaxAttempts());
         req.setStatus(QueueStatus.QUEUE.name());
         req.setStart(OffsetDateTime.now());
         req.setSaveCalculate( taskRequest.getSaveCalculate());

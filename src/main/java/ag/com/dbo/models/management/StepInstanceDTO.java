@@ -11,6 +11,8 @@ public class StepInstanceDTO {
     @Id
     private String stepInstanceId;
     private String[] parentStepInstanceIds;
+    private String[] activeParentStepInstanceIds;
+
     private String status; // StepStatus
     private EtlInstance etlInstance;
     private Step step;
@@ -23,6 +25,13 @@ public class StepInstanceDTO {
     private OffsetDateTime start;
     private OffsetDateTime stop;
     private String name;
+    private Boolean saveCalculate;
+
+    @Column(columnDefinition = "Text")
+    private String etlVars;
+    @Column(columnDefinition = "TEXT")
+    private String groovyScript;
+
 
     /**
      * Add String to log

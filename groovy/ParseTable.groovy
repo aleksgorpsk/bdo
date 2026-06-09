@@ -23,8 +23,7 @@ taskLog = """
 
 import groovy.json.JsonOutput
 
-def parse(callLog){
-println callLog
+def parse(taskLog, vars){
     def start = callLog.indexOf("+-");
     def stop = callLog.lastIndexOf("-+")+2;
     def stable = callLog[start..stop]
@@ -59,7 +58,9 @@ println callLog
         }
         }
     )
+    Map result = [:]
 
-    return JsonOutput.toJson(rst)
+    result.put(vars.get(resultName,result))
+    return JsonOutput.toJson(result)
 }
-print parse(taskLog)
+return  parse(taskLog, vars)
