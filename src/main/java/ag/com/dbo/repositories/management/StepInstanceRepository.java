@@ -11,6 +11,8 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigInteger;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 @Repository
@@ -30,12 +32,11 @@ public interface StepInstanceRepository extends JpaRepository<@NonNull StepInsta
     @Query("SELECT si FROM StepInstance si WHERE si.etl.id = :etlid")
     List<StepInstance> findByEtl(@Param("etlid") BigInteger etlId);
 
-    /*
+    @Query("SELECT si FROM StepInstance si WHERE si.status= :status and si. stepType= :type and nextTest <= :tm")
+    List<StepInstance> findActiveSensors(
+            @Param("status") String status,
+            @Param("type") String type,
+            @Param("tm") OffsetDateTime now);
 
-  @Query("SELECT ei FROM EtlInstance ei WHERE ei.etl.id = :etlid")
-  Page<EtlInstance> findByEtl(@Param("etlid") BigInteger etlId, Pageable pageable);
 
-   List<EtlInstance> findByEtlIdAndStatus(BigInteger etlId, String Status);
-}
-     */
 }

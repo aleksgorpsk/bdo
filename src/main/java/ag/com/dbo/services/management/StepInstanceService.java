@@ -1,10 +1,7 @@
 package ag.com.dbo.services.management;
 
 import ag.com.dbo.controllers.queue.QueueStatus;
-import ag.com.dbo.models.management.EtlInstance;
-import ag.com.dbo.models.management.StepInstance;
-import ag.com.dbo.models.management.StepInstanceDTO;
-import ag.com.dbo.models.management.StepStatus;
+import ag.com.dbo.models.management.*;
 import ag.com.dbo.models.queue.QueueStorage;
 import ag.com.dbo.repositories.management.EtlInstanceRepository;
 import ag.com.dbo.repositories.management.StepInstanceRepository;
@@ -16,6 +13,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigInteger;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -111,14 +110,6 @@ public class StepInstanceService {
                 .toList();
     }
 
-
-
-    /*
-     * -------------------------------------------------------------------------
-     * Update
-     * -------------------------------------------------------------------------
-     */
-
     //    @CachePut(value = "etlInstances", key = "#etlInstanceDTO.etlInstanceId")
     public boolean update(StepInstanceDTO stepInstanceDTO) {
         if (stepInstanceRepository.existsById(stepInstanceDTO.getStepInstanceId())) {
@@ -129,11 +120,6 @@ public class StepInstanceService {
         }
     }
 
-    /*
-     * -------------------------------------------------------------------------
-     * Delete
-     * -------------------------------------------------------------------------
-     */
 
     //    @CacheEvict(value = "etlInstances", key = "#etlInstanceId")
     public boolean delete(String id) {
@@ -196,5 +182,9 @@ public class StepInstanceService {
             log.error("{} not found !!!", result.getTaskId());
         }
     return oSi;
+    }
+
+    public List<StepInstance> getActiveSensors(){
+        return stepInstanceRepository.findActiveSensors(StepStatus.InWait.name(), StepType.Sensor.name(), OffsetDateTime.now());
     }
 }

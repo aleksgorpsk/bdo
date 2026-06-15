@@ -6,7 +6,9 @@ public enum StepStatus {
     ReadyToQueue,
     Queue,
     Missed,
-    InProcess;
+    Pause,
+    InProcess,
+    InWait; // sensor
 
 
 }

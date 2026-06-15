@@ -2,16 +2,14 @@ package ag.com.dbo.services.management;
 
 import ag.com.dbo.controllers.FullEtlInstance;
 import ag.com.dbo.controllers.model.TaskRequest;
+import ag.com.dbo.models.checker.SensorModel;
 import ag.com.dbo.models.management.*;
 import ag.com.dbo.repositories.management.EtlInstanceRepository;
 import ag.com.dbo.repositories.management.EtlRepository;
 import ag.com.dbo.repositories.management.StepInstanceRepository;
 import ag.com.dbo.repositories.management.StepRepository;
 
-import ag.com.dbo.utils.Utils;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import groovy.lang.Binding;
-import groovy.lang.GroovyShell;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -21,8 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.client.RestClient;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
+
 import java.math.BigInteger;
 import java.time.OffsetDateTime;
 import java.util.*;
@@ -31,6 +28,7 @@ import java.util.stream.Collectors;
 
 import static ag.com.dbo.services.queue.utils.VarSupport.*;
 import static ag.com.dbo.utils.Utils.saveError;
+import static ag.com.dbo.utils.Utils.wrapVars;
 
 @Slf4j
 @Service
@@ -40,13 +38,14 @@ public class EngineService {
     private final StepRepository stepRepository;
     private final StepInstanceRepository stepInstanceRepository;
     private final RestClient restClient;
+    private final ExternalStepTypeService externalStepTypeService;
 
     @Value("${queue.enqueue.path}")
     private String enqueuePath;
 
 
     public EngineService(EtlRepository etlRepository, EtlInstanceRepository etlInstanceRepository,
-                         StepRepository stepRepository, StepInstanceRepository stepInstanceRepository, RestClient restClient
+                         StepRepository stepRepository, StepInstanceRepository stepInstanceRepository, RestClient restClient, ExternalStepTypeService externalStepTypeService
 
     ) {
         this.etlRepository = etlRepository;
@@ -54,6 +53,7 @@ public class EngineService {
         this.stepRepository = stepRepository;
         this.stepInstanceRepository = stepInstanceRepository;
         this.restClient = restClient;
+        this.externalStepTypeService = externalStepTypeService;
     }
 
 
@@ -92,6 +92,7 @@ public class EngineService {
                 si.setEtl(etl.getEtl());
                 si.setStep(step);
                 si.setEtlInstance(etl);
+                //TODO !!!!
                 si.setVars(step.getVars());
                 si.setActive(step.getStepActive());
                 si.setMaxAttempts(step.getMaxAttempts());
@@ -99,6 +100,8 @@ public class EngineService {
                 si.setSaveCalculate(step.getSaveCalculate());
                 si.setGroovyScript(step.getGroovyScript());
                 etl.setEtlVars(merge(etl.getEtlVars(), si.getVars(),si.getName()));
+                si.setStepType(step.getStepType());
+                si.setNextTest(null);
                 log.debug("si:{} ", si);
                 sis.add(si);
             }
@@ -136,9 +139,14 @@ public class EngineService {
             return;
         }
     }
-// step finished and need new step
-    public void stepFrom(String stepInstanceId ){
+
+    public void stepFrom(String stepInstanceId ) {
         StepInstance si = stepInstanceRepository.getReferenceById(stepInstanceId);
+        stepFrom(si);
+    }
+// step finished and need new step
+
+    public void stepFrom(StepInstance si ){
         FullEtlInstance fullEtlInstance = null;
         try {
             fullEtlInstance = getFullEtlInstance(si.getEtlInstance());
@@ -147,30 +155,60 @@ public class EngineService {
             si.setStatus(StepStatus.Failed.name());
             return;
         }
-        if (checkAllStepInstances(si, fullEtlInstance)){
-            log.info("!!!!!ETL finished !!!!!!");
-            EtlInstance ei =si.getEtlInstance();
-            ei.setStop(OffsetDateTime.now());
-            if (getEtlInstanceErrorExists(si, fullEtlInstance)){
-                ei.setStatus(EtlStatus.Fail.name());
-            }else{
-                ei.setStatus(EtlStatus.Success.name());
+        // check finish
+        EtlInstance ei = si.getEtlInstance();
+        if(StepStatus.Success.name().equals(si.getStatus())) {
+            if (checkAllStepInstances(si, fullEtlInstance)) {
+                log.info("!!!!!ETL finished !!!!!!");
+                ei.setStop(OffsetDateTime.now());
+                if (getEtlInstanceErrorExists(si, fullEtlInstance)) {
+                    ei.setStatus(EtlStatus.Fail.name());
+                } else {
+                    ei.setStatus(EtlStatus.Success.name());
+                }
+                etlInstanceRepository.saveAndFlush(ei);
+                return;
             }
+        }else if(StepStatus.Failed.name().equals(si.getStatus())) {
+            si.setStatus(StepStatus.Failed.name());
+            ei.setStatus(EtlStatus.Fail.name());
+            stepInstanceRepository.saveAndFlush(si);
             etlInstanceRepository.saveAndFlush(ei);
-            return;
         }
-        Set<String> children = fullEtlInstance.getParentToChildrenStep().get(stepInstanceId);
+
+        /// TODO Check Sensor
+        if (StepStatus.InProcess.name().equals(si.getStatus())
+                && StepType.Sensor.name().equals(si.getStepType())){
+                    // check
+        }
+
+        Set<String> children = fullEtlInstance.getParentToChildrenStep().get(si.getStepInstanceId());
         List<String> incorrectWayId = null;
+        // check sensor
+        if (StepType.Sensor.name().equals(si.getStepType())){
+            // check sensor condition
+            try {
+                SensorModel sModel = externalStepTypeService.checkSensor(si);
+                boolean sensorOk= externalStepTypeService.execSensorBranchGroovyScript(si);
+                if (!sensorOk){ // sensor not ready
+                    return;
+                }
+
+            }catch (Exception x){
+                return;
+            }
+        }
+
         // check branch !!!
         // TODO
-        if(StringUtils.isNotEmpty(si.getStep().getBranchCondition())){
+        if (StepType.Branch.name().equals( si.getStepType())
+                && StringUtils.isNotEmpty(si.getStep().getBranchCondition())){
             try {
-
-                List<String> correctWsyNames =execGroovyScript(si);
-                List<String> correctWayId = fullEtlInstance.getCorrectWayInIds(correctWsyNames, stepInstanceId);
-                incorrectWayId = fullEtlInstance.getIncorrectWayIds(correctWsyNames, stepInstanceId);
+                List<String> correctWsyNames = externalStepTypeService.execBranchGroovyScript(si);
+                List<String> correctWayId = fullEtlInstance.getCorrectWayInIds(correctWsyNames, si.getStepInstanceId());
+                incorrectWayId = fullEtlInstance.getIncorrectWayIds(correctWsyNames, si.getStepInstanceId());
                 if (CollectionUtils.isEmpty(correctWayId)){
-                    log.info("last step!:{}",stepInstanceId);
+                    log.info("last step!:{}", si.getStepInstanceId());
                     children= Collections.emptySet();
                 }else{
                     children = new  HashSet<>(correctWayId);
@@ -180,11 +218,9 @@ public class EngineService {
             }
         }
         if (CollectionUtils.isEmpty(children) ){
-            log.info("last step!:{}",stepInstanceId);
+            log.info("last step!:{}",si.getStepInstanceId());
         }else{
             FullEtlInstance finalFullEtlInstance = fullEtlInstance;
-
-            ///  !!!!
             children.stream()
                     .map(x-> finalFullEtlInstance.getSiBase().get(x))
                     .forEach(stepInstance-> {
@@ -209,7 +245,7 @@ public class EngineService {
      * should be next
      * @param fullEtlInstance
      * @param stepInstanceId
-     * @return
+     * @return List<StepInstance>
      */
 
 
@@ -308,20 +344,7 @@ public class EngineService {
      * @param si
      */
 
-    private List<String> execGroovyScript(StepInstance si ) throws JsonProcessingException {
-        String sVars = si.getEtlInstance().getEtlVars();
-        if (StringUtils.isNotEmpty(sVars)) {
-            Map<String, Object> vars = stringToJsonVar(sVars);
-            Binding binding = new Binding();
-            binding.setVariable("stepName", si.getName());
-            binding.setVariable("vars", vars);
-            GroovyShell shell = new GroovyShell(binding);
-            Object oResult = shell.evaluate(si.getStep().getBranchCondition());
-            return stringBranchVars(oResult);
 
-        }
-        return null;
-    }
 
     /**
      *   need full check because maybe next step
@@ -384,12 +407,15 @@ public class EngineService {
         log.info("sendToQueue:{}", si);
         TaskRequest taskRequest = new TaskRequest();
         taskRequest.setTaskId(si.getStepInstanceId());
+        taskRequest.setName(si.getName());
         taskRequest.setCommandProfile(si.getStep().getDataLoading().getProps());
         taskRequest.setCalculateType(si.getStep().getDataLoading().getName());
         taskRequest.setMaxAttempts(si.getStep().getMaxAttempts());
-        taskRequest.setParameters(si.getStep().getVars());
+        taskRequest.setParameters(si.getVars());
         taskRequest.setSaveCalculate(si.getSaveCalculate());
         taskRequest.setGroovyScript(si.getGroovyScript());
+        taskRequest.setStepType(si.getStepType());
+        taskRequest.setResults(si.getEtlInstance().getEtlVars());
         try {
             this.restClient.put().uri(enqueuePath)
                     .contentType(MediaType.APPLICATION_JSON)

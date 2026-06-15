@@ -43,15 +43,16 @@ public class QueueController {
         req.setTaskId(taskId);
 
         req.setCommandProfile(taskRequest.getCommandProfile());
-        if (taskRequest.getParameters() !=null) {
-            req.setParameters(taskRequest.getParameters());
-        }
+        req.setName(taskRequest.getName());
         req.setCalculateType(taskRequest.getCalculateType());
         req.setMaxAttempts((taskRequest.getMaxAttempts()==null)? 2: taskRequest.getMaxAttempts());
         req.setStatus(QueueStatus.QUEUE.name());
         req.setStart(OffsetDateTime.now());
         req.setSaveCalculate( taskRequest.getSaveCalculate());
         req.setGroovyScript(taskRequest.getGroovyScript());
+        req.setStepType(taskRequest.getStepType());
+        req.setParameters(taskRequest.getParameters());
+        req.setResults(taskRequest.getResults());
 
         queueService.save(req);
         runLogic(req);

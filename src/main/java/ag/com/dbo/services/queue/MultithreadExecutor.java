@@ -3,6 +3,7 @@ package ag.com.dbo.services.queue;
 import ag.com.dbo.controllers.queue.QueueStatus;
 import ag.com.dbo.models.queue.QueueStorage;
 import ag.com.dbo.repositories.queue.QueueStorageRepository;
+import ag.com.dbo.services.management.ExternalStepTypeService;
 import ag.com.dbo.services.queue.utils.LoadTaskFactory;
 import ag.com.dbo.services.queue.model.PropData;
 import lombok.extern.slf4j.Slf4j;
@@ -25,12 +26,13 @@ public class MultithreadExecutor implements InitializingBean {
     private final ManagerService managerService;
     private final Environment env;
     private final QueueStorageRepository queueStorageRepository;
+    private final ExternalStepTypeService externalStepTypeService;
 
-    public MultithreadExecutor(ManagerService managerService, Environment env, QueueStorageRepository queueStorageRepository) {
+    public MultithreadExecutor(ManagerService managerService, Environment env, QueueStorageRepository queueStorageRepository, ExternalStepTypeService externalStepTypeService) {
         this.managerService = managerService;
         this.env = env;
-
         this.queueStorageRepository = queueStorageRepository;
+        this.externalStepTypeService = externalStepTypeService;
     }
 
     public void afterPropertiesSet() {
@@ -49,7 +51,7 @@ public class MultithreadExecutor implements InitializingBean {
     @Async
     public void setRun(QueueStorage request){
         log.info("setRun: {}",request);
-        Callable<PropData> task = LoadTaskFactory.getTask(request, env, queueStorageRepository);
+        Callable<PropData> task = LoadTaskFactory.getTask(request, env, queueStorageRepository, externalStepTypeService);
         log.info("task!!!: {}",task);
         if (task==null){
             request.addLog("incorrect task name: "+ request.getCalculateType());

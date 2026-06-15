@@ -24,17 +24,20 @@ import static ag.com.dbo.services.queue.utils.LogParser.parseTableAndSearchData;
 import static ag.com.dbo.services.queue.utils.VarSupport.merge;
 
 @Slf4j
-public class HiveCountFilesTask extends HiveOperatorTask implements Callable<PropData> {
+public class HiveCountFilesTask
+        //extends HiveOperatorTask implements Callable<PropData>
+{
+
     /**
      *  errors:
      *  -105 : too many attempts
      *  -106 : process error
      */
 
-    public HiveCountFilesTask(QueueStorage data, Environment env, QueueStorageRepository queueStorageRepository){
-        super(data, env, queueStorageRepository);
-    }
-
+//    public HiveCountFilesTask(QueueStorage data, Environment env, QueueStorageRepository queueStorageRepository){
+//         super(data, env, queueStorageRepository);
+//    }
+/*
     @Override
     public PropData call() throws Exception {
         log.info("Call HiveOperatorTask");
@@ -126,12 +129,6 @@ public class HiveCountFilesTask extends HiveOperatorTask implements Callable<Pro
         }
         return result;
     }
-    /**
-     *
-     * @param fullOut full out data
-     * @param vars vars must have rowNum (0 by default) and vat with name columnName
-     * @return value
-     */
 
     public String getResult(String fullOut, Map<String, Object > vars){
        int start = fullOut.indexOf("+-");
@@ -161,4 +158,6 @@ public class HiveCountFilesTask extends HiveOperatorTask implements Callable<Pro
         }
     }
 
+
+ */
 }

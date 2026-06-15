@@ -32,6 +32,9 @@ public class StepInstanceDTO {
     @Column(columnDefinition = "TEXT")
     private String groovyScript;
 
+    private String stepType;
+    private OffsetDateTime nextTest;
+
 
     /**
      * Add String to log

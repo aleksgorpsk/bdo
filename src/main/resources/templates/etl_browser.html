@@ -62,6 +62,7 @@
                 <th th:replace="~{fragments/sorting :: sorting('id','Id')}"></th>
                 <th th:replace="~{fragments/sorting :: sorting('name','Name')}"></th>
                 <th th:replace="~{fragments/sorting :: sorting('comment','Comment')}"></th>
+                <th>Active</th>
                 <th>Published</th>
                 <th>Last status</th>
             </tr>
@@ -69,7 +70,9 @@
             <tbody>
             <tr th:each="etl : ${etlList}">
                 <td><a th:href="@{/etl_instance_browser/{id}(id=${etl.id})}" th:text="${etl.id}"></a></td>
+                <td><a th:href="@{/etl_step/{id}(id=${etl.id})}" th:text="${etl.name}"></a></td>
                 <td><a th:href="@{/etl_step/{id}(id=${etl.id})}" th:text="${etl.comment}"></a></td>
+
                 <td>
                     <a th:if="${etl.active == true}" th:href="@{'/etl/' + ${etl.id} + '/active/false'}"
                        title="Disable this etl">
@@ -81,6 +84,7 @@
 
                     </a>
                 </td>
+
                 <td>
                     <a th:href="@{'/steps_field/' + ${etl.id}}" title="Show steps.">
                         Pipes

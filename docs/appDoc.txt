@@ -1,0 +1,32 @@
+StepModel
+
+{
+"logic" : " ls -lA "
+"stepScript":"groovy script for get response and save to log"
+"stepResultName":""
+}
+
+Sensor:
+
+Vars should contents json
+
+
+like
+{
+"attemptTimeOut": 12  // timeout in sec
+"failTimeout" : 3600       // timeout for fail
+"stepScript":"groovy script...."  // script for test thet Sensor OK
+"checkSensorScript":"groovy script...."  // script for test thet Sensor OK
+"sensorResultName":""
+
+}
+
+// TODO
+Branch
+
+{
+"checkScript":"groovy script...."  // script for test thet Sensor OK
+"branchResultName":""
+}
+
+

@@ -18,6 +18,7 @@ public class QueueStorage {
     @Column(name = "taskId", updatable = false)
     private String TaskId;
 
+    private String name;
     private Integer attempt;
     private Integer maxAttempts;
 
@@ -45,6 +46,11 @@ public class QueueStorage {
 
     @Column(columnDefinition = "TEXT")
     private String groovyScript;
+
+    private String stepType;
+
+    @Column(columnDefinition = "TEXT")
+    private String results;
 
 
     /**

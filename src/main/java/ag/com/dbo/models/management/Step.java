@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigInteger;
+import java.time.OffsetDateTime;
 
 @Entity
 @Table(name = "step", schema = "etl" )
@@ -44,5 +45,8 @@ public class Step {
 
     @Column(columnDefinition = "TEXT")
     private String branchCondition;
+
+    private String stepType;
+    private OffsetDateTime nextTest;
 
 }

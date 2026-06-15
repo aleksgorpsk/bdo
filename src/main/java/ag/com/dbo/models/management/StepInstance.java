@@ -54,6 +54,8 @@ public class StepInstance {
     private String etlVars;
     @Column(columnDefinition = "TEXT")
     private String groovyScript;
+    private String stepType;
+    private OffsetDateTime nextTest;
 
     /**
      * Add String to log

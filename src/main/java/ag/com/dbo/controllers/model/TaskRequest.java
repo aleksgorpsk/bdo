@@ -20,4 +20,10 @@ public class TaskRequest {
 
     private String groovyScript;
 
+    private String stepType;
+
+    private String name;
+
+    private String results;
+
 }
