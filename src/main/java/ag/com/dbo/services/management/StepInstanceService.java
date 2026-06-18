@@ -158,7 +158,11 @@ public class StepInstanceService {
             StepInstance si = oSi.get();
 
             if (Objects.equals(result.getStatus(), QueueStatus.SUCCESS.name())) {
-                si.setStatus(StepStatus.Success.name());
+                if (StepType.Sensor.name().equals(si.getStepType())) {
+                    si.setStatus(StepStatus.InWait.name());
+                }else{
+                    si.setStatus(StepStatus.Success.name());
+                }
             }else {
                 si.setStatus(StepStatus.Failed.name());
             }

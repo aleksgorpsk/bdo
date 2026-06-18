@@ -11,7 +11,7 @@ def stepName="branches1"
 import groovy.json.JsonOutput
 
 
-def parse(stepName,vars, results){
+def parse(stepName, vars, results){
     def step1=results.get((stepName))
     def branch = step1.get("result")
     def result = []

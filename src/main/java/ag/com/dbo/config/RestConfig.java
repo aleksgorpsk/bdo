@@ -14,8 +14,15 @@ import org.springframework.web.client.RestClient;
 public class RestConfig {
 
 
-    @Bean
-    public RestClient restClient(@Value("${queue.url}") String queueBasePath ){
+    @Bean("queueRestClient")
+    public RestClient queueRestClient(@Value("${queue.url}") String queueBasePath ){
+        return RestClient.builder()
+                .baseUrl(queueBasePath)
+                .build();
+    }
+
+    @Bean(name = "scriptRestClient")
+    public RestClient scriptRestClient(@Value("${script.url}") String queueBasePath ){
         return RestClient.builder()
                 .baseUrl(queueBasePath)
                 .build();

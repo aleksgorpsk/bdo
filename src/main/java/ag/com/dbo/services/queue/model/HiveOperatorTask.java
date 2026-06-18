@@ -96,15 +96,12 @@ public class HiveOperatorTask extends TaskProperties implements Callable<PropDat
             try {
                String result = externalStepTypeService.calculateResult(taskLog, sModel, task);
                 if (processCode == 0){
-                    if (StepType.Sensor.name().equals(task.getStepType())){
-                        task.setStatus(QueueStatus.IN_PROGRES.name());
-                    }else {
-                        task.setStatus(QueueStatus.SUCCESS.name());
-                    }
+                    task.setStatus(QueueStatus.SUCCESS.name());
+                    task.setStop(OffsetDateTime.now());
                 }else{
                     task.setStatus(QueueStatus.FAIL.name());
+                    task.setStop(OffsetDateTime.now());
                 }
-                task.setStop(OffsetDateTime.now());
                 queueStorageRepository.saveAndFlush(task);
             }catch(Throwable e){
                 saveError(task,queueStorageRepository, e, "Error");

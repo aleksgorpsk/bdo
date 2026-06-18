@@ -17,19 +17,18 @@ import static ag.com.dbo.services.queue.utils.VarSupport.stringToJsonVar;
 public class GroovyService {
 
 
-    public ScriptResponse execSensorBranchGroovyScript(Script script , String inVars, String inResults, String StepName ) throws JsonProcessingException {
+    public ScriptResponse execSensorBranchGroovyScript(Script script , String inVars, String inResults, String stepName ) throws JsonProcessingException {
         ScriptResponse response = new ScriptResponse();
         try {
             Map<String, Object> vars = stringToJsonVar(inVars);
             Map<String, Object> results = stringToJsonVar(inResults);
             Binding binding = new Binding();
-            binding.setVariable("stepName", StepName);
+            binding.setVariable("stepName", stepName);
             binding.setVariable("vars", vars);
             binding.setVariable("results", results);
             GroovyShell shell = new GroovyShell(binding);
             Object oResult = shell.evaluate(script.getScript());
-            String res= "{\"result\":"+oResult.toString()+"}";
-            response.setResponse(res);
+            response.setResponse(oResult.toString());
             response.setStatus("OK");
             return response;
         } catch (Exception e) {

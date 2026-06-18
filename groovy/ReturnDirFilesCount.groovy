@@ -1,5 +1,5 @@
 taskLog="""
-       2
+       1
  code result: 0
 """
 vars = [directoryName:"/Users/aleksgor/opt/files", resultName:"testFile"]

@@ -34,7 +34,7 @@ public class QueueService {
     }
 
     public QueueStorage save(QueueStorage queue){
-        return queueStorageRepository.save(queue);
+        return queueStorageRepository.saveAndFlush(queue);
     }
 
     public QueueStorage enqueue(QueueStorage task){

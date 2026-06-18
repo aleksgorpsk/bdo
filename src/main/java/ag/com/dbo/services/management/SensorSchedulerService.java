@@ -1,6 +1,7 @@
 package ag.com.dbo.services.management;
 
 import ag.com.dbo.models.management.StepInstance;
+import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -22,9 +23,11 @@ public class SensorSchedulerService {
 
 
     @Scheduled(fixedRateString = "${sensor.scheduler.testInterval}", timeUnit = TimeUnit.SECONDS)
+    @Transactional
     public void scheduling(){
         List<StepInstance> result =  stepInstanceService.getActiveSensors();
-        result.forEach(x-> engineService.stepFrom(x.getStepInstanceId()));
+        log.info("sensor scheduled !!!:{}",result);
+        result.forEach(x-> engineService.enqueueTask(x, null));
     }
 
 }
