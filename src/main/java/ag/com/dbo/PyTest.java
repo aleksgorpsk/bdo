@@ -6,7 +6,7 @@ import org.graalvm.polyglot.Value;
 import java.util.Map;
 
 
-public class Test {
+public class PyTest {
 
     public static void main(String[] args) {
         try (Context context = Context.newBuilder().allowAllAccess(true).build()) {
@@ -15,17 +15,7 @@ public class Test {
             Map c= Map.of("directoryName","/Users/aleksgor/opt/files","stepResultName","testFile1");
             Map d= Map.of("sensor1",c);
             String t= "sensor1";
-            /*
-            Map results=Map[sensor1:[
-            directoryName: "/Users/aleksgor/opt/files",
-                    stepResultName: "testFile1",
-                    attemptTimeOut:  12,
-                    failTimeout:120,
-                    logToTesultScript: "import groovy.json.JsonOutput\n\ndef parse(taskLog, vars){\n    def firstValid = taskLog.readLines().find { it?.trim() }\n    def result = [\"result\":firstValid.trim()]\n    return JsonOutput.toJson(result)\n}\nreturn   parse(taskLog,vars)",
-                    sensorScript:  "GROOVY:sensorTest1:1",
-                    result: "{\"result\":\"1\"}"
-]]
-             */
+
             // Pass data and get results back
             String s1="def checkw(x, t):\n" +
                     " print(\"333333\") \n"+

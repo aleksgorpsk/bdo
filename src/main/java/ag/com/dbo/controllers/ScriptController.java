@@ -7,6 +7,7 @@ import ag.com.dbo.models.script.ScriptId;
 import ag.com.dbo.models.script.ScriptType;
 import ag.com.dbo.services.management.ScriptService;
 import ag.com.dbo.services.script.GroovyService;
+import ag.com.dbo.services.script.PythonService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
@@ -25,10 +26,13 @@ public class ScriptController {
 
     private final ScriptService scriptService;
     private final GroovyService groovyService;
+    private final PythonService pythonService;
 
-    public ScriptController(ScriptService scriptService, GroovyService groovyService) {
+
+    public ScriptController(ScriptService scriptService, GroovyService groovyService, PythonService pythonService) {
         this.scriptService = scriptService;
         this.groovyService = groovyService;
+        this.pythonService = pythonService;
     }
 
     @PutMapping("/script/run")
@@ -53,7 +57,12 @@ public class ScriptController {
         }
         if (script != null) {
             if (ScriptType.GROOVY.name().equals(script.getScriptId().getLanguage())) {
-                ScriptResponse response = groovyService.execSensorBranchGroovyScript(script, request.getParams(), request.getResults(), request.getStepName());
+                ScriptResponse response = groovyService.execGroovyScript(script, request.getParams(), request.getResults(), request.getStepName());
+                return ResponseEntity.status(HttpStatus.OK).header("Content-Type", "application/json").body(response);
+            }
+            if (ScriptType.PYTHON.name().equals(script.getScriptId().getLanguage())) {
+                ScriptResponse response = new ScriptResponse();
+                response= pythonService.execPythonScript(script, request.getParams(), request.getResults(), request.getStepName());
                 return ResponseEntity.status(HttpStatus.OK).header("Content-Type", "application/json").body(response);
             } else {
                 ScriptResponse response = new ScriptResponse();

@@ -17,7 +17,7 @@ import static ag.com.dbo.services.queue.utils.VarSupport.stringToJsonVar;
 public class GroovyService {
 
 
-    public ScriptResponse execSensorBranchGroovyScript(Script script , String inVars, String inResults, String stepName ) throws JsonProcessingException {
+    public ScriptResponse execGroovyScript(Script script , String inVars, String inResults, String stepName ) throws JsonProcessingException {
         ScriptResponse response = new ScriptResponse();
         try {
             Map<String, Object> vars = stringToJsonVar(inVars);

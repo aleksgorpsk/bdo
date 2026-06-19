@@ -141,16 +141,20 @@
             <type>pom</type>
         </dependency>
 
-        <!--
-        <dependency>
-            <groupId>black.ninia</groupId>
-            <artifactId>jep</artifactId>
-            <version>4.3.1</version>
-        </dependency>
-    -->
+
     </dependencies>
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.6.3</version>
+                <configuration>
+                    <arguments>
+                        <argument>--enable-native-access=ALL-UNNAMED</argument>
+                    </arguments>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
