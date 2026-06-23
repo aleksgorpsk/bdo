@@ -4,7 +4,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.thymeleaf.util.StringUtils;
+import org.springframework.util.ObjectUtils;
+
 
 import java.util.HashMap;
 import java.util.List;
@@ -28,10 +29,10 @@ public class VarSupport {
     }
 
     public static String merge(String existsData, String newData, String chindName) throws JsonProcessingException {
-        if(StringUtils.isEmpty(existsData)){
+        if(ObjectUtils.isEmpty(existsData)){
             existsData ="{}";
         }
-        if (StringUtils.isEmpty(newData)){
+        if (ObjectUtils.isEmpty(newData)){
             return existsData;
         }
         ObjectMapper objectMapper = getObjectMapper();
@@ -43,10 +44,10 @@ public class VarSupport {
 
     @Deprecated // neet to use stepName
     public static String merge(String existsData, String newData) throws JsonProcessingException {
-        if(StringUtils.isEmpty(existsData)){
+        if(ObjectUtils.isEmpty(existsData)){
             existsData ="{}";
         }
-        if (StringUtils.isEmpty(newData)){
+        if (ObjectUtils.isEmpty(newData)){
             return existsData;
         }
         ObjectMapper objectMapper = getObjectMapper();
@@ -56,7 +57,7 @@ public class VarSupport {
     }
 
     public static Map<String,Object> stringToJsonVar(String s) throws JsonProcessingException {
-        if (StringUtils.isEmpty(s)){
+        if (ObjectUtils.isEmpty(s)){
             return null;
         }
         TypeReference<HashMap<String,Object>> typeRef = new TypeReference<HashMap<String,Object>>() {};

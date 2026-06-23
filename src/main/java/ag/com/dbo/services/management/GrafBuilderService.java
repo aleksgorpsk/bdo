@@ -201,8 +201,11 @@ public class GrafBuilderService {
             ));
             return stepDate;
         }
+    }
 
-
+    public List<Step> getSteps(BigInteger etlId) {
+        log.info("getSteps:{}", etlId);
+        return stepRepository.findAllStepsByEtl(etlId);
     }
 
 

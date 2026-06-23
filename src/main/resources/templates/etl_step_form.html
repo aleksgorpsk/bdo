@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<!--<html xmlns:th="http://www.thymeleaf.org"> -->
+
+<head xmlns:th="http://www.w3.org/1999/xhtml">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0"/>
+    <link rel="stylesheet" type="text/css" th:href="@{/css/bootstrap.min.css}"/>
+    <link rel="stylesheet" type="text/css" th:href="@{/css/style.css}"/>
+    <script type="text/javascript" th:src="@{/css/jquery-1.7.1.min.js}"></script>
+    <script type="text/javascript" th:src="@{/css/bootstrap.min.js}"></script>
+</head>
+
+<body>
+<div th:replace="~{fragments/etl_steps/header :: header}"></div>
+
+<!--
+private BigInteger stepId;
+
+
+
+//    private String calculateMethod; // method of loading.... from ag.com.dbo.services.loadingService.TaskName
+
+
+
+  private OffsetDateTime nextTest;  -->
+<div class="container-fluid">
+    <h2 class="text-center">[[${pageTitle}]]</h2>
+
+    <div class="my-3">
+        <form th:action="@{/etlstep/save}" method="post" enctype="multipart/form-data" th:object="${step}"
+              style="max-width: 550px; margin: 0 auto">
+
+            <input type="hidden" name="etlId" th:value="${step.etl.id}">
+            <div class="p-3">
+
+                <!--            <input type="hidden" th:etlId="*{step.etl.id}" id="etlId"/> -->
+
+                <div class="form-group row">
+                    <label class="col-sm-3 col-form-label" for="name">parents</label>
+                    <div class="col-sm-9">
+                        <!-- <input type="parentStepIds" th:field="*{allsteps}"  /> -->
+                        <label for="step">User hobbies (multiple select):</label>
+                        <br/>
+                        <select id="step" th:field="*{parentStepIds}" size="8" multiple="multiple">
+                            <option th:each="step : ${allsteps}"
+                                    th:value="${{step.stepId}}"
+                                    th:text="${step.name}">
+                                Cinema
+                            </option>
+                        </select>
+                    </div>
+                </div>
+                <!-- calculateMethod  -->
+                <div class="form-group row">
+                    <label class="col-sm-3 col-form-label" for="name">Data loading type </label>
+                    <div class="col-sm-9">
+                        <!-- <input type="parentStepIds" th:field="*{allsteps}"  /> -->
+                        <!--                        <label for="step">User hobbies (multiple select):</label> -->
+                        <select id="dataLoadingg" th:field="*{dataLoading}">
+                            <option value="">-- Choose Dataloading type</option>
+                            <option th:each="dl : ${allDataLoading}"
+                                    th:value="${{dl.id}}"
+                                    th:text="${dl.comments}">
+                                Cinema
+                            </option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <label class="col-sm-3 col-form-label" for="name">Title</label>
+                    <div class="col-sm-9">
+                        <input type="text" th:field="*{name}" required minlength="2" maxlength="128"
+                               class="form-control"
+                               id="name"/>
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <label class="col-sm-3 col-form-label" for="name">Step type </label>
+                    <div class="col-sm-9">
+                        <select id="stepTypee" th:field="*{stepType}">
+                            <option value=""> ---Choose step Type type---</option>
+                            <option th:each="stepType : ${stepTypes}"
+                                    th:value="${{stepType}}"
+                                    th:text="${stepType}">
+                                Cinema
+                            </option>
+                        </select>
+                    </div>
+                </div>
+
+
+                <div class="form-group row">
+                    <label class="col-sm-3 col-form-label" for="name">maxAttempts</label>
+                    <div class="col-sm-9">
+                        <input type="number"
+                               id="quantity"
+                               th:field="*{maxAttempts}"
+                               min="1"
+                               max="100"
+                               step="1"
+                               placeholder="Enter max step attempts "/>
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <label class="col-sm-3 col-form-label" for="name">vars</label>
+                    <div class="col-sm-9">
+                        <input type="text" th:field="*{vars}" minlength="2" class="form-control"
+                               id="vars"/>
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <label class="col-sm-3 form-check-label" for="stepActive">active</label>
+                    <div class="col-sm-9">
+                        <input type="checkbox" th:field="*{stepActive}"/>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label class="col-sm-3 form-check-label" for="saveCalculate">save the calculate result</label>
+                    <div class="col-sm-9">
+                        <input type="checkbox" th:field="*{saveCalculate}"/>
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <label class="col-sm-3 col-form-label" for="name">Script ( link)</label>
+                    <div class="col-sm-9">
+                        <input type="text" th:field="*{groovyScript}" minlength="2" class="form-control"
+                               id="groovyScript"/>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label class="col-sm-3 col-form-label" for="name">Breanch script ( link)</label>
+                    <div class="col-sm-9">
+                        <input type="text" th:field="*{branchCondition}" minlength="2" class="form-control"
+                               id="branchCondition"/>
+                    </div>
+                </div>
+                <!-- TODO
+               <div class="form-group row">
+                    <label class="col-sm-3 col-form-label" for="name">Next test </label>
+                    <div class="col-sm-9">
+                        <input type="datetime-local" th:field="*{nextTest}" class="form-control"  id="nextTest" th:value="${#temporals.format(step.nextTest, 'yyyy-MM-dd''T''HH:mm')}" />
+                    </div>
+                </div> -->
+
+                <div class="text-center">
+                    <input type="submit" value="Save" class="btn btn-primary btn-sm mr-2"/>
+                    <input type="button" value="Cancel" id="btnCancel" class="btn btn-secondary btn-sm"/>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+
+<script type="text/javascript">
+    $(document).ready(function () {
+      $("#btnCancel").on("click", function () {
+        window.location = "[[@{/etl_browser}]]";
+      });
+    });
+</script>
+
+</body>
+
+</html>

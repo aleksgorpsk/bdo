@@ -1,0 +1,18 @@
+<header th:fragment="header" xmlns:th="http://www.w3.org/1999/xhtml">
+  <nav class="navbar navbar-expand-md bg-dark navbar-dark">
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#topNavbar">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="topNavbar">
+        <input type="hidden" name="etlId" th:value="${etlId}">
+        <ul class="navbar-nav">
+            <!--
+                <td><a th:href="@{/etl_instance_browser/{id}(id=${etl.id})}" th:text="${etl.id}"></a></td>
+            -->
+        <li class="nav-item">
+          <a class="nav-link" th:href="@{/step/new/{etlid}(etlid=${etlId})}">Add step</a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+</header>
