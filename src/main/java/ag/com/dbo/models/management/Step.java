@@ -47,6 +47,7 @@ public class Step {
     private String branchCondition;
 
     private String stepType;
+    /*
     private OffsetDateTime nextTest;
-
+*/
 }

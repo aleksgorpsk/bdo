@@ -33,6 +33,7 @@ public class EtlStepsController {
     private final StepService stepService;
     private final EtlService etlService;
     private final DataLoadingRepository dataLoadingRepository;
+    private final List<String> types;
 
 
     public EtlStepsController(GrafBuilderService grafBuilderService, StepRepository stepRepository, StepService stepService, EtlService etlService, DataLoadingRepository dataLoadingRepository) {
@@ -41,6 +42,7 @@ public class EtlStepsController {
         this.stepService = stepService;
         this.etlService = etlService;
         this.dataLoadingRepository = dataLoadingRepository;
+        types = Arrays.stream(StepType.values()).map(Enum::name).toList();
     }
 
     @GetMapping("etl_step/{etlId}")
@@ -98,8 +100,7 @@ public class EtlStepsController {
         model.addAttribute("pageTitle", "Create new Etl Step");
         model.addAttribute("allsteps", stepRepository.findAllStepsByEtl(etlId));
         model.addAttribute("allDataLoading", dataLoadingRepository.findAll());
-        List<String> types = Arrays.stream(StepType.values()).map(Enum::name).toList();
-        model.addAttribute("stepTypes", types);
+        model.addAttribute("stepTypes", this.types);
         return "etl_step_form";
     }
 //    etl_step/step/edit/43
@@ -114,11 +115,23 @@ public class EtlStepsController {
         model.addAttribute("pageTitle", "Edit Etl stepId");
         model.addAttribute("allsteps", stepRepository.findAllStepsByEtl(stepDto.getEtl().getId()));
         model.addAttribute("allDataLoading", dataLoadingRepository.findAll());
-        List<String> types = Arrays.stream(StepType.values()).map(Enum::name).toList();
-        model.addAttribute("stepTypes", types);
+        model.addAttribute("stepTypes", this.types);
         return "etl_step_form";
     }
 
+    @GetMapping("/etl_step/delete/{stepId}")
+    public String delete(
+            @PathVariable("stepId") BigInteger stepId,
+            Model model) {
+        StepDTO step = stepService.retrieveById(stepId);
+        stepService.delete(stepId);
+        log.info("Deleet:{}",stepId);
+        if (step==null) {
+            return "etl_browser";
+        }
+         return "redirect:/etl_step/" + step.getEtl().getId();
+
+    }
     /*
      * -------------------------------------------------------------------------
      * Update

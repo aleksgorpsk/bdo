@@ -149,6 +149,7 @@ private BigInteger stepId;
                 <div class="text-center">
                     <input type="submit" value="Save" class="btn btn-primary btn-sm mr-2"/>
                     <input type="button" value="Cancel" id="btnCancel" class="btn btn-secondary btn-sm"/>
+                    <input type="button" value="Delete" id="btnDelete" class="btn btn-secondary btn-sm"/>
                 </div>
             </div>
         </form>
@@ -160,7 +161,10 @@ private BigInteger stepId;
 <script type="text/javascript">
     $(document).ready(function () {
       $("#btnCancel").on("click", function () {
-        window.location = "[[@{/etl_browser}]]";
+        window.location = "[[@{/etl_step/}]][[${step.etl.id}]]";
+      });
+      $("#btnDelete").on("click", function () {
+        window.location = "[[@{/etl_step/delete/}]][[${stepId}]]";
       });
     });
 </script>

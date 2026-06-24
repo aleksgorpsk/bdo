@@ -2,7 +2,6 @@ package ag.com.dbo.services.queue.model;
 
 import ag.com.dbo.controllers.queue.QueueStatus;
 import ag.com.dbo.models.checker.StepModel;
-import ag.com.dbo.models.management.StepType;
 import ag.com.dbo.models.queue.QueueStorage;
 import ag.com.dbo.repositories.queue.QueueStorageRepository;
 import ag.com.dbo.services.management.ExternalStepTypeService;

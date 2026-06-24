@@ -56,11 +56,15 @@ public class StepService {
      * -------------------------------------------------------------------------
      */
 
-    @Cacheable(value = "etls", key = "#id")
     public StepDTO retrieveById(BigInteger id) {
         return stepRepository.findById(id)
                 .map(this::mapFrom)
                 .orElse(null);
+    }
+
+    public void delete(BigInteger id) {
+//        stepRepository
+         stepRepository.deleteById(id);
     }
 
     public StepDTO mapFrom(Step step) {
