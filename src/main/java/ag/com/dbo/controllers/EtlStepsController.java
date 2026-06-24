@@ -1,7 +1,11 @@
 package ag.com.dbo.controllers;
 
 import ag.com.dbo.models.graf.Figure;
-import ag.com.dbo.models.management.*;
+import ag.com.dbo.models.management.StepDTO;
+import ag.com.dbo.models.management.Step;
+import ag.com.dbo.models.management.StepType;
+import ag.com.dbo.models.management.EtlDTO;
+import ag.com.dbo.models.management.Etl;
 import ag.com.dbo.repositories.management.DataLoadingRepository;
 import ag.com.dbo.repositories.management.StepRepository;
 import ag.com.dbo.services.management.EtlService;
@@ -13,7 +17,6 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigInteger;
@@ -75,7 +78,7 @@ public class EtlStepsController {
             redirectAttributes.addAttribute("message", e.getMessage());
         }
 
-        return "redirect:/etl_browser";
+        return "redirect:/etl_step/"+stepDto.getEtl().getId();
     }
 
     @GetMapping("/step/new/{etlId}")
@@ -83,15 +86,13 @@ public class EtlStepsController {
             @PathVariable("etlId") BigInteger etlId,
             Model model) {
         Optional<EtlDTO> etlDto =etlService.findById(etlId);
-
         Step step = new Step();
+        step.setMaxAttempts(2);
         if(etlDto.isPresent()) {
             Etl etl= etlService.mapFrom( etlDto.get());
             step.setEtl(etl);
         }
         step.setStepActive(true);
-        log.info("!!!!!etlId:{}", etlId);
-//        step.setEtl(etlId);
         model.addAttribute("etlId", etlId);
         model.addAttribute("step", step);
         model.addAttribute("pageTitle", "Create new Etl Step");
@@ -99,8 +100,22 @@ public class EtlStepsController {
         model.addAttribute("allDataLoading", dataLoadingRepository.findAll());
         List<String> types = Arrays.stream(StepType.values()).map(Enum::name).toList();
         model.addAttribute("stepTypes", types);
+        return "etl_step_form";
+    }
+//    etl_step/step/edit/43
+    @GetMapping("/etl_step/edit/{stepId}")
+    public String editEtlStep(
+            @PathVariable("stepId") BigInteger stepId,
+            Model model) {
 
-
+        StepDTO stepDto =stepService.retrieveById(stepId);
+        model.addAttribute("etlId", stepId);
+        model.addAttribute("step", stepDto);
+        model.addAttribute("pageTitle", "Edit Etl stepId");
+        model.addAttribute("allsteps", stepRepository.findAllStepsByEtl(stepDto.getEtl().getId()));
+        model.addAttribute("allDataLoading", dataLoadingRepository.findAll());
+        List<String> types = Arrays.stream(StepType.values()).map(Enum::name).toList();
+        model.addAttribute("stepTypes", types);
         return "etl_step_form";
     }
 

@@ -42,6 +42,8 @@
   // 2. Loop through data to create rectangles
   rectData.forEach(data => {
       if (data.type =='rectangle'){
+      const link = document.createElementNS(svgns, "a");
+      link.setAttribute("href", "/etl_step/edit/"+data.id);
           let rect = document.createElementNS(svgns, 'rect');
           rect.setAttribute('x', data.x);
           rect.setAttribute('y', data.y);
@@ -52,14 +54,15 @@
           rect.setAttribute('ry', data.ry);
 
           // Optional: Add interactivity
-          rect.addEventListener('click', () => alert('Clicked: ' + data.color));
+          link.appendChild(rect);
+
           let text = document.createElementNS(svgns, 'text');
           text.setAttribute('x', data.x+20 );
           text.setAttribute('y', data.y+60);
           text.textContent="Step:"+data.id+": "+ data.name ;
 
-          svg.appendChild(rect);
-                      svg.appendChild(text);
+          svg.appendChild(link);
+          svg.appendChild(text);
 
       }
 

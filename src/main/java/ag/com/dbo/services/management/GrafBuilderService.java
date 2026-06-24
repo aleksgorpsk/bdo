@@ -66,18 +66,18 @@ public class GrafBuilderService {
                         childrenStep.put(parent, children);
                     }
                 }else{
-                    childrenStep.put(entry.getKey(), new ArrayList<>());
+                    if (!childrenStep.containsKey(entry.getKey())) {
+                        childrenStep.put(entry.getKey(), new ArrayList<>());
+                    }
                 }
             }
             log.info("childrenStep:{}", childrenStep);
             // build tree root-> children
 
-            List<Step> rootSteps = steps.stream().filter(s -> ArrayUtils.isEmpty(s.getParentStepIds())).toList();
-            log.info("rootSteps:{}", rootSteps.stream().map(Step::getStepId).toList());
-            List<List<BigInteger>> stepPlan= getStepPlan(childrenStep, rootSteps);
+            List<List<BigInteger>> stepPlan= getStepLines(childrenStep, steps);
             log.info("stepPlan: {}",stepPlan);
 
-            return getFigure(stepPlan,stepMap);
+            return getFigure(stepPlan, stepMap);
         }
     }
 
@@ -154,22 +154,21 @@ public class GrafBuilderService {
     }
 
 
-    private List<List<BigInteger>> getStepPlan(Map<BigInteger, List<BigInteger>>  childrenStep, List<Step>  rootSteps) {
-        List<List<BigInteger>> plan = new ArrayList<>();
-        List<BigInteger> leaf = rootSteps.stream().map(Step::getStepId).toList();
-        while (!leaf.isEmpty()) {
-            plan.add(leaf);
-            List<BigInteger> leaf2 = new ArrayList<>();
+    private List<BigInteger> getNextLine(List<BigInteger> currentLine, Map<BigInteger, List<BigInteger>>  childrenSteps){
+        return currentLine.stream().filter(childrenSteps::containsKey).map(childrenSteps::get).flatMap(List::stream).distinct().toList();
+    }
 
-            for (BigInteger stepId : leaf) {
-                List<BigInteger> leaf3 = childrenStep.getOrDefault(stepId, Collections.emptyList());
-                if (!leaf3.isEmpty()) {
-                    leaf2.addAll(leaf3);
-                }
-            }
-            leaf = leaf2;
+    private List<List<BigInteger>> getStepLines(Map<BigInteger, List<BigInteger>>  childrenSteps,  List<Step> steps) {
+        List<List<BigInteger>> result = new ArrayList<>();
+        List<BigInteger> newList = steps.stream().filter(s -> ArrayUtils.isEmpty(s.getParentStepIds())).map(Step::getStepId).toList();
+        while(!newList.isEmpty()){
+            result.add(newList);
+            newList = getNextLine(newList, childrenSteps);
         }
-        return plan;
+
+       log.info("getStepLines:{}", result);
+
+        return result;
     }
 
     public StepData  getStepsField(BigInteger etlId) {

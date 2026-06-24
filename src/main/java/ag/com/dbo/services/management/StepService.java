@@ -1,28 +1,16 @@
 package ag.com.dbo.services.management;
 
-import ag.com.dbo.controllers.queue.QueueStatus;
-import ag.com.dbo.models.management.*;
-import ag.com.dbo.models.queue.QueueStorage;
-import ag.com.dbo.repositories.management.EtlInstanceRepository;
+import ag.com.dbo.models.management.StepDTO;
+import ag.com.dbo.models.management.Step;
 import ag.com.dbo.repositories.management.StepInstanceRepository;
 import ag.com.dbo.repositories.management.StepRepository;
-import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
-import org.springframework.cache.annotation.CachePut;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigInteger;
-import java.time.OffsetDateTime;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.function.Function;
-import java.util.stream.StreamSupport;
 
-import static ag.com.dbo.services.queue.utils.VarSupport.merge;
 
 @Slf4j
 @Service
@@ -60,6 +48,19 @@ public class StepService {
         Step etl = mapFrom(stepDTO);
         Step newEtl =stepRepository.saveAndFlush(etl);
         return mapFrom(newEtl);
+    }
+
+    /*
+     * -------------------------------------------------------------------------
+     * Retrieve
+     * -------------------------------------------------------------------------
+     */
+
+    @Cacheable(value = "etls", key = "#id")
+    public StepDTO retrieveById(BigInteger id) {
+        return stepRepository.findById(id)
+                .map(this::mapFrom)
+                .orElse(null);
     }
 
     public StepDTO mapFrom(Step step) {

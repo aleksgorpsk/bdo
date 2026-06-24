@@ -26,7 +26,7 @@ public class SensorSchedulerService {
     @Transactional
     public void scheduling(){
         List<StepInstance> result =  stepInstanceService.getActiveSensors();
-        log.info("sensor scheduled !!!:{}",result);
+        log.debug("sensor scheduled !!!:{}",result);
         result.forEach(x-> engineService.enqueueTask(x, null));
     }
 

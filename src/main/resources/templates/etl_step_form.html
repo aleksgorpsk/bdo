@@ -33,13 +33,12 @@ private BigInteger stepId;
             <input type="hidden" name="etlId" th:value="${step.etl.id}">
             <div class="p-3">
 
-                <!--            <input type="hidden" th:etlId="*{step.etl.id}" id="etlId"/> -->
+                <input type="hidden" name="stepId" th:value="${stepId}">
 
                 <div class="form-group row">
                     <label class="col-sm-3 col-form-label" for="name">parents</label>
                     <div class="col-sm-9">
-                        <!-- <input type="parentStepIds" th:field="*{allsteps}"  /> -->
-                        <label for="step">User hobbies (multiple select):</label>
+                        <label for="step">Step parents  (multiple select):</label>
                         <br/>
                         <select id="step" th:field="*{parentStepIds}" size="8" multiple="multiple">
                             <option th:each="step : ${allsteps}"
@@ -56,7 +55,7 @@ private BigInteger stepId;
                     <div class="col-sm-9">
                         <!-- <input type="parentStepIds" th:field="*{allsteps}"  /> -->
                         <!--                        <label for="step">User hobbies (multiple select):</label> -->
-                        <select id="dataLoadingg" th:field="*{dataLoading}">
+                        <select id="dataLoading" th:field="*{dataLoading}">
                             <option value="">-- Choose Dataloading type</option>
                             <option th:each="dl : ${allDataLoading}"
                                     th:value="${{dl.id}}"
@@ -107,8 +106,8 @@ private BigInteger stepId;
                 <div class="form-group row">
                     <label class="col-sm-3 col-form-label" for="name">vars</label>
                     <div class="col-sm-9">
-                        <input type="text" th:field="*{vars}" minlength="2" class="form-control"
-                               id="vars"/>
+                    <textarea id="vars" th:field="*{vars}" rows="10" cols="50"
+                              placeholder="Enter your multi-line text here..."></textarea>
                     </div>
                 </div>
 
