@@ -155,15 +155,43 @@ public class GrafBuilderService {
 
 
     private List<BigInteger> getNextLine(List<BigInteger> currentLine, Map<BigInteger, List<BigInteger>>  childrenSteps){
-        return currentLine.stream().filter(childrenSteps::containsKey).map(childrenSteps::get).flatMap(List::stream).distinct().toList();
+        return currentLine
+                .stream()
+                .filter(childrenSteps::containsKey)
+                .map(childrenSteps::get)
+                .flatMap(List::stream)
+                .distinct()
+                .collect(Collectors
+                        .toCollection(ArrayList::new));
     }
+
+    private boolean foundLine(int currentLine, BigInteger element, List<List<BigInteger>> result){
+        for(int i = 0; i< result.size(); i++) {
+            List<BigInteger> searchLine= result.get(i);
+            if (i!= currentLine){
+                if (searchLine.contains(element)){
+                    return  true;
+                }
+            }
+        }
+        return  false;
+        }
 
     private List<List<BigInteger>> getStepLines(Map<BigInteger, List<BigInteger>>  childrenSteps,  List<Step> steps) {
         List<List<BigInteger>> result = new ArrayList<>();
-        List<BigInteger> newList = steps.stream().filter(s -> ArrayUtils.isEmpty(s.getParentStepIds())).map(Step::getStepId).toList();
+        List<BigInteger> newList = steps.stream().filter(s -> ArrayUtils.isEmpty(s.getParentStepIds()))
+                .map(Step::getStepId)
+                .collect(Collectors
+                        .toCollection(ArrayList::new));//toList();
         while(!newList.isEmpty()){
             result.add(newList);
             newList = getNextLine(newList, childrenSteps);
+        }
+// toDO remove duplicates!
+        for(int i = 0; i< result.size(); i++){
+            List<BigInteger> line =  result.get(i);
+            int finalI = i;
+            line.removeIf(x-> foundLine(finalI,x,result) );
         }
 
        log.info("getStepLines:{}", result);
