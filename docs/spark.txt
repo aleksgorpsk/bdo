@@ -1,0 +1,21 @@
+curl -X POST http://<spark-master-ip>:6066/v1/submissions/create \
+--header "Content-Type: application/json;charset=UTF-8" \
+--data '{
+  "action": "CreateSubmissionRequest",
+  "clientSparkVersion": "3.5.0",
+  "appArgs": [ "arg1", "arg2" ],
+  "appResource": "hdfs://path/to/your/application.jar",
+  "environmentVariables": {
+    "SPARK_ENV_LOADED": "1"
+  },
+  "mainClass": "com.example.MySparkApp",
+  "sparkProperties": {
+    "spark.jars": "hdfs://path/to/your/application.jar",
+    "spark.driver.supervise": "false",
+    "spark.app.name": "MyHttpSparkJob",
+    "spark.eventLog.enabled": "false",
+    "spark.master": "spark://<spark-master-ip>:7077",
+    "spark.executor.memory": "2g",
+    "spark.driver.memory": "1g"
+  }
+}'

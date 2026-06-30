@@ -49,6 +49,7 @@ services:
     ports:
       - "10000:10000" # JDBC port
       - "10002:10002" # WebUI port
+
   spark-master:
     image: apache/spark:4.1.1
     container_name: spark-master
@@ -56,8 +57,10 @@ services:
       - "8080:8080"   # Spark Master web UI
       - "7077:7077"   # Spark Master port
       - "4040:4040"   # Spark application UI
+      - "6066:6066"
     environment:
       - SPARK_MODE=master
+      - spark.master.rest.enabled=true
     command: /opt/spark/bin/spark-class org.apache.spark.deploy.master.Master
     volumes:
       - spark-data:/opt/spark/work-dir
@@ -70,7 +73,7 @@ services:
     environment:
       - SPARK_MODE=worker
       - SPARK_MASTER_URL=spark://spark-master:7077
-      - SPARK_WORKER_MEMORY=4g
+      - SPARK_WORKER_MEMORY=6g
       - SPARK_WORKER_CORES=2
     command: >
       /opt/spark/bin/spark-class org.apache.spark.deploy.worker.Worker
@@ -86,7 +89,7 @@ services:
     environment:
       - SPARK_MODE=worker
       - SPARK_MASTER_URL=spark://spark-master:7077
-      - SPARK_WORKER_MEMORY=4g
+      - SPARK_WORKER_MEMORY=6g
       - SPARK_WORKER_CORES=2
     command: >
       /opt/spark/bin/spark-class org.apache.spark.deploy.worker.Worker
@@ -102,7 +105,7 @@ services:
     environment:
       - SPARK_MODE=worker
       - SPARK_MASTER_URL=spark://spark-master:7077
-      - SPARK_WORKER_MEMORY=4g
+      - SPARK_WORKER_MEMORY=6g
       - SPARK_WORKER_CORES=2
     command: >
       /opt/spark/bin/spark-class org.apache.spark.deploy.worker.Worker
@@ -110,5 +113,19 @@ services:
     volumes:
       - spark-data:/opt/spark/work-dir
 
+  minio:
+    image: minio/minio:latest
+    container_name: minio
+    volumes:
+      - minio_data:/data
+    ports:
+      - "9000:9000" # S3 API endpoint
+      - "9001:9001" # Web Console UI
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadminpassword
+    command: server /data --console-address ":9001"
+
 volumes:
   spark-data:
+  minio_data:
