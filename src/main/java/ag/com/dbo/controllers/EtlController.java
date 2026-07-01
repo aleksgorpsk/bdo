@@ -1,10 +1,12 @@
 package ag.com.dbo.controllers;
 
 import java.math.BigInteger;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
 import ag.com.dbo.models.management.EtlDTO;
+import ag.com.dbo.models.management.EtlStatus;
 import ag.com.dbo.services.management.EngineService;
 import ag.com.dbo.services.management.EtlService;
 import lombok.extern.slf4j.Slf4j;
@@ -31,11 +33,12 @@ public class EtlController {
 //  @Autowired
   private final  EtlService etlService;
     private final EngineService engineService;
-
+    private final List<String> etlStatuses;
 
     public EtlController(EtlService etlService, EngineService engineService) {
         this.etlService = etlService;
         this.engineService = engineService;
+        etlStatuses =  Arrays.stream(EtlStatus.values()).map(Enum::name).toList();
     }
 
     @GetMapping("/etl_browser")
@@ -81,17 +84,30 @@ public class EtlController {
   @GetMapping("/etl/new")
   public String addEtl(Model model) {
     EtlDTO etl = new EtlDTO();
-      etl.setActive(true);
+    etl.setActive(true);
+    etl.setCronScheduling("* * */1 * * *");
 
     model.addAttribute("etl", etl);
+    model.addAttribute("allStatuses", etlStatuses);
     model.addAttribute("pageTitle", "Create new Etl");
 
     return "etl_form";
   }
 
   @PostMapping("/etl/save")
-  public String saveEtl(EtlDTO etlDto, RedirectAttributes redirectAttributes) {
+  public String saveEtl(EtlDTO etlDto,  Model model, RedirectAttributes redirectAttributes) {
     try {
+        if (!org.quartz.CronExpression.isValidExpression(etlDto.getCronScheduling())){
+            redirectAttributes.addAttribute("message", "Incorrect Cron expression1: "+etlDto.getCronScheduling());
+            if (etlDto.getId()!=null) {
+                return "redirect:/etl/"+etlDto.getId();
+            }else{
+                return "redirect:/etl/new";
+            }
+        }
+        else {
+            redirectAttributes.addAttribute("message", null);
+        }
         if (etlDto.getId()!=null) {
             etlService.update(etlDto);
         }else{
@@ -106,24 +122,32 @@ public class EtlController {
   }
 
   @GetMapping("/etl/{id}")
-  public String editEtl(@PathVariable("id") BigInteger id, Model model, RedirectAttributes redirectAttributes) {
+  public String editEtl(@PathVariable("id") BigInteger id,
+                        Model model,
+                        RedirectAttributes redirectAttributes,
+                        @RequestParam Optional<String> message) {
     try {
-      Optional<EtlDTO> etl = etlService.findById(id);
-      model.addAttribute("etl", etl);
-      model.addAttribute("pageTitle", "Edit Etl (ID: " + id + ")");
-      return "etl_form";
+      Optional<EtlDTO> oetl = etlService.findById(id);
+      if (oetl.isPresent()) {
+          EtlDTO etl = oetl.get();
+          message.ifPresent(s -> model.addAttribute("message", s));
+          model.addAttribute("etl", etl);
+          model.addAttribute("allStatuses", etlStatuses);
+          model.addAttribute("pageTitle", "Edit Etl (ID: " + id + ")");
+          return "etl_form";
+      }else{
+          redirectAttributes.addFlashAttribute("message", "Etl not found: "+id);
+      }
     } catch (Exception e) {
       redirectAttributes.addFlashAttribute("message", e.getMessage());
-
-      return "redirect:/etl_browser";
     }
+      return "redirect:/etl_browser";
   }
 
   @GetMapping("/etl/delete/{id}")
   public String deleteEtl(@PathVariable("id") BigInteger id, Model model, RedirectAttributes redirectAttributes) {
     try {
         etlService.delete(id);
-
       redirectAttributes.addFlashAttribute("message", "The Etl with id=" + id + " has been deleted successfully!");
     } catch (Exception e) {
       redirectAttributes.addFlashAttribute("message", e.getMessage());

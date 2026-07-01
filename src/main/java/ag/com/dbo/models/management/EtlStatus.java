@@ -1,10 +1,7 @@
 package ag.com.dbo.models.management;
 
 public enum EtlStatus {
-    Ready,
-    AutoStart,
-    ManualStart,
-    Started,
+    InProgress,
     Success,
     Fail;
 

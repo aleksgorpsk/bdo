@@ -85,7 +85,6 @@ public class HiveOperatorTask extends TaskProperties implements Callable<PropDat
             Process process = processBuilder.start();
             BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
             OutputStream output = process.getOutputStream();
-  //          out=applyVars(out,  vars);
 
 
             String taskLog = fullReadStr(reader);

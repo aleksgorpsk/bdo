@@ -13,9 +13,8 @@ public class EtlDTO {
     @NotBlank
     private String name;
     private Boolean active;
-    private Integer status; //1 - ready to start 2- started
+    private String status;
     private String cronScheduling;
     private Integer interval; // in sec
     private String comment;
-    private Integer lastResult;
 }

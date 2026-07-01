@@ -2,68 +2,110 @@
 <html xmlns:th="http://www.thymeleaf.org">
 
 <head>
-  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0" />
-  <link rel="stylesheet" type="text/css" th:href="@{/css/bootstrap.min.css}" />
-  <link rel="stylesheet" type="text/css" th:href="@{/css/style.css}" />
+
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0"/>
+    <link rel="stylesheet" type="text/css" th:href="@{/css/bootstrap.min.css}"/>
+    <link rel="stylesheet" type="text/css" th:href="@{/css/style.css}"/>
     <script type="text/javascript" th:src="@{/css/jquery-1.7.1.min.js}"></script>
-  <script type="text/javascript" th:src="@{/css/bootstrap.min.js}"></script>
+    <script type="text/javascript" th:src="@{/css/bootstrap.min.js}"></script>
 </head>
 
 <body>
-  <div th:replace="~{fragments/header :: header}"></div>
+<div th:replace="~{fragments/header :: header}"></div>
 
-  <div class="container-fluid">
-    <h2 class="text-center">[[${pageTitle}]]</h2>
-
-    <div class="my-3">
-      <form th:action="@{/etl/save}" method="post" enctype="multipart/form-data" th:object="${etl}"
-        style="max-width: 550px; margin: 0 auto">
-
-        <input type="hidden" th:field="*{id}" />
-
-        <div class="p-3">
-          <div class="form-group row">
-            <label class="col-sm-3 col-form-label" for="name">Title</label>
-            <div class="col-sm-9">
-              <input type="text" th:field="*{name}" required minlength="2" maxlength="128" class="form-control"
-                id="name" />
-            </div>
-          </div>
-
-            <div class="form-group row">
-            <label class="col-sm-3 col-form-label" for="comment">comment</label>
-            <div class="col-sm-9">
-              <input type="text" th:field="*{comment}" minlength="2" maxlength="256" class="form-control"
-                id="comment" />
-            </div>
-          </div>
-
-          <div class="form-group row">
-            <label class="col-sm-3 form-check-label" for="active">active</label>
-            <div class="col-sm-9">
-              <input type="checkbox" th:field="*{active}" />
-            </div>
-          </div>
-
-          <div class="text-center">
-            <input type="submit" value="Save" class="btn btn-primary btn-sm mr-2" />
-            <input type="button" value="Cancel" id="btnCancel" class="btn btn-secondary btn-sm" />
-          </div>
-        </div>
-      </form>
+<div class="container-fluid">
+    <h2 class="text-center">[[${pageTitle}]] </h2>
+    <div th:if="${message != null}" class="alert alert-success alert-dismissible fade show text-center message"
+         role="alert">
+        [[${message}]]
+        <button type="button" class="close btn-sm" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
     </div>
-  </div>
+    <div class="my-3">
+        <form th:action="@{/etl/save}" method="post" enctype="multipart/form-data" th:object="${etl}"
+              style="max-width: 550px; margin: 0 auto">
 
-  <div th:replace="~{fragments/footer :: footer}"></div>
+            <input type="hidden" th:field="*{id}"/>
 
-  <script type="text/javascript">
+            <div class="p-3">
+                <div class="form-group row">
+                    <label class="col-sm-3 col-form-label" for="name">Title</label>
+                    <div class="col-sm-9">
+                        <input type="text" th:field="*{name}" required minlength="2" maxlength="128"
+                               class="form-control"
+                               id="name"/>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label class="col-sm-3 col-form-label" for="comment">comment</label>
+                    <div class="col-sm-9">
+                        <input type="text" th:field="*{comment}" minlength="2" maxlength="256" class="form-control"
+                               id="comment"/>
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <label class="col-sm-3 form-check-label" for="active">active</label>
+                    <div class="col-sm-9">
+                        <input type="checkbox" th:field="*{active}"/>
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <label class="col-sm-3 col-form-label" for="name">LastStatus </label>
+                    <div class="col-sm-9">
+                        <select id="status" th:field="*{status}">
+                            <option value="status">[[*{status}]]</option>
+                            <option th:each="st : ${allStatuses}"
+                                    th:value="${{st}}"
+                                    th:text="${st}">
+                                Cinema
+                            </option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label class="col-sm-3 col-form-label" for="cronExpression">cronScheduling</label>
+                    <div class="col-sm-9">
+                        <input type="text" th:field="*{cronScheduling}" minlength="2" maxlength="256"
+                               class="form-control"
+                               id="cronScheduling"/>
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <label class="col-sm-3 col-form-label" for="name">interval</label>
+                    <div class="col-sm-9">
+                        <input type="number"
+                               id="interval"
+                               th:field="*{interval}"
+                               min="1"
+                               max="1000000"
+                               step="1"
+                               placeholder="Interval "/>
+                    </div>
+                </div>
+
+                <div class="text-center">
+                    <input type="submit" value="Save" class="btn btn-primary btn-sm mr-2"/>
+                    <input type="button" value="Cancel" id="btnCancel" class="btn btn-secondary btn-sm"/>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+
+<script type="text/javascript">
     $(document).ready(function () {
       $("#btnCancel").on("click", function () {
         window.location = "[[@{/etl_browser}]]";
       });
     });
-  </script>
+</script>
 
 </body>
 

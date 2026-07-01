@@ -66,7 +66,7 @@ public class EngineService {
         EtlInstance ei = new EtlInstance();
         ei.setEtl(etl);
         ei.setStart(OffsetDateTime.now());
-        ei.setStatus(EtlStatus.Started.name());
+        ei.setStatus(EtlStatus.InProgress.name());
         ei.setComment(etl.getComment());
         etlInstanceRepository.saveAndFlush(ei);
         log.debug("save  etl status:{}", ei);

@@ -103,8 +103,7 @@
                     </a>
                 </td>
                 <td>
-                    <img th:if="${etl.lastResult ==0 }" th:src="@{/images/icons8-ok-24.png}"/>
-                    <img th:if="${etl.lastResult !=0 }" th:src="@{/images/icons8-fail-24.png}"/>
+                    <img th:text="${etl.status}" />
                 </td>
             </tr>
 

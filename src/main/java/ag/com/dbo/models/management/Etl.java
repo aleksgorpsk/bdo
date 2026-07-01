@@ -22,11 +22,10 @@ public class Etl {
 
     private BigInteger id;
     private String name;
+    private String comment;
     private Boolean active;
-    private Integer status; //1 - ready to start, 2- auto started, 3 - manual start
+    private String status; // last instance EtlStatus
     private String cronScheduling;
     private Integer interval; // in sec
-    private String comment;
-    private Integer lastResult;
 
 }

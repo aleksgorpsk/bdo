@@ -14,15 +14,6 @@ public class LoadTaskFactory {
                                              QueueStorageRepository queueStorageRepository,
                                              ExternalStepTypeService externalStepTypeService) {
         String calculateType = task.getCalculateType();
-        if (TaskName.CSV_TO_HIVE.name().equals(calculateType)) {
-            return new HiveTask(task, env, queueStorageRepository);
-        }
-        if (TaskName.HIVE_TO_DB.name().equals(calculateType)) {
-            return new HiveToJdbcTask(task, env, queueStorageRepository);
-        }
-        if (TaskName.SIMPLE.name().equals(calculateType)) {
-            return new SimpleBashTask(task, env, queueStorageRepository);
-        }
         if (TaskName.HIVEOPERATOR.name().equals(calculateType)) {
             return new HiveOperatorTask(task, env, queueStorageRepository, externalStepTypeService);
         }
