@@ -5,7 +5,9 @@ import ag.com.dbo.controllers.queue.QueueStatus;
 import ag.com.dbo.models.queue.QueueStorage;
 import ag.com.dbo.services.queue.MultithreadExecutor;
 import ag.com.dbo.services.queue.QueueService;
+import ag.com.dbo.models.management.statuses.QueueInfo;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.http.HttpStatus;
@@ -18,8 +20,8 @@ import java.util.UUID;
 
 
 @RestController
-//@RequestMapping("/queue")
 @Slf4j
+//@ConditionalOnProperty(prefix = "spring.role", havingValue = "master", matchIfMissing = false)
 public class QueueController {
 
     private final QueueService queueService;
@@ -30,6 +32,14 @@ public class QueueController {
         this.queueService = queueService;
         this.multithreadExecutor = multithreadExecutor;
     }
+
+    @GetMapping("/queue/info")
+        public ResponseEntity<@NonNull QueueInfo> info(){
+        return ResponseEntity.status(HttpStatus.OK)
+                .header("Content-Type","application/json")
+                .body(this.multithreadExecutor.getFreeSpots());
+    }
+
 
     @PutMapping("/queue/put")
     public ResponseEntity<@Nullable QueueStorage> enqueue(

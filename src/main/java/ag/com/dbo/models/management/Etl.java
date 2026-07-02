@@ -14,11 +14,11 @@ import java.time.OffsetDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Etl {
+
     @Id
     @SequenceGenerator( name = "mySeqGen", sequenceName = "etl_id_seq", allocationSize = 1, initialValue=1000)
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "mySeqGen")
     @Column(name = "id", updatable = false)
-//    @Column(name = "id", updatable = false, columnDefinition="numeric(38) DEFAULT nextval(\'etl_id_seq\')")
 
     private BigInteger id;
     private String name;

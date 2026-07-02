@@ -51,17 +51,18 @@ public class EngineService {
     }
 
 
-//    @Scheduled(fixedRateString = "${scheduler.testInterval}", timeUnit = TimeUnit.SECONDS)
-    public void schedule(){
+    //    @Scheduled(fixedRateString = "${scheduler.testInterval}", timeUnit = TimeUnit.SECONDS)
+    public void schedule() {
         log.info("sh!");
         List<Etl> started = etlRepository.findByStatus(1);
-        log.info("get:"+started);
-        for (Etl etl : started){
+        log.info("get:" + started);
+        for (Etl etl : started) {
             createEtlInstance(etl);
         }
     }
-//Start !!!
-    public void createEtlInstance(Etl etl){
+
+    //Start !!!
+    public void createEtlInstance(Etl etl) {
         log.info("get one:{}", etl.getId());
         EtlInstance ei = new EtlInstance();
         ei.setEtl(etl);
@@ -73,9 +74,9 @@ public class EngineService {
         createStepInstances(ei);
     }
 
-    private void createStepInstances(EtlInstance etl){
+    private void createStepInstances(EtlInstance etl) {
         log.info("steps for etl instance: {}", etl.getEtlInstanceId());
-        List<Step> steps= stepRepository.findAllStepsByEtl(etl.getEtl().getId());
+        List<Step> steps = stepRepository.findAllStepsByEtl(etl.getEtl().getId());
         log.info("steps1: {}", steps.stream().map(Step::getStepId));
 
         List<StepInstance> sis = new ArrayList<>(steps.size());
@@ -93,62 +94,94 @@ public class EngineService {
                 si.setName(step.getName());
                 si.setSaveCalculate(step.getSaveCalculate());
                 si.setGroovyScript(step.getGroovyScript());
-                etl.setEtlVars(merge(etl.getEtlVars(), si.getVars(),si.getName()));
+                etl.setEtlVars(merge(etl.getEtlVars(), si.getVars(), si.getName()));
                 si.setStepType(step.getStepType());
                 si.setNextTest(null);
                 log.debug("si:{} ", si);
                 sis.add(si);
             }
-        }catch(Exception e){
-            etl.addLog("Cannot build vars field: "+e.getMessage());
+        } catch (Exception e) {
+            etl.addLog("Cannot build vars field: " + e.getMessage());
             etl.setStatus(EtlStatus.Fail.name());
             etlInstanceRepository.saveAndFlush(etl);
             return;
         }
-        log.info("steps sis:"+sis);
+        log.info("steps sis:" + sis);
         List<StepInstance> sisOut = stepInstanceRepository.saveAllAndFlush(sis);
         etl = etlInstanceRepository.saveAndFlush(etl);
 
         log.info("saved new etl status: {}", sisOut);
         // stepId-> stepInstanceId old -> new
-        Map<BigInteger,String> stepInstanceRelation = sisOut.stream().collect(
-                Collectors.toMap( x -> x.getStep().getStepId(), StepInstance::getStepInstanceId )
+        Map<BigInteger, String> stepInstanceRelation = sisOut.stream().collect(
+                Collectors.toMap(x -> x.getStep().getStepId(), StepInstance::getStepInstanceId)
         );
         // Step instances // set parents
-        for (StepInstance si :sisOut){
+        for (StepInstance si : sisOut) {
             // Steps
             BigInteger[] parentStep = si.getStep().getParentStepIds();
             if (parentStep != null) {
                 String[] parentsSi = Arrays.stream(parentStep).map(stepInstanceRelation::get).toArray(String[]::new);
                 si.setParentStepInstanceIds(parentsSi);
             }
-           StepInstance sisOute = stepInstanceRepository.saveAndFlush(si);
-           log.info("saved updated etl status: {}", sisOute);
+            StepInstance sisOute = stepInstanceRepository.saveAndFlush(si);
+            log.info("saved updated etl status: {}", sisOute);
         }
         try {
             makeStep(etl);
-        } catch (Exception e){
+        } catch (Exception e) {
             etl.addLog("cannot calculate logic: " + e.getMessage());
             etl.setStatus(StepStatus.Failed.name());
             return;
         }
     }
-/*
-public void checkSensor(StepInstance si, FullEtlInstance fullEtlInstance)  {
-    if (StepStatus.InWait.name().equals(si.getStatus())
-            && StepType.Sensor.name().equals(si.getStepType())){
 
-        try {
-            SensorModel sModel = externalStepTypeService.getSensor(si.getVars());
+    /*
+    public void checkSensor(StepInstance si, FullEtlInstance fullEtlInstance)  {
+        if (StepStatus.InWait.name().equals(si.getStatus())
+                && StepType.Sensor.name().equals(si.getStepType())){
 
-    if(si.getNextTest()==null){
-        si.setNextTest(OffsetDateTime.now().plusSeconds(sModel.getAttemptTimeOut()));
-    }else{
-        si.setNextTest(si.getNextTest().plusSeconds(sModel.getAttemptTimeOut()));
+            try {
+                SensorModel sModel = externalStepTypeService.getSensor(si.getVars());
+
+        if(si.getNextTest()==null){
+            si.setNextTest(OffsetDateTime.now().plusSeconds(sModel.getAttemptTimeOut()));
+        }else{
+            si.setNextTest(si.getNextTest().plusSeconds(sModel.getAttemptTimeOut()));
+        }
+        stepInstanceRepository.saveAndFlush(si);
+
+        if(fullEtlInstance==null) {
+            try {
+                fullEtlInstance = getFullEtlInstance(si.getEtlInstance());
+            } catch (Exception e) {
+                si.addLog("cannot calculate logic:" + e.getMessage());
+                si.setStatus(StepStatus.Failed.name());
+                return;
+            }
+        }
+
+
+
+
+                boolean result = externalStepTypeService.checkSensorScript(si);
+                log.info("!!!!!!!:{}",result);
+
+            }catch (Exception e){
+                saveError(si,stepInstanceRepository,e,"Cannot parse Sensor script");
+            }
+            //TODO!!!
+        }
     }
-    stepInstanceRepository.saveAndFlush(si);
 
-    if(fullEtlInstance==null) {
+    */
+    public void stepFrom(String stepInstanceId) {
+        StepInstance si = stepInstanceRepository.getReferenceById(stepInstanceId);
+        stepFrom(si);
+    }
+// step finished and need new step
+
+    public void stepFrom(StepInstance si) {
+        FullEtlInstance fullEtlInstance = null;
         try {
             fullEtlInstance = getFullEtlInstance(si.getEtlInstance());
         } catch (Exception e) {
@@ -156,40 +189,9 @@ public void checkSensor(StepInstance si, FullEtlInstance fullEtlInstance)  {
             si.setStatus(StepStatus.Failed.name());
             return;
         }
-    }
-
-
-
-
-            boolean result = externalStepTypeService.checkSensorScript(si);
-            log.info("!!!!!!!:{}",result);
-
-        }catch (Exception e){
-            saveError(si,stepInstanceRepository,e,"Cannot parse Sensor script");
-        }
-        //TODO!!!
-    }
-}
-
-*/
-    public void stepFrom(String stepInstanceId ) {
-        StepInstance si = stepInstanceRepository.getReferenceById(stepInstanceId);
-        stepFrom(si);
-    }
-// step finished and need new step
-
-    public void stepFrom(StepInstance si ){
-        FullEtlInstance fullEtlInstance = null;
-        try {
-            fullEtlInstance = getFullEtlInstance(si.getEtlInstance());
-        }catch(Exception e ){
-            si.addLog("cannot calculate logic:"+e.getMessage());
-            si.setStatus(StepStatus.Failed.name());
-            return;
-        }
         // check finish
         EtlInstance ei = si.getEtlInstance();
-        if(StepStatus.Success.name().equals(si.getStatus())) {
+        if (StepStatus.Success.name().equals(si.getStatus())) {
             if (checkAllStepInstances(si, fullEtlInstance)) {
                 log.info("!!!!!ETL finished !!!!!!");
                 ei.setStop(OffsetDateTime.now());
@@ -201,8 +203,8 @@ public void checkSensor(StepInstance si, FullEtlInstance fullEtlInstance)  {
                 etlInstanceRepository.saveAndFlush(ei);
                 return;
             }
-        }else if(StepStatus.Failed.name().equals(si.getStatus())) {
-             si.setStatus(StepStatus.Failed.name());
+        } else if (StepStatus.Failed.name().equals(si.getStatus())) {
+            si.setStatus(StepStatus.Failed.name());
             ei.setStatus(EtlStatus.Fail.name());
             stepInstanceRepository.saveAndFlush(si);
             etlInstanceRepository.saveAndFlush(ei);
@@ -226,7 +228,7 @@ public void checkSensor(StepInstance si, FullEtlInstance fullEtlInstance)  {
                 boolean result = externalStepTypeService.checkSensorScript(si, sModel);
                 log.info("!!!!!!!:{}", result);
 
-            }catch (JsonProcessingException e){
+            } catch (JsonProcessingException e) {
                 saveError(si, stepInstanceRepository, e, "Cannot parse Sensor parameters");
                 return;
 
@@ -237,38 +239,38 @@ public void checkSensor(StepInstance si, FullEtlInstance fullEtlInstance)  {
         }
         // check branch !!!
         // TODO
-        if (StepType.Branch.name().equals( si.getStepType())
-                && StringUtils.isNotEmpty(si.getStep().getBranchCondition())){
+        if (StepType.Branch.name().equals(si.getStepType())
+                && StringUtils.isNotEmpty(si.getStep().getBranchCondition())) {
             try {
                 List<String> correctWsyNames = externalStepTypeService.execBranchGroovyScript(si);
                 List<String> correctWayId = fullEtlInstance.getCorrectWayInIds(correctWsyNames, si.getStepInstanceId());
                 incorrectWayId = fullEtlInstance.getIncorrectWayIds(correctWsyNames, si.getStepInstanceId());
-                if (CollectionUtils.isEmpty(correctWayId)){
+                if (CollectionUtils.isEmpty(correctWayId)) {
                     log.info("last step!:{}", si.getStepInstanceId());
-                    children= Collections.emptySet();
-                }else{
-                    children = new  HashSet<>(correctWayId);
+                    children = Collections.emptySet();
+                } else {
+                    children = new HashSet<>(correctWayId);
                 }
-            }catch (Exception e){
-                saveError(si, stepInstanceRepository,e, "Wrong Groovy script");
+            } catch (Exception e) {
+                saveError(si, stepInstanceRepository, e, "Wrong Groovy script");
             }
         }
-        if (CollectionUtils.isEmpty(children) ){
-            log.info("last step!:{}",si.getStepInstanceId());
-        }else{
+        if (CollectionUtils.isEmpty(children)) {
+            log.info("last step!:{}", si.getStepInstanceId());
+        } else {
             FullEtlInstance finalFullEtlInstance = fullEtlInstance;
             children.stream()
-                    .map(x-> finalFullEtlInstance.getSiBase().get(x))
-                    .forEach(stepInstance-> {
+                    .map(x -> finalFullEtlInstance.getSiBase().get(x))
+                    .forEach(stepInstance -> {
                         log.info("try to run child:{}", stepInstance.getStepInstanceId());
                         enqueueTask(stepInstance, finalFullEtlInstance);
                     });
         }
-        if(!CollectionUtils.isEmpty(incorrectWayId)){
+        if (!CollectionUtils.isEmpty(incorrectWayId)) {
             // set all branch status to StepStatus.Missed
-            List<StepInstance> listSii= new ArrayList<>(incorrectWayId.size());
-            List<StepInstance> result= new ArrayList<>();
-            for(String id: incorrectWayId){
+            List<StepInstance> listSii = new ArrayList<>(incorrectWayId.size());
+            List<StepInstance> result = new ArrayList<>();
+            for (String id : incorrectWayId) {
                 result.addAll(recursiveSetMissed(fullEtlInstance, id, false));
             }
             stepInstanceRepository.saveAllAndFlush(result);
@@ -279,81 +281,83 @@ public void checkSensor(StepInstance si, FullEtlInstance fullEtlInstance)  {
 
     /**
      * should be next
+     *
      * @param fullEtlInstance
      * @param stepInstanceId
      * @return List<StepInstance>
      */
 
 
-    private List<StepInstance> recursiveSetMissed(FullEtlInstance fullEtlInstance, String stepInstanceId, boolean recursive){
+    private List<StepInstance> recursiveSetMissed(FullEtlInstance fullEtlInstance, String stepInstanceId, boolean recursive) {
         List<StepInstance> result = new ArrayList<>();
-        StepInstance  sii = fullEtlInstance.getSiBase().get(stepInstanceId);
+        StepInstance sii = fullEtlInstance.getSiBase().get(stepInstanceId);
         if (!recursive) {
             sii.setStatus(StepStatus.Missed.name());
             result.add(sii);
-        }else{
+        } else {
             String[] parents = sii.getParentStepInstanceIds();
-            if (ArrayUtils.isNotEmpty(parents) && parents.length==1){
+            if (ArrayUtils.isNotEmpty(parents) && parents.length == 1) {
                 sii.setStatus(StepStatus.Missed.name());
                 result.add(sii);
             }
         }
         Set<String> children = fullEtlInstance.getParentToChildrenStep().get(stepInstanceId);
-        if (children!=null){
-            children.forEach(x-> result.addAll(recursiveSetMissed(fullEtlInstance,x, true)));
+        if (children != null) {
+            children.forEach(x -> result.addAll(recursiveSetMissed(fullEtlInstance, x, true)));
         }
         return result;
     }
 
-    private boolean checkAllStepInstances(StepInstance si, FullEtlInstance fullEtlInstance){
+    private boolean checkAllStepInstances(StepInstance si, FullEtlInstance fullEtlInstance) {
         List<StepInstance> steps = fullEtlInstance.getSteps();
-        long finishedCount= steps.stream().filter(x->
+        long finishedCount = steps.stream().filter(x ->
                 (StepStatus.Success.name().equals(x.getStatus()) ||
                         StepStatus.Missed.name().equals(x.getStatus()) ||
                         StepStatus.Failed.name().equals(x.getStatus()))
 
         ).count();
-        return  (steps.size() == finishedCount);
+        return (steps.size() == finishedCount);
 
     }
-    private boolean getEtlInstanceErrorExists(StepInstance si, FullEtlInstance fullEtlInstance){
+
+    private boolean getEtlInstanceErrorExists(StepInstance si, FullEtlInstance fullEtlInstance) {
         List<StepInstance> steps = fullEtlInstance.getSteps();
-        long errorCount= steps.stream()
-                .filter(x-> StepStatus.Failed.name().equals(x.getStatus()))
+        long errorCount = steps.stream()
+                .filter(x -> StepStatus.Failed.name().equals(x.getStatus()))
                 .count();
-        return  (errorCount>0);
+        return (errorCount > 0);
 
     }
 
 
     private void makeStep(EtlInstance etlInstance) throws Exception {
 
-        log.info("make first step etlInstance id:"+etlInstance.getEtlInstanceId());
+        log.info("make first step etlInstance id:" + etlInstance.getEtlInstanceId());
         //get all step instances from etl instances
-        List<StepInstance> steps= stepInstanceRepository.findAllStepInstancesByEtlInstanceId(etlInstance.getEtlInstanceId());
+        List<StepInstance> steps = stepInstanceRepository.findAllStepInstancesByEtlInstanceId(etlInstance.getEtlInstanceId());
 
         FullEtlInstance fullEtlInstance = getFullEtlInstance(etlInstance);
         // root steps can be with condition ? I suppose not.
-        List<StepInstance> startSteps = fullEtlInstance.getSteps().stream().filter(x-> ArrayUtils.isEmpty(x.getParentStepInstanceIds())).toList();
-        for (StepInstance si : startSteps){
+        List<StepInstance> startSteps = fullEtlInstance.getSteps().stream().filter(x -> ArrayUtils.isEmpty(x.getParentStepInstanceIds())).toList();
+        for (StepInstance si : startSteps) {
             enqueueTask(si, fullEtlInstance);
         }
     }
 
-    private  FullEtlInstance getFullEtlInstance(EtlInstance etlInstance) throws Exception {
-        log.info("make step etlInstance id:"+etlInstance.getEtlInstanceId());
+    private FullEtlInstance getFullEtlInstance(EtlInstance etlInstance) throws Exception {
+        log.info("make step etlInstance id: {}", etlInstance.getEtlInstanceId());
         //get all step instances from etl instances
-        List<StepInstance> steps= stepInstanceRepository.findAllStepInstancesByEtlInstanceId(etlInstance.getEtlInstanceId());
+        List<StepInstance> steps = stepInstanceRepository.findAllStepInstancesByEtlInstanceId(etlInstance.getEtlInstanceId());
 
         // map Si.id-> Si for one etl instance (cache)
-        Map<String, StepInstance> stepInstancesEltInstance =   steps.stream().collect(
+        Map<String, StepInstance> stepInstancesEltInstance = steps.stream().collect(
                 Collectors.toMap(StepInstance::getStepInstanceId, Function.identity())
         );
 
         // make a map: parens Step instance to list of children
-        Map<String, Set<String>> parentToChildrenStep= new HashMap<>();
-        for(StepInstance si : steps) {
-            if (ArrayUtils.isNotEmpty(si.getParentStepInstanceIds())){
+        Map<String, Set<String>> parentToChildrenStep = new HashMap<>();
+        for (StepInstance si : steps) {
+            if (ArrayUtils.isNotEmpty(si.getParentStepInstanceIds())) {
                 for (String parentId : si.getParentStepInstanceIds()) {
                     Set<String> children = parentToChildrenStep.get(parentId);
                     if (children == null) {
@@ -368,27 +372,27 @@ public void checkSensor(StepInstance si, FullEtlInstance fullEtlInstance)  {
 
         log.debug("list tree:{}", stepInstancesEltInstance);
         //
-        List<String> finishSteps = stepInstancesEltInstance.keySet().stream().filter( k-> !parentToChildrenStep.containsKey(k)).toList();
+        List<String> finishSteps = stepInstancesEltInstance.keySet().stream().filter(k -> !parentToChildrenStep.containsKey(k)).toList();
         log.debug("finishSteps: {}", finishSteps);
         // try to run recursive from root
 
-        return  new FullEtlInstance(parentToChildrenStep, stepInstancesEltInstance, finishSteps, steps);
+        return new FullEtlInstance(parentToChildrenStep, stepInstancesEltInstance, finishSteps, steps);
 
     }
 
 
-
     /**
-     *   need full check because maybe next step
+     * need full check because maybe next step
+     *
      * @param currentSi
      * @param fullEtlInstance
      */
-    public void enqueueTask( StepInstance currentSi, FullEtlInstance fullEtlInstance ){
+    public void enqueueTask(StepInstance currentSi, FullEtlInstance fullEtlInstance) {
         log.info("Step: {}", currentSi.getStepInstanceId());
-        if(fullEtlInstance == null){
+        if (fullEtlInstance == null) {
             try {
                 fullEtlInstance = getFullEtlInstance(currentSi.getEtlInstance());
-            }catch(Exception e ){
+            } catch (Exception e) {
                 saveError(currentSi, stepInstanceRepository, e, "cannot calculate logic:");
                 return;
             }
@@ -403,9 +407,9 @@ public void checkSensor(StepInstance si, FullEtlInstance fullEtlInstance)  {
                         .map(x -> finalFullEtlInstance.getSiBase().get(x))
                         .filter(x -> StepStatus.Success.name().equals(x.getStatus()) ||
                                 StepStatus.Missed.name().equals(x.getStatus()) ||
-                                StepStatus.Failed.name().equals(x.getStatus()) )
+                                StepStatus.Failed.name().equals(x.getStatus()))
                         .toList();
-                if (ArrayUtils.isEmpty(parents) || parents.length == parentOkSi.size()){
+                if (ArrayUtils.isEmpty(parents) || parents.length == parentOkSi.size()) {
                     startStepInstance(currentSi);
                 }
 
@@ -416,11 +420,12 @@ public void checkSensor(StepInstance si, FullEtlInstance fullEtlInstance)  {
 
     /**
      * Strart StepInstance and return
+     *
      * @param si
      * @return
      */
-    private boolean startStepInstance(StepInstance si){
-        log.info("-------!!!!!!startStep: {}",si);
+    private boolean startStepInstance(StepInstance si) {
+        log.info("-------!!!!!!startStep: {}", si);
         if (si.getStep().getStepActive()) {
             try {
                 si.setStatus(StepStatus.InProcess.name());
@@ -428,12 +433,12 @@ public void checkSensor(StepInstance si, FullEtlInstance fullEtlInstance)  {
                 externalStepTypeService.sendToQueue(si);
                 log.info("sent to queue:{}", si.getStepInstanceId());
                 return true;
-            }catch (Throwable e){
-                saveError(si, stepInstanceRepository,e,"cannot send to queue");
+            } catch (Throwable e) {
+                saveError(si, stepInstanceRepository, e, "cannot send to queue");
                 return true;
             }
-        }else{
-            log.info("startStep:{} inactive",si);
+        } else {
+            log.info("startStep:{} inactive", si);
             si.setStatus(StepStatus.Missed.name());
             si.setStop(OffsetDateTime.now());
             si.addLog("Deactivated by status.");

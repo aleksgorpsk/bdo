@@ -24,7 +24,7 @@ import java.util.List;
 
 @Slf4j
 @Controller
-@ConditionalOnProperty(name = "dbo.management", havingValue = "true")
+//@ConditionalOnProperty(name = "dbo.management", havingValue = "true")
 public class StepInstanceController {
 
     private final StepInstanceService stepInstanceService;

@@ -41,3 +41,4 @@ build/
 /hiveserver2
 /docker
 /lib
+/src/main/resources/cluster.json

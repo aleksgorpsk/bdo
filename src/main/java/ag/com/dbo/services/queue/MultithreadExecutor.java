@@ -4,6 +4,7 @@ import ag.com.dbo.controllers.queue.QueueStatus;
 import ag.com.dbo.models.queue.QueueStorage;
 import ag.com.dbo.repositories.queue.QueueStorageRepository;
 import ag.com.dbo.services.management.ExternalStepTypeService;
+import ag.com.dbo.models.management.statuses.QueueInfo;
 import ag.com.dbo.services.queue.utils.LoadTaskFactory;
 import ag.com.dbo.services.queue.model.PropData;
 import lombok.extern.slf4j.Slf4j;
@@ -89,12 +90,17 @@ public class MultithreadExecutor implements InitializingBean {
         }
     }
 
-    public  int getFreeSpots(){
-        int poolSize =  poolExecutor.getPoolSize();
+    /**
+     *
+     * @return  number of free threads slots and busy threads
+     */
+    public  QueueInfo getFreeSpots(){
+        int poolSize =  poolExecutor.getMaximumPoolSize();
         log.debug("poolSize: {}", poolSize);
         int activeSize = poolExecutor.getActiveCount();
         log.debug("activeSize: {}", activeSize);
-        return poolSize- activeSize;
+        return  new QueueInfo(poolSize - activeSize, activeSize);
+
     }
 
 }

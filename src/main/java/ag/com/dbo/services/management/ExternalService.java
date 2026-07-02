@@ -5,6 +5,7 @@ import ag.com.dbo.controllers.model.ScriptResponse;
 import ag.com.dbo.controllers.model.TaskRequest;
 import ag.com.dbo.models.checker.SensorModel;
 import ag.com.dbo.models.management.StepInstance;
+import ag.com.dbo.models.management.statuses.QueueInfo;
 import ag.com.dbo.repositories.management.StepInstanceRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
@@ -46,14 +47,15 @@ public class ExternalService {
                     .body(taskRequest)
                     .retrieve()
                     .toBodilessEntity();
-        }catch(Throwable e){
-            saveError(si, stepInstanceRepository,  e, "cannot send to queue");
+        } catch (Throwable e) {
+            saveError(si, stepInstanceRepository, e, "cannot send to queue");
 
         }
     }
 
     /**
-     *  script Ok/Not
+     * script Ok/Not
+     *
      * @param si
      * @param sModel
      * @return
@@ -73,9 +75,30 @@ public class ExternalService {
                     .retrieve()
                     .body(ScriptResponse.class);
 
-        }catch(Throwable e){
-            saveError(si, stepInstanceRepository,  e, "cannot send to sensor");
-            return  new ScriptResponse("Error", e.getMessage());
+        } catch (Throwable e) {
+            saveError(si, stepInstanceRepository, e, "cannot send to sensor");
+            return new ScriptResponse("Error", e.getMessage());
         }
     }
+
+    public QueueInfo getInfo(String host) {
+try {
+    return workerRestClient(host).get()
+            .uri("/queue/info")
+            .retrieve()
+            .body(QueueInfo.class);
+}catch (Exception e){
+    log.warn("Host:{} not found! {}", host,e.getMessage());
+}
+return null;
+    }
+
+    public RestClient workerRestClient(String host) {
+        return RestClient.builder()
+                .baseUrl(host) // Your custom server URL
+                .defaultHeader("Content-Type", "application/json")
+                .build();
+    }
+
+
 }
