@@ -21,7 +21,7 @@ public class Node {
     private String type;  // master/agent
 
     @Column(columnDefinition ="TEXT")
-    private String tegs; // coma separated  string
+    private String tags; // coma separated  string
     private Boolean active;
     @Transient
     private Integer freeSlots;

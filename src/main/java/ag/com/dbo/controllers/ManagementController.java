@@ -27,7 +27,6 @@ public class ManagementController {
         log.info("Manager returnTask: {}", queueResult);
         try {
             stepInstanceService.updateStepInstance(queueResult);
-            //TODO save result
         }catch (Exception e){
 
         }

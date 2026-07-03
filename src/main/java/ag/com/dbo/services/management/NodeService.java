@@ -3,27 +3,24 @@ package ag.com.dbo.services.management;
 import ag.com.dbo.models.management.*;
 import ag.com.dbo.models.management.statuses.QueueInfo;
 import ag.com.dbo.repositories.management.*;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.net.InetAddress;
 import java.util.*;
-import java.util.concurrent.ThreadLocalRandom;
 
 @Slf4j
 @Service
-public class NodeService implements InitializingBean {
+public class NodeService {
 
     private final NodeRepository nodeRepository;
 
     private final ExternalService externalService;
-    private List<Node> nodeList = null;
-    private String localHost;
-    @Value("${server.port}")
-    private String port;
 
     public NodeService(NodeRepository nodeRepository, ExternalService externalService) {
         this.nodeRepository = nodeRepository;
@@ -33,9 +30,9 @@ public class NodeService implements InitializingBean {
 
     @Scheduled(cron = "${dbo.queue.collect.schedule}")
     private void updateBusyWorkers() {
-        List<Node> worker = getWorkerHosts();
+        List<Node> worker = externalService.getWorkerHosts();
         worker.forEach(x -> {
-            QueueInfo info = externalService.getInfo(x.getHost());
+            QueueInfo info = externalService.getInfo(x);
             if(info!=null) {
                 x.setFreeSlots(info.getFreeSlots());
                 x.setBusy(info.getBusy());
@@ -43,45 +40,36 @@ public class NodeService implements InitializingBean {
         });
     }
 
-    private List<Node> getNodeList() {
-        if (nodeList == null) {
-            nodeList = nodeRepository.findAll().stream().filter(Node::getActive).toList();
-        }
-        return nodeList;
+
+    public Page<@NonNull Node> retrievePage(Pageable pageable){
+        return  nodeRepository.findAll(pageable);
+    }
+    public Page<@NonNull Node> findByEtlContainingIgnoreCase(String keyword, Pageable pageable){
+        return nodeRepository.findByNameContainingIgnoreCase( keyword,  pageable);
     }
 
-    private List<Node> getWorkerHosts() {
-        return getNodeList().stream()
-                .filter(Node::getActive)
-                .filter(x -> NodeType.Worker.name().equals(x.getType()))
-                .toList();
+    public Optional<Node> findById(Integer id){
+         return nodeRepository.findById(id);
     }
 
-    public String getHost() {
-
-        if (getNodeList() == null) {
-            return localHost;
-        }
-        List<Node> freeNodes = new ArrayList<>(getWorkerHosts());
-        if (freeNodes.isEmpty()) {
-            return this.localHost;
-        }
-        if (freeNodes.size() == 1) {
-            return freeNodes.get(0).getHost();
-        }
-        if (freeNodes.stream().filter(x -> x.getFreeSlots() > 0).toList().isEmpty()) {
-            freeNodes.sort(Comparator.comparing(Node::getFreeSlots).reversed());
-            return freeNodes.get(0).getHost();
+    public boolean delete(Integer id) {
+        if (nodeRepository.existsById(id)) {
+            nodeRepository.deleteById(id);
+            return true;
         } else {
-            log.warn("No free workers!!!");
-            return freeNodes.get(ThreadLocalRandom.current().nextInt(freeNodes.size())).getHost();
+            return false;
         }
     }
+    public Node create(Node node) {
+        return  nodeRepository.saveAndFlush(node);
 
-    @Override
-    public void afterPropertiesSet() throws Exception {
-        String host = InetAddress.getLocalHost().getHostName();
-        this.localHost = host + ":" + port;
     }
-
+    public boolean update(Node node) {
+        if (nodeRepository.existsById(node.getId())) {
+            nodeRepository.save(node);
+            return true;
+        } else {
+            return false;
+        }
+    }
 }

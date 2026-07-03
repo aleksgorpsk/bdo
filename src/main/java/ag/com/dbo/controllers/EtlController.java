@@ -27,10 +27,8 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Slf4j
 @Controller
-//@ConditionalOnProperty(name = "dbo.management", havingValue = "true")
 public class EtlController {
 
-//  @Autowired
   private final  EtlService etlService;
     private final EngineService engineService;
     private final List<String> etlStatuses;

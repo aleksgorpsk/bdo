@@ -6,6 +6,7 @@ import ag.com.dbo.repositories.management.EtlRepository;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import org.modelmapper.ModelMapper;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
@@ -61,7 +62,6 @@ public class EtlService {
     public Page<@NonNull EtlDTO> retrievePage(PageRequest pageable){
         Page<@NonNull Etl> entities = etlRepository.findAll(pageable);
         return entities.map(e-> modelMapper.map(e, EtlDTO.class));
-
     }
 
     public Page<@NonNull EtlDTO> retrievePage(Pageable pageable){
@@ -147,14 +147,13 @@ public class EtlService {
         }
     }
 
-    public Page<EtlDTO> convert( Page<Etl> etlp){
-        Page<EtlDTO> dtoPage = etlp.map(new Function<Etl, EtlDTO>() {
+    public Page<@NotNull EtlDTO> convert(Page<@NotNull Etl> etlp){
+        return etlp.map(new Function<Etl, EtlDTO>() {
             @Override
             public EtlDTO apply(Etl entity) {
                 return mapFrom(entity);
             }
         });
-        return dtoPage;
 
     }
 

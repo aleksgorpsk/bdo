@@ -21,7 +21,6 @@ import java.util.UUID;
 
 @RestController
 @Slf4j
-//@ConditionalOnProperty(prefix = "spring.role", havingValue = "master", matchIfMissing = false)
 public class QueueController {
 
     private final QueueService queueService;

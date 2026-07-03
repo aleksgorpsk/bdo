@@ -36,7 +36,6 @@ public class Step {
 
     @Column(columnDefinition = "TEXT")
     private String vars;
-//    private String calculateMethod; // method of loading.... from ag.com.dbo.services.loadingService.TaskName
     private Integer maxAttempts;
     private Boolean saveCalculate;
 
@@ -47,7 +46,7 @@ public class Step {
     private String branchCondition;
 
     private String stepType;
-    /*
-    private OffsetDateTime nextTest;
-*/
+
+    @Column(columnDefinition ="TEXT")
+    private String tags; // comma separated
 }

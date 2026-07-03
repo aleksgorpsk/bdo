@@ -1,17 +1,13 @@
+<!DOCTYPE html>
+<html xmlns:th="http://thymeleaf.org">
 <body>
-    <h2>Submitted Employee Information</h2>
-    <table>
-        <tr>
-            <td>Name :</td>
-            <td>${etl.name}</td>
-        </tr>
-        <tr>
-            <td>ID :</td>
-            <td>${etl.id}</td>
-        </tr>
-        <tr>
-            <td>Contact Number :</td>
-            <td>${contactNumber}</td>
-        </tr>
-    </table>
+<!-- Определяем фрагмент с именем "navbar" -->
+<nav th:fragment="navbar">
+    <ul>
+        <li><a href="/" th:href="@{/}">Главная</a></li>
+        <li><a href="/about" th:href="@{/about}">О нас</a></li>
+        <li><a href="/contact" th:href="@{/contact}">Контакты</a></li>
+    </ul>
+</nav>
 </body>
+</html>

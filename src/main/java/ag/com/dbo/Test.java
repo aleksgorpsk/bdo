@@ -3,52 +3,16 @@ package ag.com.dbo;
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.Value;
 
+import java.util.List;
 import java.util.Map;
 
 
 public class Test {
 
     public static void main(String[] args) {
-        try (Context context = Context.newBuilder().allowAllAccess(true).build()) {
-            // Evaluate simple Python statements
-    //        context.eval("python", "print('Hello from Python via GraalPy!')");
-            Map c= Map.of("directoryName","/Users/aleksgor/opt/files","stepResultName","testFile1");
-            Map d= Map.of("sensor1",c);
-            String t= "sensor1";
-            /*
-            Map results=Map[sensor1:[
-            directoryName: "/Users/aleksgor/opt/files",
-                    stepResultName: "testFile1",
-                    attemptTimeOut:  12,
-                    failTimeout:120,
-                    logToTesultScript: "import groovy.json.JsonOutput\n\ndef parse(taskLog, vars){\n    def firstValid = taskLog.readLines().find { it?.trim() }\n    def result = [\"result\":firstValid.trim()]\n    return JsonOutput.toJson(result)\n}\nreturn   parse(taskLog,vars)",
-                    sensorScript:  "GROOVY:sensorTest1:1",
-                    result: "{\"result\":\"1\"}"
-]]
-             */
-            // Pass data and get results back
-            String s1="def checkw(x, t):\n" +
-                    " print(\"333333\") \n"+
-                    "return x.get(t).get('stepResultName') \n";
-            String s2="import json\n" +
-                    "\n" +
-                    "def parse(stepName,vars, results):\n" +
-                    "    return json.dumps('3')\n" +
-                    "}\n" +
-                    "\n" +
-                    "return  parse(stepName,vars, results)\n";
-            String pythonCode = "import json \n" +
-                            "def process_data(a, b):\n" +
-                            "    result = a + b\n" +
-                            "    greeting = \"Hello from Python!\"\n" +
-                            "    my_map = {'a':'b'} \n" +
-                            "    return json.dumps('3') \n";
-//                            "    return json.dumps(my_map, indent=4)\n";
-            context.eval("python", pythonCode);
-            Value squareFunc = context.getBindings("python").getMember("process_data");
-            String result = squareFunc.execute(3, 4).asString();
+        String s="aaaa,bbb,ccc";
+        List<String> nodeTagsList = List.of(s.split(","));
+        System.out.println(nodeTagsList);
 
-            System.out.println("Result from Python: " + result);
-        }
     }
 }

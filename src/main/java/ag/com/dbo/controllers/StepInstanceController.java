@@ -24,7 +24,6 @@ import java.util.List;
 
 @Slf4j
 @Controller
-//@ConditionalOnProperty(name = "dbo.management", havingValue = "true")
 public class StepInstanceController {
 
     private final StepInstanceService stepInstanceService;
@@ -89,7 +88,6 @@ public class StepInstanceController {
             model.addAttribute("reverseSortDirection", sortDirection.equals("asc") ? "desc" : "asc");
             model.addAttribute("pageTitle", "Eit instance");
 
-//            redirectAttributes.addFlashAttribute("etlId", etlId);
         } catch (Exception e) {
             e.printStackTrace();
             model.addAttribute("message", e.getMessage());
