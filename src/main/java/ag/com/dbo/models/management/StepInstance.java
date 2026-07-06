@@ -56,6 +56,7 @@ public class StepInstance {
     private String groovyScript;
     private String stepType;
     private OffsetDateTime nextTest;
+    private String tags; // comma separated
 
     /**
      * Add String to log

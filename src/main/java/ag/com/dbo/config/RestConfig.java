@@ -31,7 +31,7 @@ public class RestConfig {
     public CacheManager cacheManager() {
         return new ConcurrentMapCacheManager("etlCache");
     }
-
+/*
     @Bean("NodeClients")
     public Map<Integer, RestClient> nodeClients(){
         List<Node> nodes= nodeRepository.findAll().stream().filter(Node::getActive).toList();
@@ -45,7 +45,7 @@ public class RestConfig {
         return result;
 
     }
-
+*/
     @Bean("queueRestClient")
     public RestClient queueRestClient(@Value("${queue.url}") String queueBasePath ){
         return RestClient.builder()

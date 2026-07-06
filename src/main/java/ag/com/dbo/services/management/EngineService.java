@@ -97,6 +97,7 @@ public class EngineService {
                 etl.setEtlVars(merge(etl.getEtlVars(), si.getVars(), si.getName()));
                 si.setStepType(step.getStepType());
                 si.setNextTest(null);
+                si.setTags(step.getTags());
                 log.debug("si:{} ", si);
                 sis.add(si);
             }

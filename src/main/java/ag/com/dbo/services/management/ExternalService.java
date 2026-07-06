@@ -31,46 +31,54 @@ import static ag.com.dbo.utils.Utils.saveError;
 public class ExternalService implements InitializingBean {
 
     private final StepInstanceRepository stepInstanceRepository;
-    private final RestClient queueRestClient;
     private final RestClient scriptRestClient;
     private final NodeRepository nodeRepository;
 
 
-    private final Map<Integer, RestClient> nodeMap;
+    public Map<Integer, RestClient> nodeMap;
 
     private List<Node> nodeList = null;
     @Value("${server.port}")
-    private String port;
+    public String port;
 
     @Value("${queue.enqueue.path}")
     private String enqueuePath;
 
     @Value("${script.process.path}")
     private String scriptRunPath;
-    @Value("${server.address:localhost}")
-    private String serverAddress;
 
-    private Node masterNode; // in case master without Workers
+    public Node masterNode; // in case master without Workers
 
     public ExternalService(StepInstanceRepository stepInstanceRepository,
-                           @Qualifier("queueRestClient") RestClient queueRestClient,
                            @Qualifier("scriptRestClient") RestClient scriptRestClient,
-                           NodeRepository nodeRepository ,
-                           Map<Integer, RestClient> nodeMap)  {
+                           NodeRepository nodeRepository) {
         this.stepInstanceRepository = stepInstanceRepository;
-        this.queueRestClient = queueRestClient;
+
         this.scriptRestClient = scriptRestClient;
         this.nodeRepository = nodeRepository;
-        this.nodeMap = nodeMap;
+
+      //  masterNode = new Node(1, "Master", "http://localhost:" + port, "Master", "", true, 3, 1);
+
+
     }
 
 
     public void sendToQueue(TaskRequest taskRequest, StepInstance si) throws JsonProcessingException {
         //TODO
+        Node node = getHost(si.getTags());
+        if (node == null) {
+            si.addLog("Cannot found queue node!");
+            return;
+        }
 
+        RestClient rc = nodeMap.get(node.getId());
+        if (rc == null) {
+            si.addLog("Cannot found rest client !");
+            return;
+        }
 
         try {
-            this.queueRestClient.put().uri(enqueuePath)
+            rc.put().uri(enqueuePath)
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(taskRequest)
                     .retrieve()
@@ -81,18 +89,46 @@ public class ExternalService implements InitializingBean {
         }
     }
 
-
-    public void afterPropertiesSet() throws Exception {
-//        this.localHost = serverAddress + ":" + port;
-        List<Node> nodes = nodeRepository.findActiveNodeByType(NodeType.Master.name());
-        if (nodes.isEmpty()){
-            masterNode = null;
-        }else {
-            masterNode = nodes.get(0);
+    public Map<Integer, RestClient> getNodeClients() {
+        List<Node> nodes = nodeRepository.findAll().stream().filter(Node::getActive).toList();
+        Map<Integer, RestClient> result = new HashMap<>(nodes.size());
+        for (Node node : nodes) {
+            RestClient client = RestClient.builder()
+                    .baseUrl(node.getHost())
+                    .build();
+            result.put(node.getId(), client);
         }
+        return result;
+    }
+
+
+    public void afterPropertiesSet() {
+//        this.localHost = serverAddress + ":" + port;
+        List<Node> nodes = nodeRepository.findAll();
+        if (nodes.isEmpty()) {
+            masterNode = new Node(1, "Master", "http://localhost:" + port, "Master", "", true, 3, 1);
+        } else {
+            List<Node> master = nodes.stream()
+                    .filter(x -> NodeType.Master.name().equals(x.getType()))
+                    .toList();
+            if (!master.isEmpty()) {
+                masterNode = nodes.get(0);
+            }else {
+                masterNode = nodes.get(0);
+            }
+        }
+        HashMap<Integer, RestClient> nodeMap2 = new HashMap<>(nodes.size());
+        for (Node node : nodes) {
+            RestClient client = RestClient.builder()
+                    .baseUrl(node.getHost())
+                    .build();
+            nodeMap2.put(node.getId(), client);
+        }
+        nodeMap = nodeMap2;
 
     }
 // UI
+
     /**
      * script Ok/Not
      *
@@ -152,7 +188,6 @@ public class ExternalService implements InitializingBean {
     }
 
 
-
     private List<Node> getNodeList() {
         if (nodeList == null) {
             nodeList = nodeRepository.findAll().stream().filter(Node::getActive).toList();
@@ -167,71 +202,73 @@ public class ExternalService implements InitializingBean {
                 .toList();
     }
 
-    public Node getHost(String tags ) {
+    public Node getHost(String tags) {
 
-        if (getNodeList() == null) { // no correct config
+        if (getNodeList().isEmpty()) { // no correct config
             return masterNode;
         }
         List<Node> workerNodes = new ArrayList<>(getWorkerHosts());
-        if (workerNodes.isEmpty()) { // no workers
+        if (workerNodes.isEmpty()) {
+            List<Node> masters = getNodeList()
+                    .stream()
+                    .filter(x -> NodeType.Master.name().equals(x.getType()))
+                    .toList();
+            if (!masters.isEmpty()) {
+                return masters.get(0);
+            }
             return masterNode;
         }
-        /*
-        if (freeNodes.size() == 1) {
-            return freeNodes.get(0);
-        }
-*/
-        List<Node>freeTaggedNodes = checkTags(workerNodes, tags);
-        if (freeTaggedNodes.isEmpty()){
+        List<Node> freeTaggedWorker = checkTags(workerNodes, tags);
+        if (freeTaggedWorker.isEmpty()) {
             log.warn("No Workers with correct tag");
             return null;
         }
-        if (freeTaggedNodes.size() == 1){
+        if (freeTaggedWorker.size() == 1) {
             log.info(" Only one node. No competition.");
-            return null;
+            return freeTaggedWorker.get(0);
         }
 
-        if (freeTaggedNodes.stream().filter(x -> x.getFreeSlots() > 0).toList().isEmpty()) {
-            freeTaggedNodes.sort(Comparator.comparing(Node::getFreeSlots).reversed());
-            return freeTaggedNodes.get(0);
+        if (!freeTaggedWorker.stream().filter(x -> x.getFreeSlots() > 0).toList().isEmpty()) {
+            freeTaggedWorker.sort(Comparator.comparing(Node::getFreeSlots).reversed());
+            return freeTaggedWorker.get(0);
         } else {
             log.warn("No free workers!!!");
-            return freeTaggedNodes.get(ThreadLocalRandom.current().nextInt(freeTaggedNodes.size()));
+            return freeTaggedWorker.get(ThreadLocalRandom.current().nextInt(freeTaggedWorker.size()));
         }
     }
 
-    private List<String> splitString(String s){
-        if (s==null){
+    private List<String> splitString(String s) {
+        if (s == null) {
             return Collections.emptyList();
         }
         return Arrays.stream(s.split(",")).map(String::trim).toList();
     }
 
-    private boolean nodeContainsTag(Node node,  List<String>requiredTagsList){
-        if(StringUtils.isEmpty(node.getTags())){
+    private boolean nodeContainsTag(Node node, List<String> requiredTagsList) {
+        if (StringUtils.isEmpty(node.getTags())) {
             return true;
         }
         List<String> tags = splitString(node.getTags());
-        for(String tag: requiredTagsList){
-            if( tags.contains(tag)){
+        for (String tag : requiredTagsList) {
+            if (tags.contains(tag)) {
                 return true;
             }
         }
-        return  false;
+        return false;
     }
 
-    private  List<Node> checkTags(List<Node> nodes, String requiredTags ){
-        if(StringUtils.isEmpty(requiredTags)){
+    private List<Node> checkTags(List<Node> nodes, String requiredTags) {
+        if (StringUtils.isEmpty(requiredTags)) {
             return nodes;
         }
 
         List<String> requiredTagsList = Stream.of(requiredTags.split(",")).map(String::trim).toList();
         List<Node> result = new ArrayList<>();
-        for (Node node :nodes){
-            if (nodeContainsTag(node, requiredTagsList)){
+        for (Node node : nodes) {
+            if (nodeContainsTag(node, requiredTagsList)) {
                 result.add(node);
             }
         }
-      return result;
+        return result;
     }
 }
