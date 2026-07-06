@@ -6,6 +6,8 @@ import com.fasterxml.jackson.core.StreamReadFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.web.client.RestClient;
@@ -22,6 +24,12 @@ public class RestConfig {
 
     public RestConfig(NodeRepository nodeRepository) {
         this.nodeRepository = nodeRepository;
+    }
+
+
+    @Bean
+    public CacheManager cacheManager() {
+        return new ConcurrentMapCacheManager("etlCache");
     }
 
     @Bean("NodeClients")

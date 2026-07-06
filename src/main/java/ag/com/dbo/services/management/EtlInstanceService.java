@@ -7,15 +7,11 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.CachePut;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.List;
 import java.util.Optional;
@@ -36,7 +32,6 @@ public class EtlInstanceService {
      * -------------------------------------------------------------------------
      */
 
-    @CachePut(value = "etlInstances", key = "#etlInstanceDTO.etlInstanceId")
     public EtlInstanceDTO create(EtlInstanceDTO etlInstanceDTO) {
             EtlInstance etl = mapFrom(etlInstanceDTO);
             EtlInstance newEtl =etlInstanceRepository.saveAndFlush(etl);
@@ -49,7 +44,6 @@ public class EtlInstanceService {
      * -------------------------------------------------------------------------
      */
 
-    @Cacheable(value = "etlInstances", key = "#etlInstanceId")
     public EtlInstanceDTO retrieveById(BigInteger id) {
         return etlInstanceRepository.findById(id)
                 .map(this::mapFrom)
@@ -91,7 +85,6 @@ public class EtlInstanceService {
 
     }
 
-//    @Cacheable(value = "etlInstances")
     public List<EtlInstanceDTO> retrieveAll() {
         return etlInstanceRepository.findAll().stream()
                 .map(this::mapFrom)
@@ -103,7 +96,6 @@ public class EtlInstanceService {
         return etlInstanceRepository.findAll();
     }
 
- //   @Cacheable(value = "etlInstances")
     public List<EtlInstanceDTO> retrievePage() {
 
         log.info("retrievePage");

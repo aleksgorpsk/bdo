@@ -88,7 +88,6 @@ public class StepInstanceService {
         return Optional.empty();
     }
 
-    //    @Cacheable(value = "etlInstances")
     public List<StepInstanceDTO> retrieveAll() {
         return stepInstanceRepository.findAll().stream()
                 .map(this::mapFrom)
@@ -100,7 +99,6 @@ public class StepInstanceService {
         return stepInstanceRepository.findAll();
     }
 
-    //   @Cacheable(value = "etlInstances")
     public List<StepInstanceDTO> retrievePage() {
 
         log.info("retrievePage");

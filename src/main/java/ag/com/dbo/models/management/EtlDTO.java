@@ -15,6 +15,6 @@ public class EtlDTO {
     private Boolean active;
     private String status;
     private String cronScheduling;
-    private Integer interval; // in sec
+    private Integer secondInterval; // in sec
     private String comment;
 }

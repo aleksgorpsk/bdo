@@ -10,7 +10,6 @@ import ag.com.dbo.models.management.EtlStatus;
 import ag.com.dbo.services.management.EngineService;
 import ag.com.dbo.services.management.EtlService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;

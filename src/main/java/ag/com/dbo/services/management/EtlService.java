@@ -10,7 +10,6 @@ import org.jetbrains.annotations.NotNull;
 import org.modelmapper.ModelMapper;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
@@ -50,7 +49,6 @@ public class EtlService {
      * -------------------------------------------------------------------------
      */
 
-    @Cacheable(value = "etls", key = "#id")
     public EtlDTO retrieveById(BigInteger id) {
         return etlRepository.findById(id)
                 .map(this::mapFrom)
@@ -91,7 +89,6 @@ public class EtlService {
 
     }
 
-    @Cacheable(value = "etls")
     public List<EtlDTO> retrieveAll() {
         return etlRepository.findAll().stream()
                 .map(this::mapFrom)
@@ -103,7 +100,6 @@ public class EtlService {
         return etlRepository.findAll();
     }
 
-    @Cacheable(value = "etls")
     public List<EtlDTO> retrievePage() {
 
         log.info("retrievePage");
@@ -121,7 +117,6 @@ public class EtlService {
      * -------------------------------------------------------------------------
      */
 
-    @CachePut(value = "etl", key = "#etlDTO.id")
     public boolean update(EtlDTO etlDTO) {
         if (etlRepository.existsById(etlDTO.getId())) {
             etlRepository.save(mapFrom(etlDTO));

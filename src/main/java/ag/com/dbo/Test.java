@@ -1,10 +1,7 @@
 package ag.com.dbo;
 
-import org.graalvm.polyglot.Context;
-import org.graalvm.polyglot.Value;
 
 import java.util.List;
-import java.util.Map;
 
 
 public class Test {
