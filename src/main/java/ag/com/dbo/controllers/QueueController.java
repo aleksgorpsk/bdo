@@ -9,7 +9,7 @@ import ag.com.dbo.models.management.statuses.QueueInfo;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
@@ -41,7 +41,7 @@ public class QueueController {
 
 
     @PutMapping("/queue/put")
-    public ResponseEntity<@Nullable QueueStorage> enqueue(
+    public ResponseEntity<@NotNull QueueStorage> enqueue(
             @RequestBody TaskRequest taskRequest) throws JsonProcessingException {
         log.info("QueueService :{}", taskRequest);
         QueueStorage req = new QueueStorage();
@@ -55,7 +55,7 @@ public class QueueController {
         req.setStatus(QueueStatus.QUEUE.name());
         req.setStart(OffsetDateTime.now());
         req.setSaveCalculate( taskRequest.getSaveCalculate());
-        req.setGroovyScript(taskRequest.getGroovyScript());
+        req.setScript(taskRequest.getScript());
         req.setStepType(taskRequest.getStepType());
         req.setParameters(taskRequest.getParameters());
         req.setResults(taskRequest.getResults());

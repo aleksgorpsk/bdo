@@ -11,7 +11,7 @@ public class StepInstanceDTO {
     @Id
     private String stepInstanceId;
     private String[] parentStepInstanceIds;
-    private String[] activeParentStepInstanceIds;
+ // private String[] activeParentStepInstanceIds;
 
     private String status; // StepStatus
     private EtlInstance etlInstance;
@@ -29,10 +29,13 @@ public class StepInstanceDTO {
 
     @Column(columnDefinition = "Text")
     private String etlVars;
-    @Column(columnDefinition = "TEXT")
-    private String groovyScript;
 
-    private String stepType;
+    @Column(columnDefinition = "TEXT")
+    private String script; // comma separated scriptLink
+
+    @Column(columnDefinition = "TEXT")
+    private String stepType; // comma separated type (maybe many types)
+
     private OffsetDateTime nextTest;
 
 

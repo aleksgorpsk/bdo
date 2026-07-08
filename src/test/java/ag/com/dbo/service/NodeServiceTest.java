@@ -8,6 +8,8 @@ import org.junit.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
 
 import java.util.Optional;
@@ -19,7 +21,10 @@ import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.times;
 
-@ExtendWith(MockitoExtension.class) // Initializes Mockito annotations automatically
+//@ExtendWith(MockitoExtension.class) // Initializes Mockito annotations automatically
+@SpringBootTest
+@ActiveProfiles("test")
+
 public class NodeServiceTest {
 
 

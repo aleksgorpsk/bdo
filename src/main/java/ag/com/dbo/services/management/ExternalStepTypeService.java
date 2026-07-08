@@ -97,7 +97,7 @@ public class ExternalStepTypeService {
             binding.setVariable("stepName", si.getName());
             binding.setVariable("vars", vars);
             GroovyShell shell = new GroovyShell(binding);
-            Object oResult = shell.evaluate(si.getStep().getBranchCondition());
+            Object oResult = null;// TODO! shell.evaluate(si.getStep().getBranchCondition());
             return stringBranchVars(oResult);
 
         }
@@ -219,7 +219,7 @@ public class ExternalStepTypeService {
         taskRequest.setMaxAttempts(si.getStep().getMaxAttempts());
         taskRequest.setParameters(si.getVars());
         taskRequest.setSaveCalculate(si.getSaveCalculate());
-        taskRequest.setGroovyScript(si.getGroovyScript());
+        taskRequest.setScript(si.getScript());
         taskRequest.setStepType(si.getStepType());
         taskRequest.setResults(si.getEtlInstance().getEtlVars());
         externalService.sendToQueue(taskRequest, si);

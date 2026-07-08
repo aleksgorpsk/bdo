@@ -28,7 +28,7 @@ public class VarSupport {
         return null;
     }
 
-    public static String merge(String existsData, String newData, String chindName) throws JsonProcessingException {
+    public static String merge(String existsData, String newData, String stepName) throws JsonProcessingException {
         if(ObjectUtils.isEmpty(existsData)){
             existsData ="{}";
         }
@@ -37,12 +37,12 @@ public class VarSupport {
         }
         ObjectMapper objectMapper = getObjectMapper();
         JsonNode targetNode = objectMapper.readTree(existsData);
-        String wrapper =  "{\""+ chindName+"\":"+newData+"}";
+        String wrapper =  "{\""+ stepName+"\":"+newData+"}";
         JsonNode mergedNode = objectMapper.readerForUpdating(targetNode).readTree(wrapper);
         return objectMapper.writeValueAsString(mergedNode);
     }
 
-    @Deprecated // neet to use stepName
+
     public static String merge(String existsData, String newData) throws JsonProcessingException {
         if(ObjectUtils.isEmpty(existsData)){
             existsData ="{}";

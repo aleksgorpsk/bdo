@@ -39,12 +39,10 @@ public class Step {
     private Boolean saveCalculate;
 
     @Column(columnDefinition = "TEXT")
-    private String groovyScript;
+    private String script; // comma separated scriptLink
 
     @Column(columnDefinition = "TEXT")
-    private String branchCondition;
-
-    private String stepType;
+    private String stepType; // comma separated type (maybe many types)
 
     @Column(columnDefinition ="TEXT")
     private String tags; // comma separated

@@ -8,10 +8,10 @@ import ag.com.dbo.repositories.management.EtlRepository;
 import ag.com.dbo.repositories.management.StepInstanceRepository;
 import ag.com.dbo.repositories.management.StepRepository;
 
+import ag.com.dbo.services.Utils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
@@ -57,24 +57,34 @@ public class EngineService {
         List<Etl> started = etlRepository.findByStatus(1);
         log.info("get:" + started);
         for (Etl etl : started) {
-            createEtlInstance(etl);
+            startEtl(etl);
         }
     }
 
+    public String addDate(EtlInstance ei){
+        String startEtl="{ \"startEtl\": \""+OffsetDateTime.now().toString()+"\"}";
+        try {
+          return  merge(ei.getEtlVars(),startEtl);
+        } catch (JsonProcessingException e) {
+            ei.addLog("Error: "+e.getMessage());
+        }
+        return null;
+    }
     //Start !!!
-    public void createEtlInstance(Etl etl) {
+    public void startEtl(Etl etl) {
         log.info("get one:{}", etl.getId());
         EtlInstance ei = new EtlInstance();
         ei.setEtl(etl);
         ei.setStart(OffsetDateTime.now());
         ei.setStatus(EtlStatus.InProgress.name());
         ei.setComment(etl.getComment());
+        ei.setEtlVars(addDate(ei));
         etlInstanceRepository.saveAndFlush(ei);
         log.debug("save  etl status:{}", ei);
         createStepInstances(ei);
     }
 
-    private void createStepInstances(EtlInstance etl) {
+    public void createStepInstances(EtlInstance etl) {
         log.info("steps for etl instance: {}", etl.getEtlInstanceId());
         List<Step> steps = stepRepository.findAllStepsByEtl(etl.getEtl().getId());
         log.info("steps1: {}", steps.stream().map(Step::getStepId));
@@ -93,7 +103,7 @@ public class EngineService {
                 si.setMaxAttempts(step.getMaxAttempts());
                 si.setName(step.getName());
                 si.setSaveCalculate(step.getSaveCalculate());
-                si.setGroovyScript(step.getGroovyScript());
+                si.setScript(step.getScript());
                 etl.setEtlVars(merge(etl.getEtlVars(), si.getVars(), si.getName()));
                 si.setStepType(step.getStepType());
                 si.setNextTest(null);
@@ -240,9 +250,9 @@ public class EngineService {
         }
         // check branch !!!
         // TODO
-        if (StepType.Branch.name().equals(si.getStepType())
-                && StringUtils.isNotEmpty(si.getStep().getBranchCondition())) {
+        if (Utils.isContainsStepType(si,StepType.Branch)) {
             try {
+
                 List<String> correctWsyNames = externalStepTypeService.execBranchGroovyScript(si);
                 List<String> correctWayId = fullEtlInstance.getCorrectWayInIds(correctWsyNames, si.getStepInstanceId());
                 incorrectWayId = fullEtlInstance.getIncorrectWayIds(correctWsyNames, si.getStepInstanceId());

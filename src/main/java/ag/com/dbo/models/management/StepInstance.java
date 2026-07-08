@@ -21,8 +21,8 @@ public class StepInstance {
     @Column( name = "parent_Step_Instance_Ids")
     private String[] parentStepInstanceIds;
 
-    @Transient
-    private String[] activeParentStepInstanceIds;
+//    @Transient
+//    private String[] activeParentStepInstanceIds;
 
     private String status; // StepStatus
 
@@ -41,7 +41,7 @@ public class StepInstance {
     @Column(columnDefinition = "Text")
     private String log;
     @Column(columnDefinition = "Text")
-    private String vars;
+    private String vars;  // step result
     private Integer maxAttempts;
     private Integer attempts;
     private Boolean active;
@@ -51,10 +51,14 @@ public class StepInstance {
     private Boolean saveCalculate;
 
     @Column(columnDefinition = "Text")
-    private String etlVars;
+    private String etlVars;  // vars
+
     @Column(columnDefinition = "TEXT")
-    private String groovyScript;
-    private String stepType;
+    private String script; // comma separated scriptLink
+
+    @Column(columnDefinition = "TEXT")
+    private String stepType; // comma separated type (maybe many types)
+
     private OffsetDateTime nextTest;
     private String tags; // comma separated
 

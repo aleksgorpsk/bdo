@@ -45,7 +45,7 @@ public class QueueStorage {
     private String etlVars;
 
     @Column(columnDefinition = "TEXT")
-    private String groovyScript;
+    private String script;
 
     private String stepType;
 

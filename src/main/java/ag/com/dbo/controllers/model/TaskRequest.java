@@ -18,7 +18,7 @@ public class TaskRequest {
 
     private Integer maxAttempts = 1;
 
-    private String groovyScript;
+    private String script;
 
     private String stepType;
 
