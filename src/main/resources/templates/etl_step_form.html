@@ -38,10 +38,10 @@ private BigInteger stepId;
                 <div class="form-group row">
                     <label class="col-sm-3 col-form-label" for="name">parents</label>
                     <div class="col-sm-9">
-                        <label for="step">Step parents  (multiple select):</label>
+                        <label for="step">Step parents:</label>
                         <br/>
                         <select id="step" th:field="*{parentStepIds}" size="8" multiple="multiple">
-                            <option th:each="step : ${allsteps}"
+                            <option th:each="step : ${allSteps}"
                                     th:value="${{step.stepId}}"
                                     th:text="${step.name}">
                                 Cinema
@@ -76,11 +76,11 @@ private BigInteger stepId;
                 </div>
 
                 <div class="form-group row">
-                    <label class="col-sm-3 col-form-label" for="name">Step type </label>
+                    <label class="col-sm-3 col-form-label" for="name">Step type</label>
                     <div class="col-sm-9">
-                        <select id="stepTypee" th:field="*{stepType}">
-                            <option value=""> ---Choose step Type type---</option>
-                            <option th:each="stepType : ${stepTypes}"
+                        <br/>
+                        <select id="stepTypee" th:field="*{stepTypeList}" size="5" multiple="multiple">
+                            <option th:each="stepType : ${allStepTypes}"
                                     th:value="${{stepType}}"
                                     th:text="${stepType}">
                                 Cinema
@@ -88,7 +88,6 @@ private BigInteger stepId;
                         </select>
                     </div>
                 </div>
-
 
                 <div class="form-group row">
                     <label class="col-sm-3 col-form-label" for="name">maxAttempts</label>
@@ -127,17 +126,18 @@ private BigInteger stepId;
                 <div class="form-group row">
                     <label class="col-sm-3 col-form-label" for="name">Script ( link)</label>
                     <div class="col-sm-9">
-                        <input type="text" th:field="*{groovyScript}" minlength="2" class="form-control"
-                               id="groovyScript"/>
+                        <input type="text" th:field="*{script}" minlength="2" class="form-control"
+                               id="script"/>
                     </div>
                 </div>
+                <!--
                 <div class="form-group row">
                     <label class="col-sm-3 col-form-label" for="name">Breanch script ( link)</label>
                     <div class="col-sm-9">
                         <input type="text" th:field="*{branchCondition}" minlength="2" class="form-control"
                                id="branchCondition"/>
                     </div>
-                </div>
+                </div> --
                 <!-- TODO
                <div class="form-group row">
                     <label class="col-sm-3 col-form-label" for="name">Next test </label>

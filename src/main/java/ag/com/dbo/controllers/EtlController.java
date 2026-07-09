@@ -79,10 +79,13 @@ public class EtlController {
   }
 
   @GetMapping("/etl/new")
-  public String addEtl(Model model) {
-    EtlDTO etl = new EtlDTO();
+  public String addEtl( Model model,
+                       @RequestParam Optional<String> message,
+                       RedirectAttributes redirectAttributes) {
+      EtlDTO etl = new EtlDTO();
     etl.setActive(true);
-    etl.setCronScheduling("* * */1 * * *");
+    etl.setCronScheduling("");
+      message.ifPresent(s -> model.addAttribute("message", s));
 
     model.addAttribute("etl", etl);
     model.addAttribute("allStatuses", etlStatuses);
@@ -92,12 +95,14 @@ public class EtlController {
   }
 
   @PostMapping("/etl/save")
-  public String saveEtl(EtlDTO etlDto,  Model model, RedirectAttributes redirectAttributes) {
+  public String saveEtl(EtlDTO etl,  Model model, RedirectAttributes redirectAttributes) {
     try {
-        if (!org.quartz.CronExpression.isValidExpression(etlDto.getCronScheduling())){
-            redirectAttributes.addAttribute("message", "Incorrect Cron expression1: "+etlDto.getCronScheduling());
-            if (etlDto.getId()!=null) {
-                return "redirect:/etl/"+etlDto.getId();
+        if (!org.quartz.CronExpression.isValidExpression(etl.getCronScheduling())){
+            redirectAttributes.addAttribute("message", "Incorrect Cron expression: "+etl.getCronScheduling());
+            model.addAttribute("EtlDTO", etl);
+
+            if (etl.getId()!=null) {
+                return "redirect:/etl/"+etl.getId();
             }else{
                 return "redirect:/etl/new";
             }
@@ -105,10 +110,10 @@ public class EtlController {
         else {
             redirectAttributes.addAttribute("message", null);
         }
-        if (etlDto.getId()!=null) {
-            etlService.update(etlDto);
+        if (etl.getId()!=null) {
+            etlService.update(etl);
         }else{
-            etlService.create(etlDto);
+            etlService.create(etl);
         }
       redirectAttributes.addFlashAttribute("message", "The Etl has been saved successfully!");
     } catch (Exception e) {

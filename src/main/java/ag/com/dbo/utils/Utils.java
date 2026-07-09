@@ -81,4 +81,8 @@ public class Utils {
         return "{\""+ wrapName +"\":"+wars+"}";
 
     }
+
+    public static <T> boolean isArrayNullOrEmpty(T[] theArray) {
+        return theArray == null || theArray.length == 0;
+    }
 }

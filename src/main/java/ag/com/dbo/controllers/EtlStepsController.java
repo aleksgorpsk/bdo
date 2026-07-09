@@ -12,6 +12,7 @@ import ag.com.dbo.services.management.EtlService;
 import ag.com.dbo.services.management.GrafBuilderService;
 import ag.com.dbo.services.management.StepService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,6 +24,8 @@ import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+
+import static ag.com.dbo.utils.Utils.isArrayNullOrEmpty;
 
 @Slf4j
 @Controller
@@ -51,7 +54,6 @@ public class EtlStepsController {
         BigInteger   bint = new BigInteger(etlId);
         List<Figure> b = grafBuilderService.getFigures(bint) ;
 
-//        ModelAndView mav = new ModelAndView("etl_steps"); // sets view name
         model.addAttribute("data", b);
         model.addAttribute("etlId", etlId);
 
@@ -62,11 +64,10 @@ public class EtlStepsController {
     @PostMapping("/etlstep/save")
     public String saveEtl(StepDTO stepDto, RedirectAttributes redirectAttributes) {
         try {
-            if (StepType.Sensor.name().equals(stepDto.getStepType())
-                    || StepType.Branch.name().equals(stepDto.getStepType())){
-                ;
+            if (isArrayNullOrEmpty(stepDto.getStepTypeList())){
+                stepDto.setStepType(StepType.Simple.name());
             }else{
-                stepDto.setStepType(null);
+                stepDto.setStepType(String.join(",",stepDto.getStepTypeList()));
             }
            Optional<EtlDTO>etlDTO = etlService.findById(stepDto.getEtlId());
             etlDTO.ifPresent(dto -> stepDto.setEtl(etlService.mapFrom(dto)));
@@ -98,7 +99,7 @@ public class EtlStepsController {
         model.addAttribute("etlId", etlId);
         model.addAttribute("step", step);
         model.addAttribute("pageTitle", "Create new Etl Step");
-        model.addAttribute("allsteps", stepRepository.findAllStepsByEtl(etlId));
+        model.addAttribute("allSteps", stepRepository.findAllStepsByEtl(etlId));
         model.addAttribute("allDataLoading", dataLoadingRepository.findAll());
         model.addAttribute("stepTypes", this.types);
         return "etl_step_form";
@@ -110,12 +111,16 @@ public class EtlStepsController {
             Model model) {
 
         StepDTO stepDto =stepService.retrieveById(stepId);
+        if(StringUtils.isNotEmpty(stepDto.getStepType())) {
+            stepDto.setStepTypeList(stepDto.getStepType().split(","));
+        }
+
         model.addAttribute("etlId", stepId);
         model.addAttribute("step", stepDto);
         model.addAttribute("pageTitle", "Edit Etl stepId");
-        model.addAttribute("allsteps", stepRepository.findAllStepsByEtl(stepDto.getEtl().getId()));
+        model.addAttribute("allSteps", stepRepository.findAllStepsByEtl(stepDto.getEtl().getId()));
         model.addAttribute("allDataLoading", dataLoadingRepository.findAll());
-        model.addAttribute("stepTypes", this.types);
+        model.addAttribute("allStepTypes", this.types);
         return "etl_step_form";
     }
 

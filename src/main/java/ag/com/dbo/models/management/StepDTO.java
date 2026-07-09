@@ -7,6 +7,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import java.math.BigInteger;
 import java.time.OffsetDateTime;
+import java.util.List;
 
 @Data
 public class StepDTO {
@@ -26,12 +27,10 @@ public class StepDTO {
     private Integer maxAttempts;
     private Boolean saveCalculate;
 
-    private String groovyScript;
+    private String script;
 
-    private String branchCondition;
-
-    private String stepType;
-//    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+    String stepType;
+    String[] stepTypeList;
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     private OffsetDateTime nextTest;
 }
