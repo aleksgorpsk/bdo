@@ -1,10 +1,10 @@
 package ag.com.dbo.services.queue.model;
 
 import ag.com.dbo.controllers.queue.QueueStatus;
-import ag.com.dbo.models.checker.StepModel;
 import ag.com.dbo.models.queue.QueueStorage;
 import ag.com.dbo.repositories.queue.QueueStorageRepository;
 import ag.com.dbo.services.management.ExternalStepTypeService;
+import ag.com.dbo.services.queue.ResultTemplate;
 import ag.com.dbo.services.queue.TaskProperties;
 
 import io.jsonwebtoken.lang.Collections;
@@ -15,11 +15,11 @@ import org.springframework.core.env.Environment;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.time.OffsetDateTime;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
+import static ag.com.dbo.services.queue.utils.VarSupport.*;
 import static ag.com.dbo.utils.Utils.saveError;
 
 @Slf4j
@@ -35,6 +35,7 @@ public class HiveOperatorTask extends TaskProperties implements Callable<PropDat
     protected final QueueStorageRepository queueStorageRepository;
     protected final ExternalStepTypeService externalStepTypeService;
 
+
     public HiveOperatorTask(QueueStorage data, Environment env, QueueStorageRepository queueStorageRepository, ExternalStepTypeService externalStepTypeService){
         super(env);
         this.queueStorageRepository = queueStorageRepository;
@@ -44,7 +45,7 @@ public class HiveOperatorTask extends TaskProperties implements Callable<PropDat
     }
 
     @Override
-    public PropData call() throws Exception {
+    public PropData call()  {
         log.info("Call HiveOperatorTask");
         try {
             task.setStatus(QueueStatus.IN_PROGRES.name());
@@ -60,39 +61,29 @@ public class HiveOperatorTask extends TaskProperties implements Callable<PropDat
             }
             task.setStart(OffsetDateTime.now());
             queueStorageRepository.saveAndFlush(task);
-
-            StepModel sModel = externalStepTypeService.checkStep(task);
-
+          //  StepModel sModel = externalStepTypeService.checkStep(task);
             String logic = task.getCommandProfile();
-            log.info("Start hiveServer2 vars:{} {} logic:{}", sModel,System.lineSeparator(),logic);
 
-            if (logic == null){
-                log.error("No logic !");
-                PropData pd = new PropData();
-                return new PropData(-106,  task,"Error in command: "+logic);
-            }// TODO ADD step name
-            task.getName();
-
-            Map<String, Object> vars= sModel.getVars();
-            logic = getCommand(logic, vars );
+            Map<String,Object> allEtlVars=stringToJsonVar(merge(task.getVars(), task.getLocalResults()));
+            log.info("Start hiveServer2 vars:{} {} logic:{}", allEtlVars, System.lineSeparator(), logic);
+            logic = getCommand(logic, allEtlVars);
+            log.info("Start hiveServer2  {} logic:{}", System.lineSeparator(), logic);
 
             log.info("logic: {}", logic);
-            int exitCode=-100;
 
             ProcessBuilder processBuilder = new ProcessBuilder();
             processBuilder.command("bash", "-c", logic);
             processBuilder.redirectErrorStream(true); // Combine stdout and stderr
             Process process = processBuilder.start();
             BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            OutputStream output = process.getOutputStream();
-
-
             String taskLog = fullReadStr(reader);
+
             int processCode = process.waitFor();
             taskLog = taskLog+ System.lineSeparator() + "code result: "+processCode;
             task.addLog(taskLog);
+            task.addResultToLocalResult(new ResultTemplate(taskLog));
+
             try {
-               String result = externalStepTypeService.calculateResult(taskLog, sModel, task);
                 if (processCode == 0){
                     task.setStatus(QueueStatus.SUCCESS.name());
                     task.setStop(OffsetDateTime.now());
@@ -104,7 +95,6 @@ public class HiveOperatorTask extends TaskProperties implements Callable<PropDat
             }catch(Throwable e){
                 saveError(task,queueStorageRepository, e, "Error");
             }
-
             return new PropData(processCode, task, out);
 
         } catch (IOException | InterruptedException e) {
@@ -112,10 +102,11 @@ public class HiveOperatorTask extends TaskProperties implements Callable<PropDat
             return new PropData(-106, task, System.lineSeparator()+ ExceptionUtils.getStackTrace(e) + e.getMessage());
         }
     }
+
     private String getCommand(String command, Map<String,Object> vars){
         if (!Collections.isEmpty(vars)){
             for (Map.Entry<String, Object> entry: vars.entrySet()){
-                String value= "";
+                String value;
                 if(entry.getValue() == null){
                     value ="NOP!";
                 }else{

@@ -1,11 +1,16 @@
 package ag.com.dbo.models.queue;
 
+import ag.com.dbo.services.queue.utils.VarSupport;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.OffsetDateTime;
+
+import static io.micrometer.common.docs.KeyName.merge;
 
 
 @Entity
@@ -31,7 +36,12 @@ public class QueueStorage {
     private String calculateType; // processing type
 
     @Column(columnDefinition = "TEXT")
-    private String parameters;
+    private String vars;
+    @Column(columnDefinition = "Text")
+    private String localResults;
+
+    @Column(columnDefinition = "Text")
+    private String etlResults;
 
     @Column(columnDefinition = "TEXT")
     private String log;
@@ -40,9 +50,6 @@ public class QueueStorage {
     private OffsetDateTime stop;
 
     private Boolean saveCalculate;
-
-    @Column(columnDefinition = "Text")
-    private String etlVars;
 
     @Column(columnDefinition = "TEXT")
     private String script;
@@ -65,6 +72,17 @@ public class QueueStorage {
             log=  log +System.lineSeparator();
         }
         log = log + message;
+    }
+
+    public String addResultToLocalVar( String name, String value ) throws JsonProcessingException {
+        String s= "{  \""+name+"\": \""+value+"\"  } }";
+        return VarSupport.merge(getLocalResults(), s );
+    }
+
+    public void addResultToLocalResult( Object template ) throws JsonProcessingException {
+        ObjectMapper mapper = new ObjectMapper();
+        String s= mapper.writeValueAsString(template);;
+        this.setLocalResults(VarSupport.merge(getLocalResults(), s ));
     }
 
 }

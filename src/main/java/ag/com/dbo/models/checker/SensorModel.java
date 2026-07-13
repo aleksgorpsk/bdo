@@ -14,7 +14,7 @@ public class SensorModel {
     private String sensorResultName;
     private String sensorScript;
 
-
+/*
     public ScriptRequest scriptRequest(){
         if (sensorScript==null){
             return null;
@@ -28,7 +28,7 @@ public class SensorModel {
         }
         return  result;
     }
-
+*/
     private Map<String, Object> properties = new HashMap<>();
     @JsonAnySetter
     public void setProperties(String key, Object value) {

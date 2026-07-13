@@ -1,0 +1,12 @@
+{
+  "attemptTimeOut" : null,
+  "failTimeout" : null,
+  "resultName" : null,
+  "scripts" : [ {
+    "scriptName" : "testBranch3",
+    "resultName" : "result1",
+    "attemptTimeOut" : null,
+    "failTimeout" : null
+  } ],
+  "properties" : { }
+}

@@ -57,12 +57,11 @@ public class ScriptController {
         }
         if (script != null) {
             if (ScriptType.GROOVY.name().equals(script.getScriptId().getLanguage())) {
-                ScriptResponse response = groovyService.execGroovyScript(script, request.getParams(), request.getResults(), request.getStepName());
+                ScriptResponse response = groovyService.execGroovyScript(script, request.getVars(), request.getEtlResults(), request.getLocalResults(),request.getStepName());
                 return ResponseEntity.status(HttpStatus.OK).header("Content-Type", "application/json").body(response);
             }
             if (ScriptType.PYTHON.name().equals(script.getScriptId().getLanguage())) {
-                ScriptResponse response = new ScriptResponse();
-                response= pythonService.execPythonScript(script, request.getParams(), request.getResults(), request.getStepName());
+                ScriptResponse  response = pythonService.execPythonScript(script, request.getVars(), request.getEtlResults(), request.getLocalResults(), request.getStepName());
                 return ResponseEntity.status(HttpStatus.OK).header("Content-Type", "application/json").body(response);
             } else {
                 ScriptResponse response = new ScriptResponse();

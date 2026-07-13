@@ -57,9 +57,10 @@ public class QueueController {
         req.setSaveCalculate( taskRequest.getSaveCalculate());
         req.setScript(taskRequest.getScript());
         req.setStepType(taskRequest.getStepType());
-        req.setParameters(taskRequest.getParameters());
+        req.setVars(taskRequest.getVars());
+        req.setLocalResults(taskRequest.getLocalResult());
+        req.setEtlResults(taskRequest.getEtlResult());
         req.setResults(taskRequest.getResults());
-
         queueService.save(req);
         runLogic(req);
        return ResponseEntity.status(HttpStatus.OK).header("Content-Type","application/json").body(req);

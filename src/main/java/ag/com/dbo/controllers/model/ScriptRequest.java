@@ -6,8 +6,10 @@ import lombok.Data;
 public class ScriptRequest {
     private String language;
     private String scriptName;
-    private Integer version;
-    private String results;
-    private String params;
+    private String version;
     private String stepName;
+    private String vars;
+    private String resultName;
+    private String localResults;
+    private String etlResults;
 }

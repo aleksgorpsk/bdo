@@ -5,7 +5,6 @@ import ag.com.dbo.models.management.StepType;
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.ReadContext;
 import org.apache.commons.lang3.StringUtils;
-
 import java.util.Collections;
 import java.util.List;
 
@@ -23,7 +22,19 @@ public class Utils {
         }
 
         ReadContext ctx = JsonPath.parse(si.getVars());
-        List<String> branches= ctx.read("$."+si.getName()+".branches.*");
-        return branches;
+        return ctx.read("$."+si.getName()+".branches.*");
     }
+
+/*
+    public ScriptName getScriptNameParts(){
+        ScriptName result= new ScriptName();
+        result.setLanguage(ar[0]);
+        result.setScriptName(ar[1]);
+        if(ar.length>2){
+            result.setVersion(Integer.parseInt(ar[2]));
+        }
+        return  result;
+    }
+
+ */
 }

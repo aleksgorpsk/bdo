@@ -7,19 +7,19 @@ import ag.com.dbo.repositories.management.EtlInstanceRepository;
 import ag.com.dbo.repositories.management.StepInstanceRepository;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigInteger;
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.stream.StreamSupport;
 
 import static ag.com.dbo.services.queue.utils.VarSupport.merge;
 
@@ -102,7 +102,7 @@ public class StepInstanceService {
     public List<StepInstanceDTO> retrievePage() {
 
         log.info("retrievePage");
-        return StreamSupport.stream(stepInstanceRepository.findAll().spliterator(), false)
+        return stepInstanceRepository.findAll().stream()
                 .map(this::mapFrom)
                 .peek(x-> log.info("etl:"+ x.toString()))
                 .toList();
@@ -129,14 +129,13 @@ public class StepInstanceService {
         }
     }
 
-    public Page<StepInstanceDTO> convert( Page<StepInstance> etlp){
-        Page<StepInstanceDTO> dtoPage = etlp.map(new Function<StepInstance, StepInstanceDTO>() {
+    public Page<@NotNull StepInstanceDTO> convert(Page<@NotNull StepInstance> etlp){
+        return etlp.map(new Function<StepInstance, StepInstanceDTO>() {
             @Override
             public StepInstanceDTO apply(StepInstance entity) {
                 return mapFrom(entity);
             }
         });
-        return dtoPage;
 
     }
 
@@ -150,7 +149,7 @@ public class StepInstanceService {
     }
 
 
-    public Optional<StepInstance> updateStepInstance(QueueStorage result)  {
+    public void updateStepInstance(QueueStorage result)  {
         Optional<StepInstance> oSi = stepInstanceRepository.findById(result.getTaskId());
         if (oSi.isPresent()){
             StepInstance si = oSi.get();
@@ -168,23 +167,29 @@ public class StepInstanceService {
             si.setStart(result.getStart());
             si.setStop(result.getStop());
             si.setAttempts(result.getAttempt());
-            si.setEtlVars(result.getEtlVars());
+            si.setLocalResults(result.getLocalResults());
             stepInstanceRepository.save(si);
             EtlInstance ei = si.getEtlInstance();
             try {
-                ei.setEtlVars(merge(ei.getEtlVars(), si.getEtlVars(),si.getName()));
+                ei.setEtlVars(merge(ei.getEtlVars(), si.getLocalResults(), si.getName()));
                 ei.addLog(si.getLog());
             }catch (Exception e){
                 si.setStatus(StepStatus.Failed.name());
                 si.addLog("Error:" + e.getMessage());
             }
             stepInstanceRepository.save(si);
-            return Optional.of(si);
         }else{
             log.error("{} not found !!!", result.getTaskId());
         }
-    return oSi;
     }
+
+    private void scriptExecute(StepInstance si){
+        if (StringUtils.isNotEmpty(si.getScript())){
+            List<String> scripts = List.of(si.getScript().split(","));
+
+        }
+    }
+
 
     public List<StepInstance> getActiveSensors(){
         return stepInstanceRepository.findActiveSensors(StepStatus.InWait.name(), StepType.Sensor.name(), OffsetDateTime.now());

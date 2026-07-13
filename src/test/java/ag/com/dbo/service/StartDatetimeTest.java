@@ -9,6 +9,7 @@ import ag.com.dbo.repositories.management.StepInstanceRepository;
 import ag.com.dbo.repositories.management.StepRepository;
 import ag.com.dbo.services.management.EngineService;
 import ag.com.dbo.services.management.ExternalStepTypeService;
+import ag.com.dbo.services.management.ScriptService;
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.ReadContext;
 import org.junit.Test;
@@ -37,10 +38,10 @@ public class StartDatetimeTest {
         StepRepository stepRepository =Mockito.mock(StepRepository.class);
         StepInstanceRepository stepInstanceRepository = Mockito.mock(StepInstanceRepository.class);
         ExternalStepTypeService externalStepTypeService= Mockito.mock(ExternalStepTypeService.class);
-
+        ScriptService scriptService = Mockito.mock(ScriptService.class);
 
         EngineServiceTest test = new EngineServiceTest(etlRepository,etlInstanceRepository,
-                stepRepository,stepInstanceRepository, externalStepTypeService);
+                stepRepository,stepInstanceRepository, externalStepTypeService, scriptService);
 
         Etl etl = new Etl();
         test.startEtl(etl);
@@ -50,10 +51,16 @@ public class StartDatetimeTest {
         assertNotNull(startDate);
         assertNotNull(OffsetDateTime.parse(startDate));
     }
-
+/*
+ EtlRepository etlRepository, EtlInstanceRepository etlInstanceRepository,
+            StepRepository stepRepository, StepInstanceRepository stepInstanceRepository,
+            ExternalStepTypeService externalStepTypeService, ScriptService scriptService
+ */
     protected static class EngineServiceTest extends EngineService {
-        public EngineServiceTest(EtlRepository etlRepository, EtlInstanceRepository etlInstanceRepository, StepRepository stepRepository, StepInstanceRepository stepInstanceRepository, ExternalStepTypeService externalStepTypeService) {
-            super(etlRepository, etlInstanceRepository, stepRepository, stepInstanceRepository, externalStepTypeService);
+        public EngineServiceTest(EtlRepository etlRepository, EtlInstanceRepository etlInstanceRepository,
+                                 StepRepository stepRepository, StepInstanceRepository stepInstanceRepository,
+                                 ExternalStepTypeService externalStepTypeService, ScriptService scriptService) {
+            super(etlRepository, etlInstanceRepository, stepRepository, stepInstanceRepository, externalStepTypeService,scriptService);
         }
 
         public void createStepInstances(EtlInstance etl) {

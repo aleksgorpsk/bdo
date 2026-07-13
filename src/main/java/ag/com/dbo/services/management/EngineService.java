@@ -1,6 +1,8 @@
 package ag.com.dbo.services.management;
 
 import ag.com.dbo.controllers.FullEtlInstance;
+import ag.com.dbo.controllers.model.ScriptResponse;
+import ag.com.dbo.controllers.model.ScriptResponses;
 import ag.com.dbo.models.checker.SensorModel;
 import ag.com.dbo.models.management.*;
 import ag.com.dbo.repositories.management.EtlInstanceRepository;
@@ -9,6 +11,7 @@ import ag.com.dbo.repositories.management.StepInstanceRepository;
 import ag.com.dbo.repositories.management.StepRepository;
 
 import ag.com.dbo.services.Utils;
+import ag.com.dbo.utils.Constants;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
@@ -33,21 +36,19 @@ public class EngineService {
     private final StepRepository stepRepository;
     private final StepInstanceRepository stepInstanceRepository;
     private final ExternalStepTypeService externalStepTypeService;
-
-//    @Value("${queue.enqueue.path}")
-//    private String enqueuePath;
-
+    private final ScriptService scriptService;
 
     public EngineService(
             EtlRepository etlRepository, EtlInstanceRepository etlInstanceRepository,
             StepRepository stepRepository, StepInstanceRepository stepInstanceRepository,
-            ExternalStepTypeService externalStepTypeService
+            ExternalStepTypeService externalStepTypeService, ScriptService scriptService
     ) {
         this.etlRepository = etlRepository;
         this.etlInstanceRepository = etlInstanceRepository;
         this.stepRepository = stepRepository;
         this.stepInstanceRepository = stepInstanceRepository;
         this.externalStepTypeService = externalStepTypeService;
+        this.scriptService = scriptService;
     }
 
 
@@ -189,7 +190,11 @@ public class EngineService {
         StepInstance si = stepInstanceRepository.getReferenceById(stepInstanceId);
         stepFrom(si);
     }
-// step finished and need new step
+
+    /**
+     * step finished and need new step
+     * @param si
+     */
 
     public void stepFrom(StepInstance si) {
         FullEtlInstance fullEtlInstance = null;
@@ -200,6 +205,15 @@ public class EngineService {
             si.setStatus(StepStatus.Failed.name());
             return;
         }
+        //   run script
+
+        try {
+            si = scriptService.runScript(si);
+        } catch (JsonProcessingException e) {
+                e.printStackTrace();
+                si.addLog("Error send Script:"+e.getMessage());
+        }
+
         // check finish
         EtlInstance ei = si.getEtlInstance();
         if (StepStatus.Success.name().equals(si.getStatus())) {
@@ -236,8 +250,8 @@ public class EngineService {
                     si.setNextTest(si.getNextTest().plusSeconds(sModel.getAttemptTimeOut()));
                 }
                 stepInstanceRepository.saveAndFlush(si);
-                boolean result = externalStepTypeService.checkSensorScript(si, sModel);
-                log.info("!!!!!!!:{}", result);
+           //     boolean result = externalStepTypeService.checkSensorScript(si, sModel);
+            //    log.info("!!!!!!!:{}", result);
 
             } catch (JsonProcessingException e) {
                 saveError(si, stepInstanceRepository, e, "Cannot parse Sensor parameters");
@@ -253,7 +267,7 @@ public class EngineService {
         if (Utils.isContainsStepType(si,StepType.Branch)) {
             try {
 
-                List<String> correctWsyNames = externalStepTypeService.execBranchGroovyScript(si);
+                List<String> correctWsyNames = getBranches(si);
                 List<String> correctWayId = fullEtlInstance.getCorrectWayInIds(correctWsyNames, si.getStepInstanceId());
                 incorrectWayId = fullEtlInstance.getIncorrectWayIds(correctWsyNames, si.getStepInstanceId());
                 if (CollectionUtils.isEmpty(correctWayId)) {
@@ -289,7 +303,12 @@ public class EngineService {
 
         }
     }
+private List<String> getBranches(StepInstance si) throws JsonProcessingException {
+     return (List<String>) stringToJsonVar(si.getLocalResults()).getOrDefault(Constants.BRANCH_RESULT_NAME, Collections.EMPTY_LIST);
 
+
+
+}
     /**
      * should be next
      *

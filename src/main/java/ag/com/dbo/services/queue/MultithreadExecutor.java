@@ -3,6 +3,7 @@ package ag.com.dbo.services.queue;
 import ag.com.dbo.controllers.queue.QueueStatus;
 import ag.com.dbo.models.queue.QueueStorage;
 import ag.com.dbo.repositories.queue.QueueStorageRepository;
+import ag.com.dbo.services.management.ExternalService;
 import ag.com.dbo.services.management.ExternalStepTypeService;
 import ag.com.dbo.models.management.statuses.QueueInfo;
 import ag.com.dbo.services.queue.utils.LoadTaskFactory;
@@ -24,16 +25,16 @@ public class MultithreadExecutor implements InitializingBean {
     private int  threadCount;
 
     private ThreadPoolExecutor poolExecutor;
-    private final ManagerService managerService;
     private final Environment env;
     private final QueueStorageRepository queueStorageRepository;
     private final ExternalStepTypeService externalStepTypeService;
+    private final ExternalService externalService;
 
-    public MultithreadExecutor(ManagerService managerService, Environment env, QueueStorageRepository queueStorageRepository, ExternalStepTypeService externalStepTypeService) {
-        this.managerService = managerService;
+    public MultithreadExecutor(Environment env, QueueStorageRepository queueStorageRepository, ExternalStepTypeService externalStepTypeService, ExternalService externalService) {
         this.env = env;
         this.queueStorageRepository = queueStorageRepository;
         this.externalStepTypeService = externalStepTypeService;
+        this.externalService = externalService;
     }
 
     public void afterPropertiesSet() {
@@ -58,7 +59,8 @@ public class MultithreadExecutor implements InitializingBean {
             request.addLog("incorrect task name: "+ request.getCalculateType());
             request.setStatus(QueueStatus.SYS_ERROR.name());
             queueStorageRepository.saveAndFlush(request);
-            managerService.sendResult(request);
+            sendToManager(request);
+
         }
 
         try {
@@ -68,7 +70,7 @@ public class MultithreadExecutor implements InitializingBean {
             PropData pData = fPdata.get();
             // send response
             log.debug("pData: {}", pData);
-            managerService.sendResult(pData.getQs());
+            sendToManager(pData.getQs());
         }catch(RejectedExecutionException e) {
             request.setStatus(QueueStatus.QUEUE.name());
             request.addLog("No spot in task! "+e.getMessage());
@@ -84,12 +86,19 @@ public class MultithreadExecutor implements InitializingBean {
             }
             queueStorageRepository.saveAndFlush(request);
             if (attempt>request.getMaxAttempts()) {
-                managerService.sendResult(request);
+                sendToManager(request);
             }
-
         }
     }
 
+    private void sendToManager(QueueStorage queueStorage){
+        try {
+            externalService.sendToManager(queueStorage);
+        }catch (Exception x){
+            queueStorage.addLog("Error to sent to manager:"+x.getMessage());
+            queueStorageRepository.saveAndFlush(queueStorage);
+        }
+    }
     /**
      *
      * @return  number of free threads slots and busy threads

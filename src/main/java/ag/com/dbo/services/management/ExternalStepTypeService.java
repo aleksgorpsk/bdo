@@ -2,29 +2,19 @@ package ag.com.dbo.services.management;
 
 import ag.com.dbo.controllers.model.ScriptResponse;
 import ag.com.dbo.controllers.model.TaskRequest;
-import ag.com.dbo.models.checker.BranchModel;
+import ag.com.dbo.models.checker.script.ScriptModel;
 import ag.com.dbo.models.checker.SensorModel;
-import ag.com.dbo.models.checker.StepModel;
 import ag.com.dbo.models.management.StepInstance;
 import ag.com.dbo.models.management.StepStatus;
-import ag.com.dbo.models.queue.QueueStorage;
 import ag.com.dbo.repositories.management.StepInstanceRepository;
-import ag.com.dbo.repositories.queue.QueueStorageRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import groovy.lang.Binding;
-import groovy.lang.GroovyShell;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import java.time.OffsetDateTime;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-import static ag.com.dbo.services.queue.utils.VarSupport.stringToJsonVar;
 import static ag.com.dbo.utils.Utils.*;
 
 @Slf4j
@@ -32,15 +22,13 @@ import static ag.com.dbo.utils.Utils.*;
 public class ExternalStepTypeService {
 
     private final StepInstanceRepository stepInstanceRepository;
-    private final QueueStorageRepository queueStorageRepository;
     private final ExternalService externalService;
 
-    public ExternalStepTypeService(StepInstanceRepository stepInstanceRepository, QueueStorageRepository queueStorageRepository, ExternalService externalService) {
+    public ExternalStepTypeService(StepInstanceRepository stepInstanceRepository, ExternalService externalService) {
         this.stepInstanceRepository = stepInstanceRepository;
-        this.queueStorageRepository = queueStorageRepository;
         this.externalService = externalService;
     }
-
+/*
     public SensorModel checkSensor(StepInstance si) throws JsonProcessingException {
 
         SensorModel model = getSensor(si.getVars());
@@ -54,12 +42,28 @@ public class ExternalStepTypeService {
 //        if (model.getSensorResultName() == null){            saveError( si, stepInstanceRepository, null,  "Empty field SensorResultName.");        }
         return model;
     }
-
+ */
     public SensorModel getSensor(String vars) throws JsonProcessingException {
-        return getExtendedObjectMapper().readValue(vars, new TypeReference<SensorModel>(){});
+        return getExtendedObjectMapper().readValue(vars, new TypeReference<>(){});
 
     }
 
+    /**
+     * in vars:
+     * {
+     *
+     * }
+     *
+     *
+     * @param vars
+     * @return
+     * @throws JsonProcessingException
+     */
+    public ScriptModel getScript(String vars) throws JsonProcessingException {
+
+        return getExtendedObjectMapper().readValue(vars, new TypeReference<>(){});
+    }
+/*
     public BranchModel checkBranch(StepInstance si) throws JsonProcessingException {
         BranchModel model = getBranch(si.getVars());
         if (model.getResultName() == null){
@@ -70,7 +74,6 @@ public class ExternalStepTypeService {
         }
         return model;
     }
-
     public BranchModel getBranch(String vars) throws JsonProcessingException {
         return getExtendedObjectMapper().readValue(vars, new TypeReference<BranchModel>(){});
 
@@ -81,14 +84,17 @@ public class ExternalStepTypeService {
 
     }
 
+
     public StepModel checkStep(QueueStorage task) throws JsonProcessingException {
-        return getStepModel(task.getParameters());
+        return getStepModel(task.getVars());
     }
 
     public StepModel getStepModel(String vars) throws JsonProcessingException {
         return getExtendedObjectMapper().readValue(vars, new TypeReference<StepModel>(){});
     }
 
+ */
+/*
     public List<String> execBranchGroovyScript(StepInstance si ) throws JsonProcessingException {
         String sVars = si.getEtlInstance().getEtlVars();
         if (StringUtils.isNotEmpty(sVars)) {
@@ -104,17 +110,19 @@ public class ExternalStepTypeService {
         return null;
     }
 
+ */
+    /*
     boolean checkSensorScript(StepInstance si, SensorModel sModel) throws Exception {
 
-            ScriptResponse response = externalService.sendSensorScript(si, sModel);
+            ScriptResponse response = externalService.sendScript(si, sModel);
             si.addLog(OffsetDateTime.now().toString() + " sensor Script :" + sModel.getSensorScript() + " result:" + response.toString());
            if (si.getStart().plusSeconds(sModel.getFailTimeout()).isBefore(OffsetDateTime.now()) ){
                log.info("Sensor timeout !");
                 saveError(si, stepInstanceRepository, null,"Sensor timeout ! "+si.getStepInstanceId());
                 throw new Exception("Sensor timeout ! "+si.getStepInstanceId());
             }
-            if ("OK".toLowerCase().equals(response.getStatus().toLowerCase())) {
-                if (Boolean.TRUE.toString().toLowerCase().equals(response.getResponse().toLowerCase())) {
+            if ("OK".equalsIgnoreCase(response.getStatus())) {
+                if (Boolean.TRUE.toString().equalsIgnoreCase(response.getResponse())) {
                     si.setStatus(StepStatus.Success.name());
                     stepInstanceRepository.saveAndFlush(si);
                     return true;
@@ -127,7 +135,7 @@ public class ExternalStepTypeService {
             }
         return  false;
     }
-
+     */
     /*
     public  boolean execSensorBranchGroovyScript(StepInstance si ) throws JsonProcessingException {
         SensorModel sm = checkSensor(si);
@@ -155,13 +163,15 @@ public class ExternalStepTypeService {
         TypeReference<List<String>> typeRef = new TypeReference<>() { };
         return getObjectMapper().readValue(s, typeRef);
     }
-
+/*
     public String calculateResult(String taskLog, StepModel sModel, QueueStorage data) throws JsonProcessingException {
         String result=null;
         if (Boolean.TRUE.equals(data.getSaveCalculate())) {
             Binding binding = new Binding();
             binding.setVariable("taskLog", taskLog);
             binding.setVariable("vars", sModel.getVars());
+            binding.setVariable("vars", sModel.getVars());
+
             GroovyShell shell = new GroovyShell(binding);
             String  oResult =  shell.evaluate(sModel.getLogToTesultScript()).toString();
 
@@ -171,7 +181,7 @@ public class ExternalStepTypeService {
             result = oResult.toString();
             Map<String,Object> res = new HashMap<>(1);
             res.put("result",result);
-            data.setEtlVars(objectMapper.writeValueAsString(res));
+            data.setLocalResults(objectMapper.writeValueAsString(res));
             // save one
             queueStorageRepository.saveAndFlush(data);
 
@@ -179,6 +189,8 @@ public class ExternalStepTypeService {
         return result;
     }
 
+
+ */
 
 
 
@@ -217,7 +229,9 @@ public class ExternalStepTypeService {
         taskRequest.setCommandProfile(si.getStep().getDataLoading().getProps());
         taskRequest.setCalculateType(si.getStep().getDataLoading().getName());
         taskRequest.setMaxAttempts(si.getStep().getMaxAttempts());
-        taskRequest.setParameters(si.getVars());
+        taskRequest.setVars(si.getVars());
+        taskRequest.setLocalResult(si.getLocalResults());
+        taskRequest.setEtlResult(si.getEtlInstance().getEtlVars());
         taskRequest.setSaveCalculate(si.getSaveCalculate());
         taskRequest.setScript(si.getScript());
         taskRequest.setStepType(si.getStepType());

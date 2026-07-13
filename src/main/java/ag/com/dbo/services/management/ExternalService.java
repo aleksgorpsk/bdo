@@ -8,6 +8,7 @@ import ag.com.dbo.models.management.Node;
 import ag.com.dbo.models.management.NodeType;
 import ag.com.dbo.models.management.StepInstance;
 import ag.com.dbo.models.management.statuses.QueueInfo;
+import ag.com.dbo.models.queue.QueueStorage;
 import ag.com.dbo.repositories.management.NodeRepository;
 import ag.com.dbo.repositories.management.StepInstanceRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -47,6 +48,8 @@ public class ExternalService implements InitializingBean {
     @Value("${script.process.path}")
     private String scriptRunPath;
 
+    @Value("${spring.manager.return.path}")
+    private String ReturnTpManagerPath;
     public Node masterNode; // in case master without Workers
 
     public ExternalService(StepInstanceRepository stepInstanceRepository,
@@ -57,11 +60,42 @@ public class ExternalService implements InitializingBean {
         this.scriptRestClient = scriptRestClient;
         this.nodeRepository = nodeRepository;
 
-      //  masterNode = new Node(1, "Master", "http://localhost:" + port, "Master", "", true, 3, 1);
 
 
     }
 
+    public void sendToManager(QueueStorage result) throws JsonProcessingException {
+        RestClient client = getManager();
+        client.put().uri(ReturnTpManagerPath)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(result)
+                .retrieve()
+                .toBodilessEntity();
+    }
+
+    private RestClient getManager(){
+        List<Node> nodes = nodeRepository.findAll().stream()
+                .filter(Node::getActive)
+                .filter(x-> NodeType.Master.name().equals( x.getType()))
+                .toList();
+        if (nodes.isEmpty()) { // if one node
+            String host= "http://localhost:" + port;
+            RestClient client = RestClient.builder()
+                    .baseUrl(host)
+                    .build();
+            masterNode = new Node(1, "Master", "http://localhost:" + port,
+                    NodeType.Master.name(), "", true, 10, 0);
+            Node newMasterNode=nodeRepository.saveAndFlush(masterNode);
+            nodeMap.put(newMasterNode.getId(), client);
+            this.masterNode = newMasterNode;
+            return client;
+        } else if (nodes.size()==1) {
+             return  nodeMap.get(nodes.get(0).getId());
+        }else{
+            return nodeMap.get( nodes.get(ThreadLocalRandom.current().nextInt(nodes.size())).getId());
+        }
+
+    }
 
     public void sendToQueue(TaskRequest taskRequest, StepInstance si) throws JsonProcessingException {
         //TODO
@@ -137,11 +171,12 @@ public class ExternalService implements InitializingBean {
      * @return
      * @throws JsonProcessingException
      */
-    public ScriptResponse sendSensorScript(StepInstance si, SensorModel sModel) throws JsonProcessingException {
+    /*
+    public ScriptResponse sendScript(StepInstance si, SensorModel sModel) throws JsonProcessingException {
         ScriptRequest scriptRequest = sModel.scriptRequest();
-        scriptRequest.setParams(si.getVars());
-        scriptRequest.setResults(si.getEtlInstance().getEtlVars());
-        scriptRequest.setParams(si.getVars());
+        scriptRequest.setVars(si.getVars());
+        scriptRequest.setLocalResults(si.getLocalResults());
+        scriptRequest.setEtlResults(si.getEtlInstance().getEtlVars());
         scriptRequest.setStepName(si.getName());
 
         try {
@@ -156,7 +191,7 @@ public class ExternalService implements InitializingBean {
             return new ScriptResponse("Error", e.getMessage());
         }
     }
-
+     */
     public QueueInfo getInfo(Node node) {
         try {
             RestClient client = nodeMap.get(node.getId());

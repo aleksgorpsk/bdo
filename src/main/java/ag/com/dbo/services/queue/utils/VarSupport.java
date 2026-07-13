@@ -60,10 +60,10 @@ public class VarSupport {
         if (ObjectUtils.isEmpty(s)){
             return null;
         }
-        TypeReference<HashMap<String,Object>> typeRef = new TypeReference<HashMap<String,Object>>() {};
+        TypeReference<HashMap<String,Object>> typeRef = new TypeReference<>() {};
         return getObjectMapper().readValue(s, typeRef);
     }
-
+/*
     public static List<String> stringBranchVars(Object o) throws JsonProcessingException {
         if (o==null){
             return null;
@@ -75,4 +75,5 @@ public class VarSupport {
         TypeReference<List<String>> typeRef = new TypeReference<>() { };
         return getObjectMapper().readValue(s, typeRef);
     }
+ */
 }

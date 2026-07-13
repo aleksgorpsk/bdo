@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Data
 public class ScriptResponse {
+    private String name;
     private String status;
     private String response;
 }

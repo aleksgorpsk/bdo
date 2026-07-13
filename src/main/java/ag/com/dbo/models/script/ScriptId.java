@@ -13,9 +13,8 @@ import java.io.Serializable;
 //  groovy:checkSensor:1
 @Embeddable
 public class ScriptId  implements Serializable {
-
     String language;
     String name;
-    Integer version;
+    String version;
 
 }

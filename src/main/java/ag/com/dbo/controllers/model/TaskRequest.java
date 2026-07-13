@@ -10,7 +10,11 @@ public class TaskRequest {
     // save
     private String commandProfile;
     // save
-    private String parameters;
+    private String vars;
+
+    private String localResult;
+
+    private String etlResult;
     // save
     private String calculateType;
     // save

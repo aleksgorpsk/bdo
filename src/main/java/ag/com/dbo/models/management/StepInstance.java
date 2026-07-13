@@ -40,8 +40,6 @@ public class StepInstance {
 
     @Column(columnDefinition = "Text")
     private String log;
-    @Column(columnDefinition = "Text")
-    private String vars;  // step result
     private Integer maxAttempts;
     private Integer attempts;
     private Boolean active;
@@ -51,7 +49,10 @@ public class StepInstance {
     private Boolean saveCalculate;
 
     @Column(columnDefinition = "Text")
-    private String etlVars;  // vars
+    private String vars;  // step result
+
+    @Column(columnDefinition = "Text")
+    private String localResults;  // vars
 
     @Column(columnDefinition = "TEXT")
     private String script; // comma separated scriptLink
@@ -73,6 +74,6 @@ public class StepInstance {
         }else{
             log=  log +System.lineSeparator();
         }
-        log = log + message;
+        log = OffsetDateTime.now()+"- " + log + message;
     }
 }
