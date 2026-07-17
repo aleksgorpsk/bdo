@@ -2,9 +2,11 @@ package ag.com.dbo.services.management;
 
 import ag.com.dbo.controllers.FullEtlInstance;
 import ag.com.dbo.controllers.model.ScriptResponse;
-import ag.com.dbo.controllers.model.ScriptResponses;
+import ag.com.dbo.controllers.model.TaskRequest;
 import ag.com.dbo.models.checker.SensorModel;
 import ag.com.dbo.models.management.*;
+import ag.com.dbo.models.script.ScriptDefinition;
+import ag.com.dbo.models.script.ScriptType;
 import ag.com.dbo.repositories.management.EtlInstanceRepository;
 import ag.com.dbo.repositories.management.EtlRepository;
 import ag.com.dbo.repositories.management.StepInstanceRepository;
@@ -15,8 +17,10 @@ import ag.com.dbo.utils.Constants;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import org.thymeleaf.util.ListUtils;
 
 
 import java.math.BigInteger;
@@ -25,7 +29,9 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static ag.com.dbo.services.Utils.getSensor;
 import static ag.com.dbo.services.queue.utils.VarSupport.*;
+import static ag.com.dbo.services.queue.utils.VarSupport.stringToJsonVar;
 import static ag.com.dbo.utils.Utils.saveError;
 
 @Slf4j
@@ -35,20 +41,20 @@ public class EngineService {
     private final EtlInstanceRepository etlInstanceRepository;
     private final StepRepository stepRepository;
     private final StepInstanceRepository stepInstanceRepository;
-    private final ExternalStepTypeService externalStepTypeService;
     private final ScriptService scriptService;
+    private final ExternalService externalService;
 
     public EngineService(
             EtlRepository etlRepository, EtlInstanceRepository etlInstanceRepository,
             StepRepository stepRepository, StepInstanceRepository stepInstanceRepository,
-            ExternalStepTypeService externalStepTypeService, ScriptService scriptService
+            ScriptService scriptService, ExternalService externalService
     ) {
         this.etlRepository = etlRepository;
         this.etlInstanceRepository = etlInstanceRepository;
         this.stepRepository = stepRepository;
         this.stepInstanceRepository = stepInstanceRepository;
-        this.externalStepTypeService = externalStepTypeService;
         this.scriptService = scriptService;
+        this.externalService = externalService;
     }
 
 
@@ -103,7 +109,6 @@ public class EngineService {
                 si.setActive(step.getStepActive());
                 si.setMaxAttempts(step.getMaxAttempts());
                 si.setName(step.getName());
-                si.setSaveCalculate(step.getSaveCalculate());
                 si.setScript(step.getScript());
                 etl.setEtlVars(merge(etl.getEtlVars(), si.getVars(), si.getName()));
                 si.setStepType(step.getStepType());
@@ -191,30 +196,45 @@ public class EngineService {
         stepFrom(si);
     }
 
+
+
     /**
      * step finished and need new step
      * @param si
      */
-
     public void stepFrom(StepInstance si) {
         FullEtlInstance fullEtlInstance = null;
+        si.addLog("Continue process Step. Second part.");
+
         try {
             fullEtlInstance = getFullEtlInstance(si.getEtlInstance());
         } catch (Exception e) {
             si.addLog("cannot calculate logic:" + e.getMessage());
             si.setStatus(StepStatus.Failed.name());
+            stepInstanceRepository.saveAndFlush(si);
             return;
         }
         //   run script
-
-        try {
-            si = scriptService.runScript(si);
-        } catch (JsonProcessingException e) {
-                e.printStackTrace();
-                si.addLog("Error send Script:"+e.getMessage());
+        stepInstanceRepository.saveAndFlush(si);
+        ScriptDefinition[] scripts= scriptService.getAppropriateScript(si, ScriptType.Common);
+        if(scripts.length>0) {
+            ScriptResponse scriptResponse = scriptService.runScript(si, scripts);
+            if (!Constants.OK.equals(scriptResponse.getStatus())){
+                log.error("Error send Script:" + scriptResponse.getResponse());
+                si.setStatus(StepStatus.Failed.name());
+                stepInstanceRepository.saveAndFlush(si);
+                return;
+            }
+            try {
+                saveResult(si, scriptResponse);
+            }catch (JsonProcessingException e){
+                si.addLog("Cannot parse response: "+e.getMessage());
+            }
+            si.addLog("Process script(s): "+scripts);
+            stepInstanceRepository.saveAndFlush(si);
         }
 
-        // check finish
+      // check finish
         EtlInstance ei = si.getEtlInstance();
         if (StepStatus.Success.name().equals(si.getStatus())) {
             if (checkAllStepInstances(si, fullEtlInstance)) {
@@ -236,23 +256,18 @@ public class EngineService {
         }
 
 
-        Set<String> children = fullEtlInstance.getParentToChildrenStep().get(si.getStepInstanceId());
-        List<String> incorrectWayId = null;
         // check sensor
 
         if (StepStatus.InWait.name().equals(si.getStatus())
                 && StepType.Sensor.name().equals(si.getStepType())) {
             try {
-                SensorModel sModel = externalStepTypeService.getSensor(si.getVars());
+                SensorModel sModel =  getSensor(si.getVars());
                 if (si.getNextTest() == null) {
                     si.setNextTest(si.getStart().plusSeconds(sModel.getAttemptTimeOut()));
                 } else {
                     si.setNextTest(si.getNextTest().plusSeconds(sModel.getAttemptTimeOut()));
                 }
                 stepInstanceRepository.saveAndFlush(si);
-           //     boolean result = externalStepTypeService.checkSensorScript(si, sModel);
-            //    log.info("!!!!!!!:{}", result);
-
             } catch (JsonProcessingException e) {
                 saveError(si, stepInstanceRepository, e, "Cannot parse Sensor parameters");
                 return;
@@ -262,14 +277,17 @@ public class EngineService {
                 return;
             }
         }
-        // check branch !!!
-        // TODO
+        // TODO BRANCH
+
+        Set<String> children = fullEtlInstance.getParentToChildrenStep().get(si.getStepInstanceId());
+        List<String> incorrectWayId = null;
+
         if (Utils.isContainsStepType(si,StepType.Branch)) {
             try {
-
                 List<String> correctWsyNames = getBranches(si);
                 List<String> correctWayId = fullEtlInstance.getCorrectWayInIds(correctWsyNames, si.getStepInstanceId());
                 incorrectWayId = fullEtlInstance.getIncorrectWayIds(correctWsyNames, si.getStepInstanceId());
+
                 if (CollectionUtils.isEmpty(correctWayId)) {
                     log.info("last step!:{}", si.getStepInstanceId());
                     children = Collections.emptySet();
@@ -277,20 +295,31 @@ public class EngineService {
                     children = new HashSet<>(correctWayId);
                 }
             } catch (Exception e) {
+
                 saveError(si, stepInstanceRepository, e, "Wrong Groovy script");
             }
         }
-        if (CollectionUtils.isEmpty(children)) {
+
+        si.setStatus(StepStatus.Success.name());
+        si.setStop(OffsetDateTime.now());
+        stepInstanceRepository.saveAndFlush(si);
+
+        if (CollectionUtils.isEmpty(children)) { // if no children
             log.info("last step!:{}", si.getStepInstanceId());
         } else {
             FullEtlInstance finalFullEtlInstance = fullEtlInstance;
-            children.stream()
+
+            List<StepInstance> siList = children.stream()
                     .map(x -> finalFullEtlInstance.getSiBase().get(x))
-                    .forEach(stepInstance -> {
-                        log.info("try to run child:{}", stepInstance.getStepInstanceId());
-                        enqueueTask(stepInstance, finalFullEtlInstance);
-                    });
+                    .filter(StepInstance::getActive).toList();
+                    si.addLog("Run to queue :"+
+                            String.join(",",siList.stream().map(x->x.getName()).toList() ));
+                    for(StepInstance siCh :siList){
+                        enqueueTask(siCh, finalFullEtlInstance);
+                    }
+
         }
+
         if (!CollectionUtils.isEmpty(incorrectWayId)) {
             // set all branch status to StepStatus.Missed
             List<StepInstance> listSii = new ArrayList<>(incorrectWayId.size());
@@ -299,16 +328,37 @@ public class EngineService {
                 result.addAll(recursiveSetMissed(fullEtlInstance, id, false));
             }
             stepInstanceRepository.saveAllAndFlush(result);
-
-
         }
     }
-private List<String> getBranches(StepInstance si) throws JsonProcessingException {
-     return (List<String>) stringToJsonVar(si.getLocalResults()).getOrDefault(Constants.BRANCH_RESULT_NAME, Collections.EMPTY_LIST);
 
-
-
-}
+    private List<String> getBranches(StepInstance si) throws Exception {
+        ScriptDefinition[] scripts= scriptService.getAppropriateScript(si, ScriptType.Branch);
+        if(scripts.length>0) {
+            try {
+                ScriptResponse scriptResponse = scriptService.runScript(si, scripts);
+                if (!Constants.OK.equals(scriptResponse.getStatus())) {
+                    log.error("Error send Script:" + scriptResponse.getResponse());
+                    si.setStatus(StepStatus.Failed.name());
+                    stepInstanceRepository.saveAndFlush(si);
+                    return Collections.EMPTY_LIST;
+                }
+                try {
+                    saveResult(si, scriptResponse);
+                } catch (JsonProcessingException e) {
+                    si.addLog("Cannot parse response: " + e.getMessage());
+                }
+                si.addLog("Process script(s): " + scripts);
+                stepInstanceRepository.saveAndFlush(si);
+                return stringToObject(scriptResponse.getResponse(), List.class);
+            }catch(Exception x){
+                saveError(si, stepInstanceRepository, x, "Error in :"+scripts);
+                return Collections.EMPTY_LIST;
+            }
+        }else{
+            si.addLog("No script for step: "+si.getName());
+        }
+        return Collections.EMPTY_LIST;
+    }
     /**
      * should be next
      *
@@ -412,13 +462,14 @@ private List<String> getBranches(StepInstance si) throws JsonProcessingException
 
 
     /**
-     * need full check because maybe next step
+     * need full check because maybe not all parents is ready
      *
      * @param currentSi
      * @param fullEtlInstance
      */
     public void enqueueTask(StepInstance currentSi, FullEtlInstance fullEtlInstance) {
         log.info("Step: {}", currentSi.getStepInstanceId());
+        //TODO are you sure ??
         if (fullEtlInstance == null) {
             try {
                 fullEtlInstance = getFullEtlInstance(currentSi.getEtlInstance());
@@ -427,6 +478,10 @@ private List<String> getBranches(StepInstance si) throws JsonProcessingException
                 return;
             }
         }
+
+
+
+        // if ready for step or sensor in Wait
         if (currentSi.getStatus() == null || StepStatus.InWait.name().equals(currentSi.getStatus())) { // not started yet or attempt
             // if all parents Success or Missed or Failed
             String[] parents = currentSi.getParentStepInstanceIds();
@@ -440,7 +495,18 @@ private List<String> getBranches(StepInstance si) throws JsonProcessingException
                                 StepStatus.Failed.name().equals(x.getStatus()))
                         .toList();
                 if (ArrayUtils.isEmpty(parents) || parents.length == parentOkSi.size()) {
-                    startStepInstance(currentSi);
+
+                    DataLoading command= currentSi.getStep().getDataLoading();
+                    if ( command==null || !currentSi.getActive() || !command.getActive() || command.getId().equals(0) || StringUtils.isEmpty(command.getProps())) {
+                        currentSi.addLog("Skip exec because active:" + command.getActive() + " command_Id =" + command.getId() + "commandline:" + command.getProps());
+                        currentSi.addLog("no queue task go to step2");
+                        stepInstanceRepository.saveAndFlush(currentSi);
+                        stepFrom(currentSi);
+                    } else {
+                        currentSi.addLog("Go to enqueue. command active:" + command.getActive() + "si.active" + currentSi.getActive() +
+                                " command_Id =" + command.getId() + "commandline:" + command.getProps());
+                        prepareToQueue(currentSi);
+                    }
                 }
 
             }
@@ -449,32 +515,23 @@ private List<String> getBranches(StepInstance si) throws JsonProcessingException
 
 
     /**
-     * Strart StepInstance and return
+     * Enqueue step
      *
      * @param si
      * @return
      */
-    private boolean startStepInstance(StepInstance si) {
+    private boolean prepareToQueue(StepInstance si) {
         log.info("-------!!!!!!startStep: {}", si);
-        if (si.getStep().getStepActive()) {
             try {
                 si.setStatus(StepStatus.InProcess.name());
                 stepInstanceRepository.saveAndFlush(si);
-                externalStepTypeService.sendToQueue(si);
+                this.externalService.sendToQueue(si);
                 log.info("sent to queue:{}", si.getStepInstanceId());
                 return true;
             } catch (Throwable e) {
                 saveError(si, stepInstanceRepository, e, "cannot send to queue");
                 return true;
             }
-        } else {
-            log.info("startStep:{} inactive", si);
-            si.setStatus(StepStatus.Missed.name());
-            si.setStop(OffsetDateTime.now());
-            si.addLog("Deactivated by status.");
-            stepInstanceRepository.saveAndFlush(si);
-            return true;
-        }
     }
 
 }

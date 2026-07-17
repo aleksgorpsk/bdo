@@ -172,7 +172,7 @@ public class StepInstanceService {
             EtlInstance ei = si.getEtlInstance();
             try {
                 ei.setEtlVars(merge(ei.getEtlVars(), si.getLocalResults(), si.getName()));
-                ei.addLog(si.getLog());
+                ei.addLog(si.getLogMessage());
             }catch (Exception e){
                 si.setStatus(StepStatus.Failed.name());
                 si.addLog("Error:" + e.getMessage());

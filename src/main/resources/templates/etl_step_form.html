@@ -79,7 +79,7 @@ private BigInteger stepId;
                     <label class="col-sm-3 col-form-label" for="name">Step type</label>
                     <div class="col-sm-9">
                         <br/>
-                        <select id="stepTypee" th:field="*{stepTypeList}" size="5" multiple="multiple">
+                        <select id="stepType" th:field="*{stepTypeList}" size="5" multiple="multiple">
                             <option th:each="stepType : ${allStepTypes}"
                                     th:value="${{stepType}}"
                                     th:text="${stepType}">
@@ -114,12 +114,6 @@ private BigInteger stepId;
                     <label class="col-sm-3 form-check-label" for="stepActive">active</label>
                     <div class="col-sm-9">
                         <input type="checkbox" th:field="*{stepActive}"/>
-                    </div>
-                </div>
-                <div class="form-group row">
-                    <label class="col-sm-3 form-check-label" for="saveCalculate">save the calculate result</label>
-                    <div class="col-sm-9">
-                        <input type="checkbox" th:field="*{saveCalculate}"/>
                     </div>
                 </div>
 

@@ -25,7 +25,6 @@ public class StepDTO {
 
     private String vars;
     private Integer maxAttempts;
-    private Boolean saveCalculate;
 
     private String script;
 
@@ -33,4 +32,6 @@ public class StepDTO {
     String[] stepTypeList;
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     private OffsetDateTime nextTest;
+
+
 }

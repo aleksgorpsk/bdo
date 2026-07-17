@@ -3,11 +3,12 @@ package ag.com.dbo.controllers;
 import ag.com.dbo.controllers.model.ScriptRequest;
 import ag.com.dbo.controllers.model.ScriptResponse;
 import ag.com.dbo.models.script.Script;
-import ag.com.dbo.models.script.ScriptId;
-import ag.com.dbo.models.script.ScriptType;
+import ag.com.dbo.models.script.ScriptDefinition;
+import ag.com.dbo.models.script.ScriptLanguage;
 import ag.com.dbo.services.management.ScriptService;
 import ag.com.dbo.services.script.GroovyService;
 import ag.com.dbo.services.script.PythonService;
+import ag.com.dbo.utils.Constants;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
@@ -42,26 +43,29 @@ public class ScriptController {
 
 
         Script script = null;
-        if (request.getVersion() == null) {
-            Optional<Script> sc = scriptService.getLastScript(request.getLanguage(), request.getScriptName());
+        if (request.getScriptDefinition().getVersion() == null) {
+            Optional<Script> sc = scriptService.getLastScript(request.getScriptDefinition().getLanguage(), request.getScriptDefinition().getName());
             if (sc.isPresent()) {
                 script = sc.get();
             }
         } else {
-            ScriptId id = new ScriptId(request.getLanguage(), request.getScriptName(), request.getVersion());
-            Optional<Script> sc = scriptService.retrieveById(id);
+            ScriptDefinition id = request.getScriptDefinition();
+
+            Optional<Script> sc = scriptService.retrieveById(id.getScriptId());
             if (sc.isPresent()) {
                 script = sc.get();
             }
 
         }
         if (script != null) {
-            if (ScriptType.GROOVY.name().equals(script.getScriptId().getLanguage())) {
+            if (ScriptLanguage.GROOVY.name().equals(script.getScriptId().getLanguage())) {
                 ScriptResponse response = groovyService.execGroovyScript(script, request.getVars(), request.getEtlResults(), request.getLocalResults(),request.getStepName());
+                response.setScriptDefinition(request.getScriptDefinition());
                 return ResponseEntity.status(HttpStatus.OK).header("Content-Type", "application/json").body(response);
             }
-            if (ScriptType.PYTHON.name().equals(script.getScriptId().getLanguage())) {
+            if (ScriptLanguage.PYTHON.name().equals(script.getScriptId().getLanguage())) {
                 ScriptResponse  response = pythonService.execPythonScript(script, request.getVars(), request.getEtlResults(), request.getLocalResults(), request.getStepName());
+                response.setScriptDefinition(request.getScriptDefinition());
                 return ResponseEntity.status(HttpStatus.OK).header("Content-Type", "application/json").body(response);
             } else {
                 ScriptResponse response = new ScriptResponse();
@@ -70,7 +74,9 @@ public class ScriptController {
             }
         } else {
             ScriptResponse response = new ScriptResponse();
-            response.setStatus(request.getLanguage() + ":" + request.getScriptName() + ":" + request.getVersion() + " Not found.");
+            response.setScriptDefinition(request.getScriptDefinition());
+            response.setStatus(Constants.ERROR);
+            response.setResponse(request.getScriptDefinition()+" not found!");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).header("Content-Type", "application/json").body(response);
         }
     }

@@ -10,12 +10,14 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.StreamReadFeature;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import lombok.extern.slf4j.Slf4j;
 
 
 import java.time.OffsetDateTime;
+import java.util.HashMap;
 import java.util.Map;
 
 import static org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace;
@@ -45,6 +47,24 @@ public class Utils {
         return getObjectMapper().writeValueAsString(input);
     }
 
+
+    public static Map<String, Object> objectToMap(Object o) {
+        TypeReference<HashMap<String,Object>> typeRef = new TypeReference<>() {};
+        return getObjectMapper().convertValue(o, typeRef);
+    }
+    public static JsonNode objectToNode(Object o) {
+        TypeReference<JsonNode> typeRef = new TypeReference<>() {};
+        return getObjectMapper().convertValue(o, typeRef);
+    }
+
+
+    public static Map<String,Object> changeFiledName(Map<String,Object> data, String oldName, String newName){
+            if (data.containsKey(oldName)) {
+                data.put(newName, data.get(oldName));
+                data.remove(oldName);
+            }
+            return data;
+    }
 
     public static void saveError(StepInstance si, StepInstanceRepository stepInstanceRepository, Throwable e, String message) {
         String error = "";

@@ -54,7 +54,6 @@ public class QueueController {
         req.setMaxAttempts((taskRequest.getMaxAttempts()==null)? 2: taskRequest.getMaxAttempts());
         req.setStatus(QueueStatus.QUEUE.name());
         req.setStart(OffsetDateTime.now());
-        req.setSaveCalculate( taskRequest.getSaveCalculate());
         req.setScript(taskRequest.getScript());
         req.setStepType(taskRequest.getStepType());
         req.setVars(taskRequest.getVars());

@@ -18,7 +18,6 @@ public class TaskRequest {
     // save
     private String calculateType;
     // save
-    private Boolean saveCalculate;
 
     private Integer maxAttempts = 1;
 

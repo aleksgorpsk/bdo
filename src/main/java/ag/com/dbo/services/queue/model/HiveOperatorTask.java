@@ -2,8 +2,8 @@ package ag.com.dbo.services.queue.model;
 
 import ag.com.dbo.controllers.queue.QueueStatus;
 import ag.com.dbo.models.queue.QueueStorage;
+import ag.com.dbo.models.script.ScriptType;
 import ag.com.dbo.repositories.queue.QueueStorageRepository;
-import ag.com.dbo.services.management.ExternalStepTypeService;
 import ag.com.dbo.services.queue.ResultTemplate;
 import ag.com.dbo.services.queue.TaskProperties;
 
@@ -33,15 +33,13 @@ public class HiveOperatorTask extends TaskProperties implements Callable<PropDat
     protected String out;
     protected final Environment env;
     protected final QueueStorageRepository queueStorageRepository;
-    protected final ExternalStepTypeService externalStepTypeService;
 
 
-    public HiveOperatorTask(QueueStorage data, Environment env, QueueStorageRepository queueStorageRepository, ExternalStepTypeService externalStepTypeService){
+    public HiveOperatorTask(QueueStorage data, Environment env, QueueStorageRepository queueStorageRepository){
         super(env);
         this.queueStorageRepository = queueStorageRepository;
         this.task = data;
         this.env = env;
-        this.externalStepTypeService = externalStepTypeService;
     }
 
     @Override

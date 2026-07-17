@@ -66,9 +66,8 @@ public class EtlStepsController {
         try {
             if (isArrayNullOrEmpty(stepDto.getStepTypeList())){
                 stepDto.setStepType(StepType.Simple.name());
-            }else{
-                stepDto.setStepType(String.join(",",stepDto.getStepTypeList()));
             }
+           stepDto.setStepType(String.join(",", stepDto.getStepTypeList()));
            Optional<EtlDTO>etlDTO = etlService.findById(stepDto.getEtlId());
             etlDTO.ifPresent(dto -> stepDto.setEtl(etlService.mapFrom(dto)));
             if (stepDto.getStepId()!=null) {
@@ -89,7 +88,7 @@ public class EtlStepsController {
             @PathVariable("etlId") BigInteger etlId,
             Model model) {
         Optional<EtlDTO> etlDto =etlService.findById(etlId);
-        Step step = new Step();
+        StepDTO step = new StepDTO();
         step.setMaxAttempts(2);
         if(etlDto.isPresent()) {
             Etl etl= etlService.mapFrom( etlDto.get());
@@ -101,7 +100,7 @@ public class EtlStepsController {
         model.addAttribute("pageTitle", "Create new Etl Step");
         model.addAttribute("allSteps", stepRepository.findAllStepsByEtl(etlId));
         model.addAttribute("allDataLoading", dataLoadingRepository.findAll());
-        model.addAttribute("stepTypes", this.types);
+        model.addAttribute("allStepTypes", this.types);
         return "etl_step_form";
     }
 //    etl_step/step/edit/43
@@ -113,14 +112,17 @@ public class EtlStepsController {
         StepDTO stepDto =stepService.retrieveById(stepId);
         if(StringUtils.isNotEmpty(stepDto.getStepType())) {
             stepDto.setStepTypeList(stepDto.getStepType().split(","));
+        }else{
+            stepDto.setStepTypeList(new String[0]);
         }
-
         model.addAttribute("etlId", stepId);
         model.addAttribute("step", stepDto);
         model.addAttribute("pageTitle", "Edit Etl stepId");
         model.addAttribute("allSteps", stepRepository.findAllStepsByEtl(stepDto.getEtl().getId()));
         model.addAttribute("allDataLoading", dataLoadingRepository.findAll());
         model.addAttribute("allStepTypes", this.types);
+        model.addAttribute("stepTypeList", stepDto.getStepTypeList());
+
         return "etl_step_form";
     }
 

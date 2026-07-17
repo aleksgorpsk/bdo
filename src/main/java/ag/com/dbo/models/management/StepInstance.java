@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import java.time.OffsetDateTime;
 
@@ -12,6 +13,7 @@ import java.time.OffsetDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Slf4j
 public class StepInstance {
 
     @Id
@@ -39,14 +41,14 @@ public class StepInstance {
     private Etl etl;
 
     @Column(columnDefinition = "Text")
-    private String log;
+    private String logMessage;
     private Integer maxAttempts;
     private Integer attempts;
     private Boolean active;
     private OffsetDateTime start;
     private OffsetDateTime stop;
     private String name;
-    private Boolean saveCalculate;
+
 
     @Column(columnDefinition = "Text")
     private String vars;  // step result
@@ -69,11 +71,12 @@ public class StepInstance {
      * @return return this object
      */
     public void addLog(String message){
-        if (log==null){
-            log ="";
+        log.info("{}-{}", OffsetDateTime.now(), message);
+        if (logMessage==null){
+            logMessage ="";
         }else{
-            log=  log +System.lineSeparator();
+            logMessage=  logMessage +System.lineSeparator();
         }
-        log = OffsetDateTime.now()+"- " + log + message;
+        logMessage = "\n" + OffsetDateTime.now()+"- " + logMessage + message;
     }
 }

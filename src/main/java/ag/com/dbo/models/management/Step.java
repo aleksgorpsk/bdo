@@ -36,7 +36,6 @@ public class Step {
     @Column(columnDefinition = "TEXT")
     private String vars;
     private Integer maxAttempts;
-    private Boolean saveCalculate;
 
     @Column(columnDefinition = "TEXT")
     private String script; // comma separated scriptLink
@@ -46,4 +45,13 @@ public class Step {
 
     @Column(columnDefinition ="TEXT")
     private String tags; // comma separated
+
+    /*
+    @Column(columnDefinition ="TEXT")
+    private String branchFunction;
+
+    @Column(columnDefinition ="TEXT")
+    private String sebsorFunction;
+    */
 }
+

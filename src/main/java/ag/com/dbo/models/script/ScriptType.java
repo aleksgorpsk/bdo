@@ -1,6 +1,7 @@
 package ag.com.dbo.models.script;
 
 public enum ScriptType {
-    GROOVY,
-    PYTHON;
+    Common,  // calculate date, run....,
+    Branch, // calculate branches only
+    Sensor; // calculate Sensor result
 }

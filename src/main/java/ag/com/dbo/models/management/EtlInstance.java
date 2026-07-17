@@ -36,7 +36,6 @@ public class EtlInstance {
     @Column(columnDefinition ="TEXT")
     private String etlVars;
     private OffsetDateTime executionDate;
-    private Boolean saveCalculate;
 
     @Column(columnDefinition ="TEXT")
     private String log;

@@ -5,19 +5,22 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+
 import java.util.List;
+import java.util.Map;
+
+import static ag.com.dbo.utils.Utils.objectToMap;
 
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
 public class ScriptResponses {
-    List<ScriptResponse> responses;
+    List<Map<String,Object>> responses;
 
-    public void addResponse(ScriptResponse response){
+    public void addResponse(Object o){
     if (responses == null){
-        responses = new ArrayList<ScriptResponse>();
+        responses = new ArrayList<Map<String,Object>>();
     }
-    responses.add(response);
+    responses.add(objectToMap(o));
     }
 }

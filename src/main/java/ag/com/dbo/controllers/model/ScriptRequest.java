@@ -1,12 +1,11 @@
 package ag.com.dbo.controllers.model;
 
+import ag.com.dbo.models.script.ScriptDefinition;
 import lombok.Data;
 
 @Data
 public class ScriptRequest {
-    private String language;
-    private String scriptName;
-    private String version;
+    private ScriptDefinition scriptDefinition;
     private String stepName;
     private String vars;
     private String resultName;

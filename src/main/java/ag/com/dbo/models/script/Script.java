@@ -20,7 +20,13 @@ public class Script implements Serializable {
 
     @EmbeddedId
     private ScriptId scriptId;
+
     @Column(columnDefinition = "Text")
     private String script;
+
+
+    public String getScriptIdString(){
+        return scriptId.getLanguage()+":"+scriptId.getName()+":"+scriptId.getVersion();
+    }
 
 }

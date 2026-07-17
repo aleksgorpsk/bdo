@@ -10,11 +10,14 @@ import java.io.Serializable;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-//  groovy:Common.checkSensor:1
-@Embeddable
-public class ScriptId  implements Serializable {
+//  groovy:checkSensor.Common:1
+
+public class ScriptDefinition implements Serializable {
     String language;
     String name;
     String type;
     String version;
+    public ScriptId getScriptId(){
+        return new ScriptId(this.language, this.name, this.type, this.version);
+    }
 }

@@ -25,7 +25,6 @@ public class StepInstanceDTO {
     private OffsetDateTime start;
     private OffsetDateTime stop;
     private String name;
-    private Boolean saveCalculate;
 
     @Column(columnDefinition = "Text")
     private String etlVars;

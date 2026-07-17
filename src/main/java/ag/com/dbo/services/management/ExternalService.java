@@ -166,8 +166,6 @@ public class ExternalService implements InitializingBean {
     /**
      * script Ok/Not
      *
-     * @param si
-     * @param sModel
      * @return
      * @throws JsonProcessingException
      */
@@ -305,5 +303,22 @@ public class ExternalService implements InitializingBean {
             }
         }
         return result;
+    }
+
+    public  void  sendToQueue(StepInstance si) throws JsonProcessingException {
+        log.info("sendToQueue:{}", si);
+        TaskRequest taskRequest = new TaskRequest();
+        taskRequest.setTaskId(si.getStepInstanceId());
+        taskRequest.setName(si.getName());
+        taskRequest.setCommandProfile(si.getStep().getDataLoading().getProps());
+        taskRequest.setCalculateType(si.getStep().getDataLoading().getName());
+        taskRequest.setMaxAttempts(si.getStep().getMaxAttempts());
+        taskRequest.setVars(si.getVars());
+        taskRequest.setLocalResult(si.getLocalResults());
+        taskRequest.setEtlResult(si.getEtlInstance().getEtlVars());
+        taskRequest.setScript(si.getScript());
+        taskRequest.setStepType(si.getStepType());
+        taskRequest.setResults(si.getEtlInstance().getEtlVars());
+        sendToQueue(taskRequest, si);
     }
 }

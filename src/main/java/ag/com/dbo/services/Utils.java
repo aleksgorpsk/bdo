@@ -1,12 +1,21 @@
 package ag.com.dbo.services;
 
+import ag.com.dbo.models.checker.SensorModel;
 import ag.com.dbo.models.management.StepInstance;
 import ag.com.dbo.models.management.StepType;
+import ag.com.dbo.models.script.ScriptDefinition;
+import ag.com.dbo.utils.Constants;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.ReadContext;
 import org.apache.commons.lang3.StringUtils;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+
+import static ag.com.dbo.services.queue.utils.VarSupport.*;
+import static ag.com.dbo.utils.Utils.getExtendedObjectMapper;
 
 public class Utils {
     public static boolean isContainsStepType(StepInstance si, StepType type){
@@ -25,16 +34,47 @@ public class Utils {
         return ctx.read("$."+si.getName()+".branches.*");
     }
 
-/*
-    public ScriptName getScriptNameParts(){
-        ScriptName result= new ScriptName();
-        result.setLanguage(ar[0]);
-        result.setScriptName(ar[1]);
-        if(ar.length>2){
-            result.setVersion(Integer.parseInt(ar[2]));
-        }
-        return  result;
+
+    public static SensorModel getSensor(String vars) throws JsonProcessingException {
+        return getExtendedObjectMapper().readValue(vars, new TypeReference<>(){});
+
     }
 
- */
+    public static List<String> getBranches(StepInstance si) throws JsonProcessingException {
+       Map<String,Object> result= stringToJsonVar(si.getLocalResults());
+       if (result==null){
+           return Collections.EMPTY_LIST;
+       }
+       Object obranch = result.get(Constants.BRANCH_RESULT_NAME);
+       if(obranch instanceof List){
+           return (List)obranch;
+       }else if (obranch instanceof List){ // in case one variant
+           return List.of((String)obranch);
+       }else {
+
+           si.addLog("No data for "+Constants.BRANCH_RESULT_NAME+ " in localResult: "+si.getLocalResults());
+           return null;
+       }
+    }
+
+
+    public static ScriptDefinition getScriptDefinitionFromFullName(String fullScriptName) {
+        ScriptDefinition result = new ScriptDefinition();
+        String[] ar = fullScriptName.split(":");
+        result.setLanguage(ar[0]);
+        String name= ar[1];
+        result.setName(name);
+        if(name.contains(".")){
+            String[] nameWithExtension = name.split("\\.");
+            result.setName(nameWithExtension[0]);
+            result.setType(nameWithExtension[1]);
+        }else{ //TODO legacy, remove !
+            result.setName(name);
+        }
+        if (ar.length > 2) {
+            result.setVersion(ar[2]);
+        }
+        return result;
+    }
+
 }

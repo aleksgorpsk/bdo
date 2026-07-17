@@ -2,19 +2,24 @@ package ag.com.dbo.services.management;
 
 import ag.com.dbo.controllers.model.ScriptRequest;
 import ag.com.dbo.controllers.model.ScriptResponse;
-import ag.com.dbo.controllers.model.ScriptResponses;
-import ag.com.dbo.models.checker.script.DirtyScriptModel;
+import ag.com.dbo.controllers.model.TaskRequest;
 import ag.com.dbo.models.checker.script.ScriptModel;
 import ag.com.dbo.models.management.StepInstance;
 import ag.com.dbo.models.script.Script;
+import ag.com.dbo.models.script.ScriptDefinition;
 import ag.com.dbo.models.script.ScriptId;
+import ag.com.dbo.models.script.ScriptType;
 import ag.com.dbo.repositories.management.ScriptRepository;
 import ag.com.dbo.repositories.management.StepInstanceRepository;
+import ag.com.dbo.services.Utils;
+import ag.com.dbo.utils.Constants;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
@@ -22,12 +27,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.client.RestClient;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import static ag.com.dbo.services.Utils.getScriptDefinitionFromFullName;
 import static ag.com.dbo.services.queue.utils.VarSupport.merge;
-import static ag.com.dbo.utils.Utils.getExtendedObjectMapper;
-import static ag.com.dbo.utils.Utils.saveError;
+import static ag.com.dbo.utils.Utils.*;
 
 
 @Slf4j
@@ -38,15 +44,17 @@ public class ScriptService {
     private final RestClient scriptRestClient;
     private final StepInstanceRepository stepInstanceRepository;
     private final ObjectMapper objectMapper;
+    private final ExternalService externalService;
 
     @Value("${script.process.path}")
     private String scriptRunPath;
 
-    public ScriptService(ScriptRepository scriptRepository, RestClient scriptRestClient, StepInstanceRepository stepInstanceRepository, ObjectMapper objectMapper) {
+    public ScriptService(ScriptRepository scriptRepository, RestClient scriptRestClient, StepInstanceRepository stepInstanceRepository, ObjectMapper objectMapper, ExternalService externalService) {
         this.scriptRepository = scriptRepository;
         this.scriptRestClient = scriptRestClient;
         this.stepInstanceRepository = stepInstanceRepository;
         this.objectMapper = objectMapper;
+        this.externalService = externalService;
     }
 
     public Optional<Script> retrieveById(ScriptId id) {
@@ -64,65 +72,80 @@ public class ScriptService {
 
     }
 
-    private DirtyScriptModel getDirtyScriptModel(StepInstance si) throws JsonProcessingException {
-        return  getExtendedObjectMapper().readValue(si.getVars(), new TypeReference<>(){});
+    private ScriptModel getScriptModel(StepInstance si) throws JsonProcessingException {
+        return getExtendedObjectMapper().readValue(si.getVars(), new TypeReference<>() {
+        });
     }
 
-    private ScriptId getScriptName(String fullScriptName){
-        ScriptId result = new ScriptId();
-        String[] ar =fullScriptName.split(":");
-        result.setLanguage(ar[0]);
-        result.setName(ar[1]);
-        if(ar.length>2){
-            result.setVersion(ar[2]);
-        }
-        return  result;
-    }
-    public StepInstance runScript(StepInstance si) throws JsonProcessingException {
 
-        DirtyScriptModel dirtyScriptModel = getDirtyScriptModel(si);
-        if (StringUtils.isNotEmpty(si.getScript())) {
-
-            String[] scripts =si.getScript().split(",");
-            si.addLog("run Scripts: " + si.getScript());
-            ScriptResponses responses= new ScriptResponses();
-            ObjectNode jsonObject = objectMapper.createObjectNode();
-            for(String script : scripts) {
-
-                ScriptId  scriptName = getScriptName(script);
-                si.addLog("run Script: " +script);
-                ScriptModel  scriptModel = dirtyScriptModel.getScriptModel(scriptName.getName());
-                ScriptResponse response = sendScript(si, scriptModel, si.getVars(), si.getLocalResults(), scriptName.getName());
-                responses.addResponse(response);
-                String jsonResponse = objectMapper.writeValueAsString(response);
-                jsonObject.put(scriptModel.getResultName(),jsonResponse);
-
-            }
-            String newString = objectMapper.writeValueAsString(jsonObject);
-            si.setLocalResults(merge(si.getLocalResults(), newString));
-            return stepInstanceRepository.saveAndFlush(si);
-        }
-        return si;
+    public ScriptDefinition[] getAppropriateScript(StepInstance si, ScriptType type) {
+        return Arrays.stream(si.getScript().split(","))
+                .filter(StringUtils::isNotEmpty)
+                .map(Utils::getScriptDefinitionFromFullName)
+                .filter(y -> y.getName() != null)
+                .filter(z -> type.name().equals(z.getType()))
+                .toArray(ScriptDefinition[]::new);
     }
 
-     /**
-      *  * script Ok/Not
+
+    /**
      *
      * @param si
-     * @param sModel
      * @return
-             * @throws JsonProcessingException
      */
-    public ScriptResponse sendScript(StepInstance si, ScriptModel sModel, String vars, String localResults, String name) throws JsonProcessingException {
-        ScriptRequest scriptRequest = sModel.scriptRequest(si.getScript());
+    public ScriptResponse runScript(StepInstance si, ScriptDefinition[] scripts) {//throws JsonProcessingException {
+        ScriptResponse response = null;
+        try {
+            si.addLog("RunScript step:" + si.getName() + " script: " + si.getScript() + " var:" + si.getVars());
+            if (ArrayUtils.isNotEmpty(scripts)) {
 
-        scriptRequest.setVars(vars);
-        scriptRequest.setResultName(sModel.getResultName());
-        scriptRequest.setScriptName(name);
+                for (ScriptDefinition scriptId : scripts) {
+                    si.addLog("run Script: " + scriptId);
+                    try {
+                        ScriptModel scriptModel = getScriptModel(si);
+                        response = sendScript(si, si.getVars(), si.getLocalResults(), scriptId);
+                        if ("OK".equals(response.getStatus())) {
+                            if (StringUtils.isNotEmpty(scriptModel.getResultName())) {
+                                si.setLocalResults(merge(si.getLocalResults(), response.getResponse(), scriptModel.getResultName()));
+                            } else {
+                                si.setLocalResults(merge(si.getLocalResults(), response.getResponse()));
+                            }
+                        } else {
+                            si.addLog("Error in " + si.getScript() + " " + response);
+                            si.addLog("RunScript step:" + si.getName() + " script: " + si.getScript() + " var:" + si.getVars() + " response:" + response);
+                            return response;
+                        }
+                        return response;
+                    } catch (JsonProcessingException e) {
+                        response = new ScriptResponse();
+                        response.setStatus("ERROR");
+                        response.setResponse(e.getMessage());
+                        si.addLog("Error in " + si.getScript() + " " + e.getMessage());
+                        return response;
+                    }
+                }
+            }
+        } finally {
+            stepInstanceRepository.saveAndFlush(si);
+        }
+        return response;
+    }
+
+    /**
+     * * script Ok/Not
+     *
+     * @param si
+     * @return
+     * @throws JsonProcessingException
+     */
+    public ScriptResponse sendScript(StepInstance si, String vars, String localResults, ScriptDefinition scriptId) throws JsonProcessingException {
+        ScriptRequest scriptRequest = new ScriptRequest();
+
+        scriptRequest.setScriptDefinition(scriptId);
         scriptRequest.setStepName(si.getName());
-        scriptRequest.setLocalResults(localResults);
+        scriptRequest.setVars(si.getVars());
+        scriptRequest.setLocalResults(si.getLocalResults());
         scriptRequest.setEtlResults(si.getEtlInstance().getEtlVars());
-
         try {
             return this.scriptRestClient.put().uri(scriptRunPath)
                     .contentType(MediaType.APPLICATION_JSON)
@@ -131,7 +154,25 @@ public class ScriptService {
                     .body(ScriptResponse.class);
         } catch (Throwable e) {
             saveError(si, stepInstanceRepository, e, "cannot send to Script executor");
-            return new ScriptResponse(name,"Error", e.getMessage());
+            return new ScriptResponse(scriptId, "Error", e.getMessage());
         }
     }
+
+    public void sendToQueue(StepInstance si) throws JsonProcessingException {
+        log.info("sendToQueue:{}", si);
+        TaskRequest taskRequest = new TaskRequest();
+        taskRequest.setTaskId(si.getStepInstanceId());
+        taskRequest.setName(si.getName());
+        taskRequest.setCommandProfile(si.getStep().getDataLoading().getProps());
+        taskRequest.setCalculateType(si.getStep().getDataLoading().getName());
+        taskRequest.setMaxAttempts(si.getStep().getMaxAttempts());
+        taskRequest.setVars(si.getVars());
+        taskRequest.setLocalResult(si.getLocalResults());
+        taskRequest.setEtlResult(si.getEtlInstance().getEtlVars());
+        taskRequest.setScript(si.getScript());
+        taskRequest.setStepType(si.getStepType());
+        taskRequest.setResults(si.getEtlInstance().getEtlVars());
+        externalService.sendToQueue(taskRequest, si);
+    }
+
 }

@@ -49,7 +49,6 @@ public class QueueStorage {
     private OffsetDateTime start;
     private OffsetDateTime stop;
 
-    private Boolean saveCalculate;
 
     @Column(columnDefinition = "TEXT")
     private String script;

@@ -1,9 +1,15 @@
 package ag.com.dbo.services.queue.utils;
 
+import ag.com.dbo.controllers.model.ScriptResponse;
+import ag.com.dbo.models.management.StepInstance;
+import ag.com.dbo.models.script.ScriptDefinition;
+import ag.com.dbo.models.script.ScriptType;
+import ag.com.dbo.utils.Constants;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.ObjectUtils;
 
 
@@ -13,6 +19,7 @@ import java.util.Map;
 
 import static ag.com.dbo.utils.Utils.getObjectMapper;
 
+@Slf4j
 public class VarSupport {
 
 
@@ -63,17 +70,29 @@ public class VarSupport {
         TypeReference<HashMap<String,Object>> typeRef = new TypeReference<>() {};
         return getObjectMapper().readValue(s, typeRef);
     }
-/*
-    public static List<String> stringBranchVars(Object o) throws JsonProcessingException {
-        if (o==null){
+
+    public static <T> T stringToObject(String s, Class<T>  objectType) throws JsonProcessingException {
+        if (ObjectUtils.isEmpty(s)){
             return null;
         }
-        String s = o.toString();
-        if (s.isEmpty()){
-            return null;
-        }
-        TypeReference<List<String>> typeRef = new TypeReference<>() { };
-        return getObjectMapper().readValue(s, typeRef);
+        return getObjectMapper().readValue(s, objectType);
     }
- */
+
+
+    public static void saveResult(StepInstance si, ScriptResponse result) throws JsonProcessingException {
+        ScriptDefinition scriptId = result.getScriptDefinition();
+        String type = scriptId.getType();
+        if (ScriptType.Common.name().equals(scriptId.getType())){
+            si.setLocalResults( merge(si.getLocalResults(),result.getResponse()));
+        }else if (ScriptType.Branch.name().equals(scriptId.getType())){
+            si.setLocalResults( merge(si.getLocalResults(),result.getResponse(), Constants.BRANCH_RESULT_NAME));
+        }else if (ScriptType.Sensor.name().equals(scriptId.getType())){
+            si.setLocalResults( merge(si.getLocalResults(),result.getResponse(), Constants.SENSOR_RESULT_NAME));
+        }else {
+            String err= "Cannot define result to localVars";
+            log.error("{} {} scriptId:",err, scriptId);
+            si.addLog(err+ " scriptId: "+scriptId);
+        }
+    }
+
 }

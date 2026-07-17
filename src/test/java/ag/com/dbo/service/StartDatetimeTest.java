@@ -8,7 +8,6 @@ import ag.com.dbo.repositories.management.EtlRepository;
 import ag.com.dbo.repositories.management.StepInstanceRepository;
 import ag.com.dbo.repositories.management.StepRepository;
 import ag.com.dbo.services.management.EngineService;
-import ag.com.dbo.services.management.ExternalStepTypeService;
 import ag.com.dbo.services.management.ScriptService;
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.ReadContext;
@@ -37,11 +36,10 @@ public class StartDatetimeTest {
         EtlInstanceRepository etlInstanceRepository= Mockito.mock(EtlInstanceRepository.class);
         StepRepository stepRepository =Mockito.mock(StepRepository.class);
         StepInstanceRepository stepInstanceRepository = Mockito.mock(StepInstanceRepository.class);
-        ExternalStepTypeService externalStepTypeService= Mockito.mock(ExternalStepTypeService.class);
         ScriptService scriptService = Mockito.mock(ScriptService.class);
 
         EngineServiceTest test = new EngineServiceTest(etlRepository,etlInstanceRepository,
-                stepRepository,stepInstanceRepository, externalStepTypeService, scriptService);
+                stepRepository,stepInstanceRepository,  scriptService);
 
         Etl etl = new Etl();
         test.startEtl(etl);
@@ -59,8 +57,8 @@ public class StartDatetimeTest {
     protected static class EngineServiceTest extends EngineService {
         public EngineServiceTest(EtlRepository etlRepository, EtlInstanceRepository etlInstanceRepository,
                                  StepRepository stepRepository, StepInstanceRepository stepInstanceRepository,
-                                 ExternalStepTypeService externalStepTypeService, ScriptService scriptService) {
-            super(etlRepository, etlInstanceRepository, stepRepository, stepInstanceRepository, externalStepTypeService,scriptService);
+                                 ScriptService scriptService) {
+            super(etlRepository, etlInstanceRepository, stepRepository, stepInstanceRepository, scriptService);
         }
 
         public void createStepInstances(EtlInstance etl) {
