@@ -12,12 +12,9 @@ import ag.com.dbo.models.script.ScriptType;
 import ag.com.dbo.repositories.management.ScriptRepository;
 import ag.com.dbo.repositories.management.StepInstanceRepository;
 import ag.com.dbo.services.Utils;
-import ag.com.dbo.utils.Constants;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -31,8 +28,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import static ag.com.dbo.services.Utils.getScriptDefinitionFromFullName;
-import static ag.com.dbo.services.queue.utils.VarSupport.merge;
 import static ag.com.dbo.utils.Utils.*;
 
 
@@ -102,15 +97,8 @@ public class ScriptService {
                 for (ScriptDefinition scriptId : scripts) {
                     si.addLog("run Script: " + scriptId);
                     try {
-                        ScriptModel scriptModel = getScriptModel(si);
                         response = sendScript(si, si.getVars(), si.getLocalResults(), scriptId);
-                        if ("OK".equals(response.getStatus())) {
-                            if (StringUtils.isNotEmpty(scriptModel.getResultName())) {
-                                si.setLocalResults(merge(si.getLocalResults(), response.getResponse(), scriptModel.getResultName()));
-                            } else {
-                                si.setLocalResults(merge(si.getLocalResults(), response.getResponse()));
-                            }
-                        } else {
+                        if (!"OK".equals(response.getStatus())) {
                             si.addLog("Error in " + si.getScript() + " " + response);
                             si.addLog("RunScript step:" + si.getName() + " script: " + si.getScript() + " var:" + si.getVars() + " response:" + response);
                             return response;
