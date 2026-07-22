@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
+
 /**
  * A configuration class that declares one or more Bean methods and also
  * triggers auto-configuration and component scanning.

@@ -5,8 +5,12 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.annotations.*;
+import jakarta.persistence.*;
 
 import java.time.OffsetDateTime;
+import jakarta.persistence.*;
+
 
 @Entity
 @Table(name = "step_instance", schema = "etl" )
@@ -45,7 +49,10 @@ public class StepInstance {
     private Integer maxAttempts;
     private Integer attempts;
     private Boolean active;
+//timestamp with time zone
+    @Column( columnDefinition = "TIMESTAMP WITH TIME ZONE")
     private OffsetDateTime start;
+    @Column( columnDefinition = "TIMESTAMP WITH TIME ZONE")
     private OffsetDateTime stop;
     private String name;
 
@@ -62,7 +69,7 @@ public class StepInstance {
     @Column(columnDefinition = "TEXT")
     private String stepType; // comma separated type (maybe many types)
 
-    private OffsetDateTime nextTest;
+    private Long nextTest; // UTC Epoch
     private String tags; // comma separated
 
     /**
@@ -72,11 +79,10 @@ public class StepInstance {
      */
     public void addLog(String message){
         log.info("{}-{}", OffsetDateTime.now(), message);
+
         if (logMessage==null){
             logMessage ="";
-        }else{
-            logMessage=  logMessage +System.lineSeparator();
         }
-        logMessage = "\n" + OffsetDateTime.now()+"- " + logMessage + message;
+        logMessage = logMessage+ "\n" + OffsetDateTime.now()+" - " + message;
     }
 }

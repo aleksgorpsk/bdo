@@ -1,13 +1,20 @@
 package ag.com.dbo.services.management;
 
+import ag.com.dbo.models.checker.SensorModel;
 import ag.com.dbo.models.management.StepInstance;
-import jakarta.transaction.Transactional;
+import ag.com.dbo.models.management.StepStatus;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+
+import static ag.com.dbo.services.Utils.getSensorModel;
 
 @Slf4j
 @Service
@@ -23,11 +30,40 @@ public class SensorSchedulerService {
 
 
     @Scheduled(fixedRateString = "${sensor.scheduler.testInterval}", timeUnit = TimeUnit.SECONDS)
-    @Transactional
     public void scheduling(){
-        List<StepInstance> result =  stepInstanceService.getActiveSensors();
-        log.debug("sensor scheduled !!!:{}",result);
-        result.forEach(x-> engineService.enqueueTask(x, null));
+        log.info("sensor scheduled start !!!");
+        List<StepInstance> result = stepInstanceService.getActiveSensors().stream().toList();
+        log.info("sensor scheduled !!!:{}" ,result.size());
+        List<StepInstance> updatedTimeout = result.stream().map(SensorSchedulerService::addTimeOut).toList();
+        List<StepInstance> updatedProcess = stepInstanceService.save(updatedTimeout);
+        List<StepInstance> readyToProcess = updatedProcess
+                .stream().filter(x-> !StepStatus.Failed.name().equals(x.getStatus())).toList();
+        readyToProcess.forEach(x-> engineService.enqueueTask(x, null));
+    }
+
+
+
+    private static StepInstance addTimeOut(StepInstance si) {
+        try {
+            SensorModel sModel = getSensorModel(si.getVars());
+            si.setNextTest(si.getNextTest()+sModel.getAttemptTimeOut());
+
+            OffsetDateTime odt = Instant.ofEpochSecond(si.getNextTest())    .atOffset(ZoneOffset.UTC);
+            if ((Instant.now().getEpochSecond()-si.getStart().toEpochSecond()) > sModel.getFailTimeout()){
+                si.addLog(" ERROR: Timeout in sensor: timeout: "+sModel.getFailTimeout()+" at:" +OffsetDateTime.now());
+                si.setStatus(StepStatus.Failed.name());
+            }else{
+                si.addLog(" Test sensor:"+si.getName()+" timeout: "+sModel.getFailTimeout()+" at:" +odt);
+            }
+            return si;
+
+        } catch (JsonProcessingException e) {
+            String message = " No timeout in "+si.getName() +":"+si.getStepInstanceId() +" : " +si.getVars();
+            log.error(message);
+            si.addLog(message);
+            si.setStatus(StepStatus.Failed.name());
+        }
+        return si;
     }
 
 }

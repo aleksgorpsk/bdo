@@ -79,7 +79,9 @@ public class Utils {
         }
         si.addLog(error);
         si.setStatus(StepStatus.Failed.name());
-        stepInstanceRepository.saveAndFlush(si);
+        if (stepInstanceRepository!=null) {
+            stepInstanceRepository.saveAndFlush(si);
+        }
 
     }
 

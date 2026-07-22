@@ -1,21 +1,26 @@
 package ag.com.dbo.services;
 
 import ag.com.dbo.models.checker.SensorModel;
+import ag.com.dbo.models.management.Step;
 import ag.com.dbo.models.management.StepInstance;
 import ag.com.dbo.models.management.StepType;
 import ag.com.dbo.models.script.ScriptDefinition;
 import ag.com.dbo.utils.Constants;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.ReadContext;
 import org.apache.commons.lang3.StringUtils;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 import static ag.com.dbo.services.queue.utils.VarSupport.*;
 import static ag.com.dbo.utils.Utils.getExtendedObjectMapper;
+import static ag.com.dbo.utils.Utils.getObjectMapper;
 
 public class Utils {
     public static boolean isContainsStepType(StepInstance si, StepType type){
@@ -35,7 +40,7 @@ public class Utils {
     }
 
 
-    public static SensorModel getSensor(String vars) throws JsonProcessingException {
+    public static SensorModel getSensorModel(String vars) throws JsonProcessingException {
         return getExtendedObjectMapper().readValue(vars, new TypeReference<>(){});
 
     }
@@ -48,7 +53,7 @@ public class Utils {
        Object obranch = result.get(Constants.BRANCH_RESULT_NAME);
        if(obranch instanceof List){
            return (List)obranch;
-       }else if (obranch instanceof List){ // in case one variant
+       }else if (obranch instanceof String){ // in case one variant
            return List.of((String)obranch);
        }else {
 
@@ -76,5 +81,13 @@ public class Utils {
         }
         return result;
     }
+
+    public static void addVarToStep(StepInstance step, String varName, Long value) throws JsonProcessingException {
+        ObjectMapper objectMapper = getObjectMapper();
+        ObjectNode newVar = objectMapper.createObjectNode();
+        newVar.put(varName, value);
+        step.setVars(merge(step.getVars(), objectMapper.writeValueAsString(newVar)));
+    }
+
 
 }

@@ -15,6 +15,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigInteger;
+import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Objects;
@@ -139,6 +140,9 @@ public class StepInstanceService {
 
     }
 
+    public List<StepInstance> save(List<StepInstance> list){
+        return stepInstanceRepository.saveAllAndFlush(list);
+    }
 
     public StepInstanceDTO mapFrom(StepInstance step) {
         return modelMapper.map(step, StepInstanceDTO.class);
@@ -155,29 +159,29 @@ public class StepInstanceService {
             StepInstance si = oSi.get();
 
             if (Objects.equals(result.getStatus(), QueueStatus.SUCCESS.name())) {
-                if (StepType.Sensor.name().equals(si.getStepType())) {
-                    si.setStatus(StepStatus.InWait.name());
-                }else{
+                if (!StepType.Sensor.name().equals(si.getStepType())) {
                     si.setStatus(StepStatus.Success.name());
                 }
             }else {
                 si.setStatus(StepStatus.Failed.name());
             }
             si.addLog("From queue:"+result.getLog());
-            si.setStart(result.getStart());
-            si.setStop(result.getStop());
-            si.setAttempts(result.getAttempt());
-            si.setLocalResults(result.getLocalResults());
-            stepInstanceRepository.save(si);
+//TODO!
+//         si.setStart(result.getStart());
+//            si.setStop(result.getStop());
+//            si.setAttempts(result.getAttempt());
             EtlInstance ei = si.getEtlInstance();
             try {
+                si.setLocalResults(merge(si.getLocalResults(), result.getLocalResults()));
                 ei.setEtlVars(merge(ei.getEtlVars(), si.getLocalResults(), si.getName()));
                 ei.addLog(si.getLogMessage());
             }catch (Exception e){
                 si.setStatus(StepStatus.Failed.name());
                 si.addLog("Error:" + e.getMessage());
+            }finally {
+                stepInstanceRepository.saveAndFlush(si);
+                etlInstanceRepository.saveAndFlush(ei);
             }
-            stepInstanceRepository.save(si);
         }else{
             log.error("{} not found !!!", result.getTaskId());
         }
@@ -192,6 +196,7 @@ public class StepInstanceService {
 
 
     public List<StepInstance> getActiveSensors(){
-        return stepInstanceRepository.findActiveSensors(StepStatus.InWait.name(), StepType.Sensor.name(), OffsetDateTime.now());
+//        OffsetDateTime.now()
+        return stepInstanceRepository.findActiveSensors(StepStatus.InWait.name(), StepType.Sensor.name(),Instant.now().getEpochSecond());
     }
 }

@@ -36,7 +36,7 @@ public interface StepInstanceRepository extends JpaRepository<@NonNull StepInsta
     List<StepInstance> findActiveSensors(
             @Param("status") String status,
             @Param("type") String type,
-            @Param("tm") OffsetDateTime now);
+            @Param("tm") Long now);
 
 
 }

@@ -88,35 +88,26 @@ public class ScriptService {
      * @param si
      * @return
      */
-    public ScriptResponse runScript(StepInstance si, ScriptDefinition[] scripts) {//throws JsonProcessingException {
+    public ScriptResponse runScript(StepInstance si, ScriptDefinition scriptDefinition) {//throws JsonProcessingException {
         ScriptResponse response = null;
+        si.addLog("RunScript step:" + si.getName() + " script: " + si.getScript() + " var:" + si.getVars());
+        si.addLog("run Script: " + scriptDefinition);
         try {
-            si.addLog("RunScript step:" + si.getName() + " script: " + si.getScript() + " var:" + si.getVars());
-            if (ArrayUtils.isNotEmpty(scripts)) {
-
-                for (ScriptDefinition scriptId : scripts) {
-                    si.addLog("run Script: " + scriptId);
-                    try {
-                        response = sendScript(si, si.getVars(), si.getLocalResults(), scriptId);
-                        if (!"OK".equals(response.getStatus())) {
-                            si.addLog("Error in " + si.getScript() + " " + response);
-                            si.addLog("RunScript step:" + si.getName() + " script: " + si.getScript() + " var:" + si.getVars() + " response:" + response);
-                            return response;
-                        }
-                        return response;
-                    } catch (JsonProcessingException e) {
-                        response = new ScriptResponse();
-                        response.setStatus("ERROR");
-                        response.setResponse(e.getMessage());
-                        si.addLog("Error in " + si.getScript() + " " + e.getMessage());
-                        return response;
-                    }
-                }
+            response = sendScript(si, si.getVars(), si.getLocalResults(), scriptDefinition);
+            if (!"OK".equals(response.getStatus())) {
+                si.addLog("Error in " + si.getScript() + " " + response);
+                si.addLog("RunScript step:" + si.getName() + " script: " + si.getScript() + " var:" + si.getVars() + " response:" + response);
             }
+            return response;
+        } catch (JsonProcessingException e) {
+            response = new ScriptResponse();
+            response.setStatus("ERROR");
+            response.setResponse(e.getMessage());
+            si.addLog("Error in " + si.getScript() + " " + e.getMessage());
+            return response;
         } finally {
             stepInstanceRepository.saveAndFlush(si);
         }
-        return response;
     }
 
     /**
@@ -145,7 +136,7 @@ public class ScriptService {
             return new ScriptResponse(scriptId, "Error", e.getMessage());
         }
     }
-
+/*
     public void sendToQueue(StepInstance si) throws JsonProcessingException {
         log.info("sendToQueue:{}", si);
         TaskRequest taskRequest = new TaskRequest();
@@ -162,5 +153,5 @@ public class ScriptService {
         taskRequest.setResults(si.getEtlInstance().getEtlVars());
         externalService.sendToQueue(taskRequest, si);
     }
-
+*/
 }

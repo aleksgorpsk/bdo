@@ -81,9 +81,10 @@ public class VarSupport {
 
     public static void saveResult(StepInstance si, ScriptResponse result) throws JsonProcessingException {
         ScriptDefinition scriptId = result.getScriptDefinition();
+        ObjectMapper mapper = new ObjectMapper();
         String type = scriptId.getType();
         if (ScriptType.Common.name().equals(scriptId.getType())){
-            si.setLocalResults( merge(si.getLocalResults(),result.getResponse()));
+            si.setLocalResults( merge(si.getLocalResults(), result.getResponse()));
         }else if (ScriptType.Branch.name().equals(scriptId.getType())){
             si.setLocalResults( merge(si.getLocalResults(),result.getResponse(), Constants.BRANCH_RESULT_NAME));
         }else if (ScriptType.Sensor.name().equals(scriptId.getType())){
