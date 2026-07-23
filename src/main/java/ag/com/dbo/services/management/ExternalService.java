@@ -1,23 +1,26 @@
 package ag.com.dbo.services.management;
 
-import ag.com.dbo.controllers.model.ScriptRequest;
-import ag.com.dbo.controllers.model.ScriptResponse;
 import ag.com.dbo.controllers.model.TaskRequest;
-import ag.com.dbo.models.checker.SensorModel;
 import ag.com.dbo.models.management.Node;
 import ag.com.dbo.models.management.NodeType;
 import ag.com.dbo.models.management.StepInstance;
 import ag.com.dbo.models.management.statuses.QueueInfo;
 import ag.com.dbo.models.queue.QueueStorage;
+import ag.com.dbo.models.script.Script;
+import ag.com.dbo.models.script.ScriptDefinition;
+import ag.com.dbo.models.script.ScriptId;
 import ag.com.dbo.repositories.management.NodeRepository;
+import ag.com.dbo.repositories.management.ScriptRepository;
 import ag.com.dbo.repositories.management.StepInstanceRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Qualifier;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
@@ -32,8 +35,8 @@ import static ag.com.dbo.utils.Utils.saveError;
 public class ExternalService implements InitializingBean {
 
     private final StepInstanceRepository stepInstanceRepository;
-    private final RestClient scriptRestClient;
     private final NodeRepository nodeRepository;
+    private final ScriptRepository scriptRepository;
 
 
     public Map<Integer, RestClient> nodeMap;
@@ -45,28 +48,36 @@ public class ExternalService implements InitializingBean {
     @Value("${queue.enqueue.path}")
     private String enqueuePath;
 
-    @Value("${script.process.path}")
-    private String scriptRunPath;
+//    @Value("${script.process.path}")
+//    private String scriptRunPath;
 
     @Value("${spring.manager.return.path}")
-    private String ReturnTpManagerPath;
+    private String returnTpManagerPath;
     public Node masterNode; // in case master without Workers
 
     public ExternalService(StepInstanceRepository stepInstanceRepository,
-                           @Qualifier("scriptRestClient") RestClient scriptRestClient,
-                           NodeRepository nodeRepository) {
+                           NodeRepository nodeRepository, ScriptRepository scriptRepository) {
         this.stepInstanceRepository = stepInstanceRepository;
-
-        this.scriptRestClient = scriptRestClient;
         this.nodeRepository = nodeRepository;
 
+        this.scriptRepository = scriptRepository;
+    }
 
-
+    public boolean  prepareToQueue(StepInstance si, ScriptDefinition scriptDefinition) {
+        log.info("-------!!!!!!startStep: {}", si);
+        try {
+            boolean send = sendToQueue(si, scriptDefinition);
+            log.info("sent to queue:{} {}", si.getStepInstanceId(), send);
+            return send;
+        } catch (Throwable e) {
+            saveError(si, stepInstanceRepository, e, "cannot send to queue");
+        }
+        return false;
     }
 
     public void sendToManager(QueueStorage result) throws JsonProcessingException {
         RestClient client = getManager();
-        client.put().uri(ReturnTpManagerPath)
+        client.put().uri(returnTpManagerPath)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(result)
                 .retrieve()
@@ -97,31 +108,6 @@ public class ExternalService implements InitializingBean {
 
     }
 
-    public void sendToQueue(TaskRequest taskRequest, StepInstance si) throws JsonProcessingException {
-        //TODO
-        Node node = getHost(si.getTags());
-        if (node == null) {
-            si.addLog("Cannot found queue node!");
-            return;
-        }
-
-        RestClient rc = nodeMap.get(node.getId());
-        if (rc == null) {
-            si.addLog("Cannot found rest client !");
-            return;
-        }
-
-        try {
-            rc.put().uri(enqueuePath)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(taskRequest)
-                    .retrieve()
-                    .toBodilessEntity();
-        } catch (Throwable e) {
-            saveError(si, stepInstanceRepository, e, "cannot send to queue");
-
-        }
-    }
 
     public Map<Integer, RestClient> getNodeClients() {
         List<Node> nodes = nodeRepository.findAll().stream().filter(Node::getActive).toList();
@@ -163,33 +149,7 @@ public class ExternalService implements InitializingBean {
     }
 // UI
 
-    /**
-     * script Ok/Not
-     *
-     * @return
-     * @throws JsonProcessingException
-     */
-    /*
-    public ScriptResponse sendScript(StepInstance si, SensorModel sModel) throws JsonProcessingException {
-        ScriptRequest scriptRequest = sModel.scriptRequest();
-        scriptRequest.setVars(si.getVars());
-        scriptRequest.setLocalResults(si.getLocalResults());
-        scriptRequest.setEtlResults(si.getEtlInstance().getEtlVars());
-        scriptRequest.setStepName(si.getName());
 
-        try {
-            return this.scriptRestClient.put().uri(scriptRunPath)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(scriptRequest)
-                    .retrieve()
-                    .body(ScriptResponse.class);
-
-        } catch (Throwable e) {
-            saveError(si, stepInstanceRepository, e, "cannot send to sensor");
-            return new ScriptResponse("Error", e.getMessage());
-        }
-    }
-     */
     public QueueInfo getInfo(Node node) {
         try {
             RestClient client = nodeMap.get(node.getId());
@@ -305,13 +265,23 @@ public class ExternalService implements InitializingBean {
         return result;
     }
 
-    public  void  sendToQueue(StepInstance si) throws JsonProcessingException {
+    public  boolean  sendToQueue(StepInstance si,  ScriptDefinition scriptDefinition) throws JsonProcessingException {
+        ScriptId scriptId = scriptDefinition.getScriptId();
+        Optional<Script> opScript = scriptRepository.findById(scriptId);
+        if (opScript.isEmpty()){
+            saveError(si, stepInstanceRepository, null,"Cannot find script :"+scriptDefinition);
+            return false;
+        }
+        Script script = opScript.get();
         log.info("sendToQueue:{}", si);
-        TaskRequest taskRequest = new TaskRequest();
+
+        TaskRequest taskRequest = getTaskRequest(si, script, scriptId);
         taskRequest.setTaskId(si.getStepInstanceId());
         taskRequest.setName(si.getName());
-        taskRequest.setCommandProfile(si.getStep().getDataLoading().getProps());
-        taskRequest.setCalculateType(si.getStep().getDataLoading().getName());
+
+        taskRequest.setCommandProfile(script.getScript());
+        taskRequest.setCalculateType(scriptId.getType());
+
         taskRequest.setMaxAttempts(si.getStep().getMaxAttempts());
         taskRequest.setVars(si.getVars());
         taskRequest.setLocalResult(si.getLocalResults());
@@ -319,6 +289,57 @@ public class ExternalService implements InitializingBean {
         taskRequest.setScript(si.getScript());
         taskRequest.setStepType(si.getStepType());
         taskRequest.setResults(si.getEtlInstance().getEtlVars());
-        sendToQueue(taskRequest, si);
+        return sendTrToQueue(taskRequest, si);
+    }
+
+    public boolean sendTrToQueue(TaskRequest taskRequest, StepInstance si) throws JsonProcessingException {
+        //TODO
+        Node node = getHost(si.getTags());
+        if (node == null) {
+            si.addLog("Cannot found queue node!");
+            return false;
+        }
+
+        RestClient rc = nodeMap.get(node.getId());
+        if (rc == null) {
+            si.addLog("Cannot found rest client !");
+            return false;
+        }
+
+        try {
+            ResponseEntity<Void> resp= rc.put().uri(enqueuePath)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(taskRequest)
+                    .retrieve()
+                    .toBodilessEntity();
+            if( resp.getStatusCode().is2xxSuccessful()){
+                return true;
+            }else{
+                si.addLog("Error send to Queue:"+resp);
+                return false;
+            }
+
+        } catch (Throwable e) {
+            saveError(si, stepInstanceRepository, e, "cannot send to queue");
+            
+        }
+        return false;
+    }
+    private static @NotNull TaskRequest getTaskRequest(StepInstance si, Script script, ScriptId scriptId) {
+        TaskRequest taskRequest = new TaskRequest();
+        taskRequest.setTaskId(si.getStepInstanceId());
+        taskRequest.setName(si.getName());
+
+        taskRequest.setCommandProfile(script.getScript());
+        taskRequest.setCalculateType(scriptId.getType());
+
+        taskRequest.setMaxAttempts(si.getStep().getMaxAttempts());
+        taskRequest.setVars(si.getVars());
+        taskRequest.setLocalResult(si.getLocalResults());
+        taskRequest.setEtlResult(si.getEtlInstance().getEtlVars());
+        taskRequest.setScript(si.getScript());
+        taskRequest.setStepType(si.getStepType());
+        taskRequest.setResults(si.getEtlInstance().getEtlVars());
+        return taskRequest;
     }
 }

@@ -4,6 +4,7 @@ package ag.com.dbo.service;
 import ag.com.dbo.models.management.Node;
 import ag.com.dbo.models.management.NodeType;
 import ag.com.dbo.repositories.management.NodeRepository;
+import ag.com.dbo.repositories.management.ScriptRepository;
 import ag.com.dbo.repositories.management.StepInstanceRepository;
 import ag.com.dbo.services.management.ExternalService;
 import org.junit.Test;
@@ -37,9 +38,10 @@ public class TagServiceTest {
 
     private ExternalService getExternalService(){
         RestClient scriptRestClient = Mockito.mock(RestClient.class);
+        ScriptRepository scriptRepository =Mockito.mock(ScriptRepository.class);
         ExternalService externalService = new ExternalService(this.stepInstanceRepository,
-                scriptRestClient,
-                this.nodeRepository);
+                this.nodeRepository,
+                scriptRepository);
         externalService.port="9051";
         return  externalService;
     }

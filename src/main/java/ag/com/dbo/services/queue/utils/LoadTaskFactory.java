@@ -15,6 +15,10 @@ public class LoadTaskFactory {
         if (TaskName.HIVEOPERATOR.name().equals(calculateType)) {
             return new HiveOperatorTask(task, env, queueStorageRepository);
         }
+        if (TaskName.ShellCommand.name().equals(calculateType)) {
+            return new HiveOperatorTask(task, env, queueStorageRepository);
+        }
+
 
         return null;
     }

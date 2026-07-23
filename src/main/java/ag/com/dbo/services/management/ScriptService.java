@@ -12,6 +12,7 @@ import ag.com.dbo.models.script.ScriptType;
 import ag.com.dbo.repositories.management.ScriptRepository;
 import ag.com.dbo.repositories.management.StepInstanceRepository;
 import ag.com.dbo.services.Utils;
+import ag.com.dbo.utils.Constants;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -40,6 +41,7 @@ public class ScriptService {
     private final StepInstanceRepository stepInstanceRepository;
     private final ObjectMapper objectMapper;
     private final ExternalService externalService;
+
 
     @Value("${script.process.path}")
     private String scriptRunPath;
@@ -91,7 +93,14 @@ public class ScriptService {
     public ScriptResponse runScript(StepInstance si, ScriptDefinition scriptDefinition) {//throws JsonProcessingException {
         ScriptResponse response = null;
         si.addLog("RunScript step:" + si.getName() + " script: " + si.getScript() + " var:" + si.getVars());
-        si.addLog("run Script: " + scriptDefinition);
+        if (ScriptType.ShellCommand.name().equals(scriptDefinition.getType())) {
+            boolean resp = this.externalService.prepareToQueue(si, scriptDefinition);
+            if (resp) {
+                return new ScriptResponse(scriptDefinition, Constants.OK, "");
+            } else{
+                return new ScriptResponse(scriptDefinition, Constants.ERROR, "Cannot send to Queue");
+            }
+        }
         try {
             response = sendScript(si, si.getVars(), si.getLocalResults(), scriptDefinition);
             if (!"OK".equals(response.getStatus())) {
@@ -136,22 +145,4 @@ public class ScriptService {
             return new ScriptResponse(scriptId, "Error", e.getMessage());
         }
     }
-/*
-    public void sendToQueue(StepInstance si) throws JsonProcessingException {
-        log.info("sendToQueue:{}", si);
-        TaskRequest taskRequest = new TaskRequest();
-        taskRequest.setTaskId(si.getStepInstanceId());
-        taskRequest.setName(si.getName());
-        taskRequest.setCommandProfile(si.getStep().getDataLoading().getProps());
-        taskRequest.setCalculateType(si.getStep().getDataLoading().getName());
-        taskRequest.setMaxAttempts(si.getStep().getMaxAttempts());
-        taskRequest.setVars(si.getVars());
-        taskRequest.setLocalResult(si.getLocalResults());
-        taskRequest.setEtlResult(si.getEtlInstance().getEtlVars());
-        taskRequest.setScript(si.getScript());
-        taskRequest.setStepType(si.getStepType());
-        taskRequest.setResults(si.getEtlInstance().getEtlVars());
-        externalService.sendToQueue(taskRequest, si);
-    }
-*/
 }

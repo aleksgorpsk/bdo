@@ -59,14 +59,17 @@ public class ScriptController {
         }
         if (script != null) {
             if (ScriptLanguage.GROOVY.name().equals(script.getScriptId().getLanguage())) {
-                ScriptResponse response = groovyService.execGroovyScript(script, request.getVars(), request.getEtlResults(), request.getLocalResults(),request.getStepName());
+                ScriptResponse response = groovyService.execGroovyScript(script, request.getVars(), request.getEtlResults(), request.getLocalResults(), request.getStepName());
                 response.setScriptDefinition(request.getScriptDefinition());
                 return ResponseEntity.status(HttpStatus.OK).header("Content-Type", "application/json").body(response);
-            }
-            if (ScriptLanguage.PYTHON.name().equals(script.getScriptId().getLanguage())) {
-                ScriptResponse  response = pythonService.execPythonScript(script, request.getVars(), request.getEtlResults(), request.getLocalResults(), request.getStepName());
+            } else if (ScriptLanguage.PYTHON.name().equals(script.getScriptId().getLanguage())) {
+                ScriptResponse response = pythonService.execPythonScript(script, request.getVars(), request.getEtlResults(), request.getLocalResults(), request.getStepName());
                 response.setScriptDefinition(request.getScriptDefinition());
                 return ResponseEntity.status(HttpStatus.OK).header("Content-Type", "application/json").body(response);
+            }else if (ScriptLanguage.SHELL_COMMAND.name().equals(script.getScriptId().getLanguage())) {
+                    ScriptResponse  response = pythonService.execPythonScript(script, request.getVars(), request.getEtlResults(), request.getLocalResults(), request.getStepName());
+                    response.setScriptDefinition(request.getScriptDefinition());
+                    return ResponseEntity.status(HttpStatus.OK).header("Content-Type", "application/json").body(response);
             } else {
                 ScriptResponse response = new ScriptResponse();
                 response.setStatus(script.getScriptId() + " Not Implemented yet.");

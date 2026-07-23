@@ -73,9 +73,9 @@ public class Utils {
                 String errorTrace = getStackTrace(e);
                 si.addLog(OffsetDateTime.now() + errorTrace);
             }
-            error = OffsetDateTime.now() + ": " + message + ": " + e.getMessage();
+            error = OffsetDateTime.now() + " - " + message + ": " + e.getMessage();
         } else {
-            error = OffsetDateTime.now() + ": " + message;
+            error = OffsetDateTime.now() + " - " + message;
         }
         si.addLog(error);
         si.setStatus(StepStatus.Failed.name());

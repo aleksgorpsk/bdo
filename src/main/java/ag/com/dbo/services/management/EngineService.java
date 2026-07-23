@@ -16,7 +16,6 @@ import ag.com.dbo.utils.Constants;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -121,12 +120,7 @@ public class EngineService {
                 si.setScript(step.getScript());
                 etl.setEtlVars(merge(etl.getEtlVars(), si.getVars(), si.getName()));
                 si.setStepType(step.getStepType());
-                if(si.getStepType().contains(StepType.Sensor.name())) {
-                    SensorModel sm =prepareSensorStepInstance(si);
-                    if (sm != null){
-                        si.setNextTest(  Instant.now().getEpochSecond() +sm.getAttemptTimeOut());
-                    }
-                }
+                si.setStatus(StepStatus.NotStartedYet.name());
                 si.setTags(step.getTags());
                 log.debug("si:{} ", si);
                 sis.add(si);
@@ -223,8 +217,6 @@ public class EngineService {
 
         if (StepStatus.InWait.name().equals(si.getStatus()) && StepType.Sensor.name().equals(si.getStepType())) {
             try {
-                //response
-
                 List<ScriptResponse> sResp = runScripts(si, ScriptType.Sensor, false);
                 if (CollectionUtils.isEmpty(sResp)) {
                     saveError(si, stepInstanceRepository, null, "No script for sensor:" + si.getName());
@@ -303,8 +295,27 @@ public class EngineService {
         }
     }
 
+    /**
+     * Run children to nextSteps
+     * @param si
+     * @param fullEtlInstance
+     */
+    private void runNextStep(StepInstance si , FullEtlInstance fullEtlInstance){
+        if(fullEtlInstance== null){
+            fullEtlInstance = getFullEtlInstance(si.getEtlInstance());
+        }
+        FullEtlInstance finalFullEtlInstance = fullEtlInstance;
+        List<StepInstance> children = fullEtlInstance.getParentToChildrenStep()
+                .get(si.getStepInstanceId())
+                .stream()
+                .map(x-> finalFullEtlInstance.getSiBase().get(x))
+                .toList();
+        children.forEach(x -> enqueueTask(x, finalFullEtlInstance));
+    }
+
     private ScriptResponse runOneScript(StepInstance si, ScriptDefinition script) {
         try {
+
             ScriptResponse scriptResponse = scriptService.runScript(si, script);
             si.addLog("Process script:  " + script + " response: " + scriptResponse);
             return scriptResponse;
@@ -456,8 +467,6 @@ public class EngineService {
     private void makeStep(EtlInstance etlInstance) throws Exception {
 
         log.info("make first step etlInstance id:" + etlInstance.getEtlInstanceId());
-        //get all step instances from etl instances
-        List<StepInstance> steps = stepInstanceRepository.findAllStepInstancesByEtlInstanceId(etlInstance.getEtlInstanceId());
 
         FullEtlInstance fullEtlInstance = getFullEtlInstance(etlInstance);
         // root steps can be with condition ? I suppose not.
@@ -472,7 +481,7 @@ public class EngineService {
         childList.forEach(x -> enqueueTask(x, fullEtlInstance));
     }
 
-    private FullEtlInstance getFullEtlInstance(EtlInstance etlInstance) throws Exception {
+    private FullEtlInstance getFullEtlInstance(EtlInstance etlInstance) {
         log.info("make step etlInstance id: {}", etlInstance.getEtlInstanceId());
         //get all step instances from etl instances
         List<StepInstance> steps = stepInstanceRepository.findAllStepInstancesByEtlInstanceId(etlInstance.getEtlInstanceId());
@@ -517,6 +526,10 @@ public class EngineService {
      */
     public void enqueueTask(StepInstance currentSi, FullEtlInstance fullEtlInstance) {
         log.info("Step: {}", currentSi.getStepInstanceId());
+
+        if (!StepStatus.NotStartedYet.name().equals(currentSi.getStatus()) && !StepStatus.InWait.name().equals(currentSi.getStatus())) {
+            return;
+        }
         //TODO are you sure ??
         if (fullEtlInstance == null) {
             try {
@@ -526,37 +539,41 @@ public class EngineService {
                 return;
             }
         }
+// check if parent is ok
+        FullEtlInstance finalFullEtlInstance = fullEtlInstance;
+        String[] parents = currentSi.getParentStepInstanceIds();
+        List<StepInstance> parentNotProcessed = Collections.EMPTY_LIST;
+        if (ArrayUtils.isNotEmpty(parents)){
+             parentNotProcessed = Arrays.stream(parents)
+                    .map(x -> finalFullEtlInstance.getSiBase().get(x))
+                    .filter(x -> !StepStatus.Success.name().equals(x.getStatus()))
+                    .toList();
+        }
+        if (!CollectionUtils.isEmpty(parentNotProcessed)){
+            return;
+        }
+        if (currentSi.getActive()) {
 
-        // if ready for step or sensor in Wait
-        if (currentSi.getStatus() == null || StepStatus.InWait.name().equals(currentSi.getStatus())) { // not started yet or attempt
-            // if all parents Success or Missed or Failed
-            String[] parents = currentSi.getParentStepInstanceIds();
-            List<StepInstance> parentOkSi = Collections.emptyList();
-            if (parents != null) {
-                FullEtlInstance finalFullEtlInstance = fullEtlInstance;
-                parentOkSi = Arrays.stream(parents)
-                        .map(x -> finalFullEtlInstance.getSiBase().get(x))
-                        .filter(x -> StepStatus.Success.name().equals(x.getStatus()) ||
-                                StepStatus.Missed.name().equals(x.getStatus()) ||
-                                StepStatus.Failed.name().equals(x.getStatus()))
-                        .toList();
-
-                if (ArrayUtils.isEmpty(parents) || parents.length == parentOkSi.size()) {
-                    DataLoading command = currentSi.getStep().getDataLoading();
-                    if (command == null || !currentSi.getActive() || !command.getActive() || command.getId().equals(0) || StringUtils.isEmpty(command.getProps())) {
-                        //  Queue not null
-                        currentSi.addLog("Skip exec because active:" + (command == null ? "null" : command.getActive()) + " command_Id =" + (command == null ? "null" : command.getId()) + "commandline:" + (command == null ? "null" : command.getProps()));
-                        currentSi.addLog("no queue task go to step2");
-                        stepInstanceRepository.saveAndFlush(currentSi);
-                        stepFrom(currentSi);
-                    } else {
-                        currentSi.addLog("Go to enqueue. command active:" + command.getActive() + "si.active" + currentSi.getActive() +
-                                " command_Id =" + command.getId() + "commandline:" + command.getProps());
-                        prepareToQueue(currentSi);
-                    }
-                }
-
+            if (currentSi.getStepType().contains(StepType.Sensor.name())) {
+                currentSi.setStatus(StepStatus.InWait.name());
+                ///  set timing for scheduling
+                SensorModel sm = prepareSensorStepInstance(currentSi);
+                currentSi.setNextTest(Instant.now().getEpochSecond() + sm.getAttemptTimeOut());
+            } else {
+                currentSi.setStatus(StepStatus.InProcess.name());
             }
+            if(currentSi.getStart()==null) {
+                currentSi.setStart(OffsetDateTime.now());
+            }
+        }else{
+            currentSi.addLog("Skip exec because inactive:" +  currentSi.getActive());
+            currentSi.setStatus(StepStatus.Missed.name());
+        }
+        stepInstanceRepository.saveAndFlush(currentSi);
+
+        if (CollectionUtils.isEmpty(parentNotProcessed) ) {
+            currentSi.addLog("Go to enqueue. si.active" + currentSi.getActive() );
+            runScripts(currentSi, ScriptType.ShellCommand ,false);
         }
     }
 
@@ -591,16 +608,17 @@ public class EngineService {
      * @param si
      * @return
      */
-    private boolean prepareToQueue(StepInstance si) {
+    /*
+    public void  prepareToQueue(StepInstance si) {
         log.info("-------!!!!!!startStep: {}", si);
         try {
             this.externalService.sendToQueue(si);
             log.info("sent to queue:{}", si.getStepInstanceId());
-            return true;
         } catch (
                 Throwable e) {
             saveError(si, stepInstanceRepository, e, "cannot send to queue");
-            return true;
         }
     }
+
+     */
 }
