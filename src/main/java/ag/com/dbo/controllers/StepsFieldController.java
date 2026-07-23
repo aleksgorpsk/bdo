@@ -2,7 +2,6 @@ package ag.com.dbo.controllers;
 
 import ag.com.dbo.controllers.model.StepData;
 import ag.com.dbo.models.management.*;
-import ag.com.dbo.repositories.management.DataLoadingRepository;
 import ag.com.dbo.repositories.management.StepRepository;
 import ag.com.dbo.services.management.EtlService;
 import ag.com.dbo.services.management.GrafBuilderService;
@@ -23,14 +22,12 @@ public class StepsFieldController {
     private final StepRepository stepRepository;
     private final StepService stepService;
     private final EtlService etlService;
-    private final DataLoadingRepository dataLoadingRepository;
 
-    public StepsFieldController(GrafBuilderService grafBuilderService, StepRepository stepRepository, StepService stepService, EtlService etlService, DataLoadingRepository dataLoadingRepository) {
+    public StepsFieldController(GrafBuilderService grafBuilderService, StepRepository stepRepository, StepService stepService, EtlService etlService) {
         this.grafBuilderService = grafBuilderService;
         this.stepRepository = stepRepository;
         this.stepService = stepService;
         this.etlService = etlService;
-        this.dataLoadingRepository = dataLoadingRepository;
     }
 
     @GetMapping("/steps_field/{id}")

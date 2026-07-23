@@ -21,8 +21,6 @@ public class StepDTO {
     private BigInteger etlId;
     private Etl etl;
 
-    private DataLoading dataLoading;
-
     private String vars;
     private Integer maxAttempts;
 

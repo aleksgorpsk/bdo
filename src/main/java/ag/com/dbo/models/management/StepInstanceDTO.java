@@ -11,8 +11,6 @@ public class StepInstanceDTO {
     @Id
     private String stepInstanceId;
     private String[] parentStepInstanceIds;
- // private String[] activeParentStepInstanceIds;
-
     private String status; // StepStatus
     private EtlInstance etlInstance;
     private Step step;

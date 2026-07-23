@@ -2,11 +2,9 @@ package ag.com.dbo.controllers;
 
 import ag.com.dbo.models.graf.Figure;
 import ag.com.dbo.models.management.StepDTO;
-import ag.com.dbo.models.management.Step;
 import ag.com.dbo.models.management.StepType;
 import ag.com.dbo.models.management.EtlDTO;
 import ag.com.dbo.models.management.Etl;
-import ag.com.dbo.repositories.management.DataLoadingRepository;
 import ag.com.dbo.repositories.management.StepRepository;
 import ag.com.dbo.services.management.EtlService;
 import ag.com.dbo.services.management.GrafBuilderService;
@@ -35,16 +33,14 @@ public class EtlStepsController {
     private final StepRepository stepRepository;
     private final StepService stepService;
     private final EtlService etlService;
-    private final DataLoadingRepository dataLoadingRepository;
     private final List<String> types;
 
 
-    public EtlStepsController(GrafBuilderService grafBuilderService, StepRepository stepRepository, StepService stepService, EtlService etlService, DataLoadingRepository dataLoadingRepository) {
+    public EtlStepsController(GrafBuilderService grafBuilderService, StepRepository stepRepository, StepService stepService, EtlService etlService) {
         this.grafBuilderService = grafBuilderService;
         this.stepRepository = stepRepository;
         this.stepService = stepService;
         this.etlService = etlService;
-        this.dataLoadingRepository = dataLoadingRepository;
         types = Arrays.stream(StepType.values()).map(Enum::name).toList();
     }
 
@@ -99,7 +95,6 @@ public class EtlStepsController {
         model.addAttribute("step", step);
         model.addAttribute("pageTitle", "Create new Etl Step");
         model.addAttribute("allSteps", stepRepository.findAllStepsByEtl(etlId));
-        model.addAttribute("allDataLoading", dataLoadingRepository.findAll());
         model.addAttribute("allStepTypes", this.types);
         return "etl_step_form";
     }
@@ -119,7 +114,6 @@ public class EtlStepsController {
         model.addAttribute("step", stepDto);
         model.addAttribute("pageTitle", "Edit Etl stepId");
         model.addAttribute("allSteps", stepRepository.findAllStepsByEtl(stepDto.getEtl().getId()));
-        model.addAttribute("allDataLoading", dataLoadingRepository.findAll());
         model.addAttribute("allStepTypes", this.types);
         model.addAttribute("stepTypeList", stepDto.getStepTypeList());
 

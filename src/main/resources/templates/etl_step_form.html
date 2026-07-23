@@ -49,22 +49,6 @@ private BigInteger stepId;
                         </select>
                     </div>
                 </div>
-                <!-- calculateMethod  -->
-                <div class="form-group row">
-                    <label class="col-sm-3 col-form-label" for="name">Data loading type </label>
-                    <div class="col-sm-9">
-                        <!-- <input type="parentStepIds" th:field="*{allsteps}"  /> -->
-                        <!--                        <label for="step">User hobbies (multiple select):</label> -->
-                        <select id="dataLoading" th:field="*{dataLoading}">
-                            <option value="">-- Choose Dataloading type</option>
-                            <option th:each="dl : ${allDataLoading}"
-                                    th:value="${{dl.id}}"
-                                    th:text="${dl.comments}">
-                                Cinema
-                            </option>
-                        </select>
-                    </div>
-                </div>
 
                 <div class="form-group row">
                     <label class="col-sm-3 col-form-label" for="name">Title</label>

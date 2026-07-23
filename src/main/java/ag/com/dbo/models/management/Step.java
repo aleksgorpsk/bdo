@@ -29,10 +29,6 @@ public class Step {
     @JoinColumn(name = "etl_id", nullable = false) // Specifies the FK column name
     private Etl etl;
 
-    @ManyToOne(fetch = FetchType.EAGER) // Many steps to one etl
-    @JoinColumn(name = "data_loading_id") // Specifies the FK column name
-    private DataLoading dataLoading;
-
     @Column(columnDefinition = "TEXT")
     private String vars;
     private Integer maxAttempts;
@@ -46,12 +42,6 @@ public class Step {
     @Column(columnDefinition ="TEXT")
     private String tags; // comma separated
 
-    /*
-    @Column(columnDefinition ="TEXT")
-    private String branchFunction;
 
-    @Column(columnDefinition ="TEXT")
-    private String sebsorFunction;
-    */
 }
 
