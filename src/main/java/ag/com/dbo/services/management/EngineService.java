@@ -191,26 +191,7 @@ public class EngineService {
             return;
         }
 
-        // check finish
-        EtlInstance ei = si.getEtlInstance();
-        if (StepStatus.Success.name().equals(si.getStatus())) {
-            if (checkAllStepInstances(si, fullEtlInstance)) {
-                log.info("!!!!!ETL finished !!!!!!");
-                ei.setStop(OffsetDateTime.now());
-                if (getEtlInstanceErrorExists(si, fullEtlInstance)) {
-                    ei.setStatus(EtlStatus.Fail.name());
-                } else {
-                    ei.setStatus(EtlStatus.Success.name());
-                }
-                etlInstanceRepository.saveAndFlush(ei);
-                return;
-            }
-        } else if (StepStatus.Failed.name().equals(si.getStatus())) {
-            si.setStatus(StepStatus.Failed.name());
-            ei.setStatus(EtlStatus.Fail.name());
-            stepInstanceRepository.saveAndFlush(si);
-            etlInstanceRepository.saveAndFlush(ei);
-        }
+
 
 
         //TODO  check sensor
@@ -225,8 +206,9 @@ public class EngineService {
                     if (Boolean.parseBoolean(sResp.get(0).getResponse())) {
                         si.setStatus(StepStatus.Success.name());
                         stepInstanceRepository.saveAndFlush(si);
-                        makeChildSteps(si, fullEtlInstance);
-                        return;
+                        if (!si.getStepType().contains(StepType.Branch.name())) {
+                            makeChildSteps(si, fullEtlInstance);
+                        }
                     } else {
                         si.addLog("Check attempt "+si.getName()+" : "+sResp);
                         stepInstanceRepository.saveAndFlush(si);
@@ -259,7 +241,6 @@ public class EngineService {
                     children = new HashSet<>(correctWayId);
                 }
             } catch (Exception e) {
-
                 saveError(si, stepInstanceRepository, e, "Wrong Groovy script");
             }
         }
@@ -272,7 +253,6 @@ public class EngineService {
             log.info("last step!:{}", si.getStepInstanceId());
         } else {
             FullEtlInstance finalFullEtlInstance = fullEtlInstance;
-
             List<StepInstance> siList = children.stream()
                     .map(x -> finalFullEtlInstance.getSiBase().get(x))
                     .filter(StepInstance::getActive).toList();
@@ -292,6 +272,27 @@ public class EngineService {
                 result.addAll(recursiveSetMissed(fullEtlInstance, id, false));
             }
             stepInstanceRepository.saveAllAndFlush(result);
+        }
+
+        // check finish
+        EtlInstance ei = si.getEtlInstance();
+        if (StepStatus.Success.name().equals(si.getStatus())) {
+            if (checkAllStepInstances(si, fullEtlInstance)) {
+                log.info("!!!!!ETL finished !!!!!!");
+                ei.setStop(OffsetDateTime.now());
+                if (getEtlInstanceErrorExists(si, fullEtlInstance)) {
+                    ei.setStatus(EtlStatus.Fail.name());
+                } else {
+                    ei.setStatus(EtlStatus.Success.name());
+                }
+                etlInstanceRepository.saveAndFlush(ei);
+                return;
+            }
+        } else if (StepStatus.Failed.name().equals(si.getStatus())) {
+            si.setStatus(StepStatus.Failed.name());
+            ei.setStatus(EtlStatus.Fail.name());
+            stepInstanceRepository.saveAndFlush(si);
+            etlInstanceRepository.saveAndFlush(ei);
         }
     }
 
@@ -369,7 +370,7 @@ public class EngineService {
                         } catch (JsonProcessingException e) {
                             si.addLog("Cannot parse response: " + e.getMessage());
                         }
-                        si.addLog("Process script(s): " + scripts);
+                        si.addLog("Process script(s) 1 : " + Arrays.toString(scripts));
                         return responses;
                     } catch (Exception x) {
                         saveError(si, null, x, "Error in :" + scripts);
@@ -400,7 +401,7 @@ public class EngineService {
                 } catch (JsonProcessingException e) {
                     si.addLog("Cannot parse response: " + e.getMessage());
                 }
-                si.addLog("Process script(s): " + scripts);
+                si.addLog("Process script(s) branch : " + Arrays.toString(scripts));
                 stepInstanceRepository.saveAndFlush(si);
                 return stringToObject(scriptResponse.getResponse(), List.class);
             } catch (Exception x) {

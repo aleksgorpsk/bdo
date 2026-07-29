@@ -29,14 +29,6 @@ public class RestConfig {
         return new ConcurrentMapCacheManager("etlCache");
     }
 
-    /*
-    @Bean("queueRestClient")
-    public RestClient queueRestClient(@Value("${queue.url}") String queueBasePath ){
-        return RestClient.builder()
-                .baseUrl(queueBasePath)
-                .build();
-    }
-*/
     @Bean(name = "scriptRestClient")
     public RestClient scriptRestClient(@Value("${script.url}") String queueBasePath, @Value("${server.port}") String port ){
         return RestClient.builder()

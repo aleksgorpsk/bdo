@@ -84,7 +84,7 @@ public class ExternalService implements InitializingBean {
                 .toBodilessEntity();
     }
 
-    private RestClient getManager(){
+    public RestClient getManager(){
         List<Node> nodes = nodeRepository.findAll().stream()
                 .filter(Node::getActive)
                 .filter(x-> NodeType.Master.name().equals( x.getType()))

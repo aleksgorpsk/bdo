@@ -10,7 +10,6 @@ import java.io.Serializable;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-//  groovy:checkSensor.Common:1
 
 public class ScriptDefinition implements Serializable {
     String language;

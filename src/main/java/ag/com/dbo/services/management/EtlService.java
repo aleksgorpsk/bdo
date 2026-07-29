@@ -73,12 +73,17 @@ public class EtlService {
         return convert(etlPage);
 
     }
+
     public Optional<EtlDTO> findById(BigInteger id){
         Optional<Etl> e=etlRepository.findById(id);
         if (e.isPresent()) {
             return Optional.of(mapFrom(e.get()));
         }
         return Optional.empty();
+    }
+
+    public Optional<Etl> findEtlById(BigInteger id){
+        return  etlRepository.findById(id);
     }
 
     public List<EtlDTO> findByStatus(Integer status){

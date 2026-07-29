@@ -27,4 +27,6 @@ public interface EtlRepository extends JpaRepository<  @NonNull Etl,  @NonNull B
     @Modifying
     public void updatePublishedStatus(Integer id, boolean published);
 
+    @Query("SELECT e FROM Etl e WHERE e.active = true")
+    List<Etl> findByActive();
 }

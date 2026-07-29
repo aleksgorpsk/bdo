@@ -5,13 +5,11 @@ import ag.com.dbo.models.management.statuses.QueueInfo;
 import ag.com.dbo.repositories.management.*;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import java.net.InetAddress;
 import java.util.*;
 
 @Slf4j
@@ -39,7 +37,6 @@ public class NodeService {
             }
         });
     }
-
 
     public Page<@NonNull Node> retrievePage(Pageable pageable){
         return  nodeRepository.findAll(pageable);
