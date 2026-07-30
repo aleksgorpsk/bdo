@@ -39,6 +39,7 @@ public class ScriptModel {
      * @param scriptName
      * @return
      */
+    /*
     public ScriptRequest scriptRequest(String scriptName, StepInstance si){
         ScriptRequest result = new ScriptRequest();
         ScriptDefinition scriptId  = getScriptDefinitionFromFullName(scriptName);
@@ -49,6 +50,7 @@ public class ScriptModel {
         result.setEtlResults(si.getEtlInstance().getEtlVars());
         return  result;
     }
+     */
 
     private Map<String, Object> properties = new HashMap<>();
     @JsonAnySetter

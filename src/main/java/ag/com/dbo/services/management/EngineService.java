@@ -31,6 +31,7 @@ import java.util.stream.Collectors;
 import static ag.com.dbo.services.Utils.addVarToStep;
 import static ag.com.dbo.services.Utils.getSensorModel;
 import static ag.com.dbo.services.queue.utils.VarSupport.*;
+import static ag.com.dbo.utils.Utils.getObjectMapper;
 import static ag.com.dbo.utils.Utils.saveError;
 
 
@@ -64,21 +65,13 @@ public class EngineService {
         this.externalService = externalService;
     }
 
-
-    //    @Scheduled(fixedRateString = "${scheduler.testInterval}", timeUnit = TimeUnit.SECONDS)
-    public void schedule() {
-        log.info("sh!");
-        List<Etl> started = etlRepository.findByStatus(1);
-        log.info("get:" + started);
-        for (Etl etl : started) {
-            startEtl(etl);
-        }
-    }
-
-    public String addDate(EtlInstance ei) {
-        String startEtl = "{ \"startEtl\": \"" + OffsetDateTime.now().toString() + "\"}";
+    public String addDate(EtlInstance ei, boolean scheduling) {
+        Map<String, Object> jsonObject = new LinkedHashMap<>();
+        jsonObject.put("startEtl", OffsetDateTime.now().toString() );
+        jsonObject.put("scheduling", scheduling);
         try {
-            return merge(ei.getEtlVars(), startEtl);
+            String varStr = getObjectMapper().writeValueAsString(jsonObject);
+            return merge(ei.getEtlVars(), varStr);
         } catch (JsonProcessingException e) {
             ei.addLog("Error: " + e.getMessage());
         }
@@ -86,14 +79,14 @@ public class EngineService {
     }
 
     //Start !!!
-    public void startEtl(Etl etl) {
+    public void startEtl(Etl etl , boolean schedule) {
         log.info("get one:{}", etl.getId());
         EtlInstance ei = new EtlInstance();
         ei.setEtl(etl);
         ei.setStart(OffsetDateTime.now());
         ei.setStatus(EtlStatus.InProgress.name());
         ei.setComment(etl.getComment());
-        ei.setEtlVars(addDate(ei));
+        ei.setEtlVars(addDate(ei, schedule));
         etlInstanceRepository.saveAndFlush(ei);
         log.debug("save  etl status:{}", ei);
         createStepInstances(ei);
@@ -203,25 +196,18 @@ public class EngineService {
                     saveError(si, stepInstanceRepository, null, "No script for sensor:" + si.getName());
                     return;
                 } else {
-                    if (Boolean.parseBoolean(sResp.get(0).getResponse())) {
-                        si.setStatus(StepStatus.Success.name());
-                        stepInstanceRepository.saveAndFlush(si);
-                        if (!si.getStepType().contains(StepType.Branch.name())) {
-                            makeChildSteps(si, fullEtlInstance);
-                        }
-                    } else {
-                        si.addLog("Check attempt "+si.getName()+" : "+sResp);
+                    if (!Boolean.parseBoolean(sResp.get(0).getResponse())) {
+                        si.addLog("Check attempt false "+si.getName()+" : "+sResp);
+                        si.setStatus(StepStatus.InWait.name());
                         stepInstanceRepository.saveAndFlush(si);
                         return;
                     }
                 }
-
             } catch (Exception e) {
                 saveError(si, stepInstanceRepository, e, " Sensor Error");
                 return;
             }
         }
-
 
         // TODO BRANCH
 
@@ -249,21 +235,51 @@ public class EngineService {
         si.setStop(OffsetDateTime.now());
         stepInstanceRepository.saveAndFlush(si);
 
-        if (CollectionUtils.isEmpty(children)) { // if no children
-            log.info("last step!:{}", si.getStepInstanceId());
-        } else {
+
+        if(CollectionUtils.isEmpty(children)){
+            // check finish
+            EtlInstance ei = si.getEtlInstance();
+            if (StepStatus.Success.name().equals(si.getStatus())) {
+//                all steps success, Failed or missed
+                if (checkAllStepInstances(si, fullEtlInstance)) {
+                    log.info("!!!!!ETL finished !!!!!!");
+                    ei.setStop(OffsetDateTime.now());
+                    if (getEtlInstanceErrorExists(si, fullEtlInstance)) {
+                        ei.setStatus(EtlStatus.Fail.name());
+                    } else {
+                        ei.setStatus(EtlStatus.Success.name());
+                    }
+                    etlInstanceRepository.saveAndFlush(ei);
+                    return;
+                }else{
+                    if (getEtlInstanceErrorExists(si, fullEtlInstance)) {
+                        ei.setStatus(EtlStatus.Fail.name());
+                        return;
+                    }
+
+                }
+            } else if (StepStatus.Failed.name().equals(si.getStatus())) {
+                si.setStatus(StepStatus.Failed.name());
+                ei.setStatus(EtlStatus.Fail.name());
+                stepInstanceRepository.saveAndFlush(si);
+                etlInstanceRepository.saveAndFlush(ei);
+            }
+        }
+
+        if (!CollectionUtils.isEmpty(children)) { // if  children not empty
             FullEtlInstance finalFullEtlInstance = fullEtlInstance;
             List<StepInstance> siList = children.stream()
                     .map(x -> finalFullEtlInstance.getSiBase().get(x))
-                    .filter(StepInstance::getActive).toList();
-            si.addLog("Run to queue :" +
-                    String.join(",", siList.stream().map(x -> x.getName()).toList()));
+                    .filter(StepInstance::getActive)
+                    .toList();
+            si.addLog("Run to queue :" + String.join(",", siList.stream().map(StepInstance::getName).toList()));
             for (StepInstance siCh : siList) {
                 enqueueTask(siCh, finalFullEtlInstance);
             }
-
+        } else {
+            log.info("last step!:{}", si.getStepInstanceId());
         }
-
+        // Skip alone steps  in incorrect way
         if (!CollectionUtils.isEmpty(incorrectWayId)) {
             // set all branch status to StepStatus.Missed
             List<StepInstance> listSii = new ArrayList<>(incorrectWayId.size());
@@ -274,26 +290,7 @@ public class EngineService {
             stepInstanceRepository.saveAllAndFlush(result);
         }
 
-        // check finish
-        EtlInstance ei = si.getEtlInstance();
-        if (StepStatus.Success.name().equals(si.getStatus())) {
-            if (checkAllStepInstances(si, fullEtlInstance)) {
-                log.info("!!!!!ETL finished !!!!!!");
-                ei.setStop(OffsetDateTime.now());
-                if (getEtlInstanceErrorExists(si, fullEtlInstance)) {
-                    ei.setStatus(EtlStatus.Fail.name());
-                } else {
-                    ei.setStatus(EtlStatus.Success.name());
-                }
-                etlInstanceRepository.saveAndFlush(ei);
-                return;
-            }
-        } else if (StepStatus.Failed.name().equals(si.getStatus())) {
-            si.setStatus(StepStatus.Failed.name());
-            ei.setStatus(EtlStatus.Fail.name());
-            stepInstanceRepository.saveAndFlush(si);
-            etlInstanceRepository.saveAndFlush(ei);
-        }
+
     }
 
     /**
@@ -443,18 +440,31 @@ public class EngineService {
         return result;
     }
 
+    /**
+     * test that all steps Success Missed or Failed and
+     * @param si
+     * @param fullEtlInstance
+     * @return
+     */
     private boolean checkAllStepInstances(StepInstance si, FullEtlInstance fullEtlInstance) {
         List<StepInstance> steps = fullEtlInstance.getSteps();
-        long finishedCount = steps.stream().filter(x ->
-                (StepStatus.Success.name().equals(x.getStatus()) ||
-                        StepStatus.Missed.name().equals(x.getStatus()) ||
-                        StepStatus.Failed.name().equals(x.getStatus()))
 
+        long finishedCount = steps.stream().filter(x ->
+                (!StepStatus.Success.name().equals(x.getStatus()) &&
+                        !StepStatus.Missed.name().equals(x.getStatus()) &&
+                        !StepStatus.Failed.name().equals(x.getStatus()))
         ).count();
-        return (steps.size() == finishedCount);
+
+        return (finishedCount==0);
 
     }
 
+    /**
+     *  get count of error steps
+     * @param si
+     * @param fullEtlInstance
+     * @return
+     */
     private boolean getEtlInstanceErrorExists(StepInstance si, FullEtlInstance fullEtlInstance) {
         List<StepInstance> steps = fullEtlInstance.getSteps();
         long errorCount = steps.stream()

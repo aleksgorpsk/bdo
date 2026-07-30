@@ -29,6 +29,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import static ag.com.dbo.services.queue.utils.VarSupport.merge;
 import static ag.com.dbo.utils.Utils.*;
 
 
@@ -102,7 +103,7 @@ public class ScriptService {
             }
         }
         try {
-            response = sendScript(si, si.getVars(), si.getLocalResults(), scriptDefinition);
+            response = sendScript(si, scriptDefinition);
             if (!"OK".equals(response.getStatus())) {
                 si.addLog("Error in " + si.getScript() + " " + response);
                 si.addLog("RunScript step:" + si.getName() + " script: " + si.getScript() + " var:" + si.getVars() + " response:" + response);
@@ -126,12 +127,12 @@ public class ScriptService {
      * @return
      * @throws JsonProcessingException
      */
-    public ScriptResponse sendScript(StepInstance si, String vars, String localResults, ScriptDefinition scriptId) throws JsonProcessingException {
+    public ScriptResponse sendScript(StepInstance si, ScriptDefinition scriptId) throws JsonProcessingException {
         ScriptRequest scriptRequest = new ScriptRequest();
 
         scriptRequest.setScriptDefinition(scriptId);
         scriptRequest.setStepName(si.getName());
-        scriptRequest.setVars(si.getVars());
+        scriptRequest.setVars(merge(si.getEtlInstance().getEtlVars(),si.getVars()));
         scriptRequest.setLocalResults(si.getLocalResults());
         scriptRequest.setEtlResults(si.getEtlInstance().getEtlVars());
         try {

@@ -185,7 +185,7 @@ public class EtlController {
         try {
             Optional<EtlDTO> etldto = etlService.findById(id);
             if (etldto.isPresent()){
-                engineService.startEtl(etlService.mapFrom(etldto.get()));
+                engineService.startEtl(etlService.mapFrom(etldto.get()), false);
                 redirectAttributes.addFlashAttribute("message", "The Etl with id=" + id + " has been started successfully!");
             }else{
                 redirectAttributes.addFlashAttribute("message", "The Etl with id=" + id + " does not exist!");

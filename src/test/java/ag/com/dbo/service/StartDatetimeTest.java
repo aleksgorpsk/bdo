@@ -44,7 +44,7 @@ public class StartDatetimeTest {
                 stepRepository,stepInstanceRepository,  scriptService, externalService);
 
         Etl etl = new Etl();
-        test.startEtl(etl);
+        test.startEtl(etl, true);
         assertNotNull(ei.getStart());
         ReadContext ctx = JsonPath.parse(ei.getEtlVars());
         String startDate = ctx.read("$.startEtl");
