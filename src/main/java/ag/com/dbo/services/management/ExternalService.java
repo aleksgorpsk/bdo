@@ -1,6 +1,7 @@
 package ag.com.dbo.services.management;
 
 import ag.com.dbo.controllers.model.TaskRequest;
+import ag.com.dbo.models.management.Etl;
 import ag.com.dbo.models.management.Node;
 import ag.com.dbo.models.management.NodeType;
 import ag.com.dbo.models.management.StepInstance;
@@ -8,7 +9,6 @@ import ag.com.dbo.models.management.statuses.QueueInfo;
 import ag.com.dbo.models.queue.QueueStorage;
 import ag.com.dbo.models.script.Script;
 import ag.com.dbo.models.script.ScriptDefinition;
-import ag.com.dbo.models.script.ScriptId;
 import ag.com.dbo.repositories.management.NodeRepository;
 import ag.com.dbo.repositories.management.ScriptRepository;
 import ag.com.dbo.repositories.management.StepInstanceRepository;
@@ -18,15 +18,18 @@ import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.InitializingBean;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
+import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Stream;
+import ag.com.scheduling.models.ScheduleData;
 
 import static ag.com.dbo.utils.Utils.saveError;
 
@@ -48,12 +51,20 @@ public class ExternalService implements InitializingBean {
     @Value("${queue.enqueue.path}")
     private String enqueuePath;
 
-//    @Value("${script.process.path}")
-//    private String scriptRunPath;
+    @Qualifier("scheduleRestClient")
+    private RestClient scheduleRestClient;
 
     @Value("${spring.manager.return.path}")
     private String returnTpManagerPath;
+
+    @Value("${schedule.delete.path}")
+    private String deleteSchedule;
+
+    @Value("${schedule.update.path}")
+    private String updateSchedule;
+
     public Node masterNode; // in case master without Workers
+
 
     public ExternalService(StepInstanceRepository stepInstanceRepository,
                            NodeRepository nodeRepository, ScriptRepository scriptRepository) {
@@ -266,8 +277,12 @@ public class ExternalService implements InitializingBean {
     }
 
     public  boolean  sendToQueue(StepInstance si,  ScriptDefinition scriptDefinition) throws JsonProcessingException {
-        ScriptId scriptId = scriptDefinition.getScriptId();
-        Optional<Script> opScript = scriptRepository.findById(scriptId);
+        Optional<Script> opScript = scriptRepository.findByScriptDefinition(
+                scriptDefinition.getName(),
+                scriptDefinition.getLanguage(),
+                scriptDefinition.getType(),
+                scriptDefinition.getVersion()
+                );
         if (opScript.isEmpty()){
             saveError(si, stepInstanceRepository, null,"Cannot find script :"+scriptDefinition);
             return false;
@@ -275,12 +290,13 @@ public class ExternalService implements InitializingBean {
         Script script = opScript.get();
         log.info("sendToQueue:{}", si);
 
-        TaskRequest taskRequest = getTaskRequest(si, script, scriptId);
+        TaskRequest taskRequest = getTaskRequest(si, script);
+        /*
         taskRequest.setTaskId(si.getStepInstanceId());
         taskRequest.setName(si.getName());
 
         taskRequest.setCommandProfile(script.getScript());
-        taskRequest.setCalculateType(scriptId.getType());
+        taskRequest.setCalculateType(script.getType());
 
         taskRequest.setMaxAttempts(si.getStep().getMaxAttempts());
         taskRequest.setVars(si.getVars());
@@ -289,6 +305,7 @@ public class ExternalService implements InitializingBean {
         taskRequest.setScript(si.getScript());
         taskRequest.setStepType(si.getStepType());
         taskRequest.setResults(si.getEtlInstance().getEtlVars());
+         */
         return sendTrToQueue(taskRequest, si);
     }
 
@@ -325,13 +342,13 @@ public class ExternalService implements InitializingBean {
         }
         return false;
     }
-    private static @NotNull TaskRequest getTaskRequest(StepInstance si, Script script, ScriptId scriptId) {
+    private static @NotNull TaskRequest getTaskRequest(StepInstance si, Script script) {
         TaskRequest taskRequest = new TaskRequest();
         taskRequest.setTaskId(si.getStepInstanceId());
         taskRequest.setName(si.getName());
 
         taskRequest.setCommandProfile(script.getScript());
-        taskRequest.setCalculateType(scriptId.getType());
+        taskRequest.setCalculateType(script.getType());
 
         taskRequest.setMaxAttempts(si.getStep().getMaxAttempts());
         taskRequest.setVars(si.getVars());
@@ -342,4 +359,31 @@ public class ExternalService implements InitializingBean {
         taskRequest.setResults(si.getEtlInstance().getEtlVars());
         return taskRequest;
     }
+
+    // --- schedule operation
+
+
+    public void deleteSchedule(BigInteger etlId){
+        ScheduleData data = new ScheduleData(etlId);
+        scheduleRestClient
+                .put()
+                .uri(deleteSchedule)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(new ScheduleData(etlId))
+                .retrieve()
+                .toBodilessEntity();
+
+    }
+
+    public void updateSchedule(Etl etl){
+        scheduleRestClient
+                .put()
+                .uri(updateSchedule)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(etl)
+                .retrieve()
+                .toBodilessEntity();
+
+    }
+
 }

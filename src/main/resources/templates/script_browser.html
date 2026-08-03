@@ -2,23 +2,23 @@
 <html xmlns:th="http://www.thymeleaf.org">
 
 <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0" />
-    <title>Script</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0"/>
+    <title>Etl</title>
 
-    <link rel="stylesheet" type="text/css" th:href="@{/css/bootstrap.min.css}" />
-    <link rel="stylesheet" type="text/css" th:href="@{/css/style.css}" />
-    <link rel="stylesheet" type="text/css" th:href="@{/css/style.css}" />
+    <link rel="stylesheet" type="text/css" th:href="@{/css/bootstrap.min.css}"/>
+    <link rel="stylesheet" type="text/css" th:href="@{/css/style.css}"/>
+    <link rel="stylesheet" type="text/css" th:href="@{/css/style.css}"/>
     <link rel="stylesheet" th:href="@{/css/all.min.css}"/>
     <script type="text/javascript" th:src="@{/css/jquery-1.7.1.min.js}"></script>
     <script type="text/javascript" th:href="@{/css/bootstrap.min.js}"></script>
 </head>
 
 <body>
-<div th:replace="~{fragments/step_instance/header :: header}"></div>
+<div th:replace="~{fragments/script/header :: header}"></div>
 
-<div class="container-fluid" style="max-width: 900px; margin: 0 auto;">
-    <h2 class="text-center">Step instances</h2>
+<div class="container-fluid" style="max-width: 100%; margin: 0 auto;">
+    <h2 class="text-center">Etl</h2>
 
     <div th:if="${message != null}" class="alert alert-success alert-dismissible fade show text-center message"
          role="alert">
@@ -29,13 +29,13 @@
     </div>
 
     <div class="my-3">
-        <form th:action="@{/step_instance_browser}" id="searchForm" th:object="${etlInstanceId}">
+        <form th:action="@{/script_browser}" id="searchForm">
             <div class="row d-flex">
                 <div class="col-md-6 mt-2">
                     <div class="search">
                         <i class="fa fa-search"></i>
-                        <input type="hidden" name="etlInstanceId" th:value="${etlInstanceId}">
-                        <input id="keyword" type="search" name="keyword" th:value="${keyword}" class="form-control"
+                        <input id="keyword" type="search" name="keyword" th:value="${keyword}" required
+                               class="form-control"
                                placeholder="Enter keyword">
                         <button type="submit" class="btn btn-secondary">Search</button>
                     </div>
@@ -44,74 +44,92 @@
                     <div class="input-group-prepend">
                         <label class="input-group-text" for="pageSize">Items per page:</label>
                     </div>
-                    <select form="searchForm" name="size" th:value="${pageSize}" onchange="changePageSize()" class="size-select"
+                    <select form="searchForm" name="size" th:value="${pageSize}" onchange="changePageSize()"
+                            class="size-select"
                             id="pageSize">
-                        <option th:each="s : ${ {3, 6, 9} }" th:value="${s}" th:text="${s}" th:selected="${s == pageSize}"></option>
+                        <option th:each="s : ${ {10, 25, 80} }" th:value="${s}" th:text="${s}"
+                                th:selected="${s == pageSize}"></option>
                     </select>
-                </div>
-                <div class="col-md-1 mt-2">
-                    <button id="btnClear" class="btn btn-info">Clear</button>
                 </div>
             </div>
         </form>
     </div>
 
-    <div th:if="${stepInstanceList.size() > 0}">
+    <div th:if="${scriptList.size() > 0}">
         <table class="table table-hover table-responsive-xl">
             <thead class="thead-light">
             <tr>
-                <th th:replace="~{fragments/step_instance/sorting :: sorting('stepInstanceList','Id')}"></th>
-                <th th:replace="~{fragments/step_instance/sorting :: sorting('name','Name')}"></th>
-                <th th:replace="~{fragments/step_instance/sorting :: sorting('start','Start')}"></th>
-                <th th:replace="~{fragments/step_instance/sorting :: sorting('stop','Stop')}"></th>
+                <th th:replace="~{fragments/script/sorting :: sorting('id','id')}"></th>
+                <th th:replace="~{fragments/script/sorting :: sorting('name','Name')}"></th>
+                <th th:replace="~{fragments/script/sorting :: sorting('language','language')}"></th>
+                <th th:replace="~{fragments/script/sorting :: sorting('type','type')}"></th>
+                <th th:replace="~{fragments/script/sorting :: sorting('version','version')}"></th>
+                <th>script</th>
                 <th>Active</th>
-                <th>Last status</th>
+                <td>Operation</td>
             </tr>
             </thead>
             <tbody>
-            <tr th:each="stepInstance : ${stepInstanceList}">
-                <td> [[${stepInstance.stepInstanceId}]] </td>
-                <td> [[${stepInstance.name}]] </td>
-                <td> <p th:text="${#temporals.format(stepInstance.start, 'dd-MM-yyyy HH:mm')}"> </td>
-                <td> <p th:text="${#temporals.format(stepInstance.stop, 'dd-MM-yyyy HH:mm')}">  </td>
+            <tr th:each="script : ${scriptList}">
+                <td>[[${script.id}]]<input type="hidden" name="scriptId" th:value="${scriptId}">     </td>
+                <td>[[${script.name}]]</td>
+                <td>[[${script.language}]]</td>
+                <td>[[${script.type}]]</td>
+                <td>[[${script.version}]]</td>
+                <td>[[${script.script}]] </td>
                 <td>
-                    <img th:if="${stepInstance.active == true}"  th:src="@{/images/icons8-check-24.png}" alt="Disable this etl"/>
-                    <img th:if="${stepInstance.active == false}"  th:src="@{/images/icons8-indeterminate-checkbox-24.png}" alt="Enable this etl"/>
+                    <a th:if="${script.active == true}" th:href="@{'/script/' + ${script.language} + '/' + ${script.name}+ '/' + ${script.type}+ '/'+ ${script.version} + '/active/false'}"
+                       title="Disable this script">
+                        <img th:src="@{/images/icons8-check-24.png}"/>
+                    </a>
+                    <a th:if="${script.active == false}" th:href="@{'/script/' + ${script.language}+'/' + ${script.name}+ '/' +${script.type}+ '/'+${script.version}+ '/active/true'}"
+                       title="Enable this script">
+                        <img th:src="@{/images/icons8-indeterminate-checkbox-24.png}"/>
+                    </a>
                 </td>
-                <td>       [[${stepInstance.status}]]               </td>
+                <td>
+                    <a th:href="@{'/script/update/' + ${script.id}}"
+                       title="Edit this script">   <img th:src="@{/images/icons8-edit-24.png}"/>
+                    </a>
+                    <a th:href="@{'/script/delete/' + ${script.id}}" th:etlTitle="${script.name}" id="btnDelete"
+                       title="Delete this script">
+                        <img th:src="@{/images/icons8-delete-24.png}"/>
+                    </a>
+                </td>
+
             </tr>
 
             </tbody>
         </table>
     </div>
 
-    <div class="" th:unless="${stepInstanceList.size() > 0}">
+    <div class="" th:unless="${scriptList.size() > 0}">
         <span>No etls found!</span>
     </div>
 
     <nav aria-label="Pagination" th:if="${totalPages > 0}">
         <ul class="pagination justify-content-center">
             <li class="page-item" th:classappend="${currentPage == 1} ? 'disabled'">
-                <a th:replace="~{fragments/etl_instance/paging :: paging(1, '<<', 'First Page')}"></a>
+                <a th:replace="~{fragments/script/paging :: paging(1, '<<', 'First Page')}"></a>
             </li>
             <li class="page-item font-weight-bold" th:classappend="${currentPage == 1} ? 'disabled'">
-                <a th:replace="~{fragments/etl_instance/paging :: paging(${currentPage - 1}, 'Prev', 'Previous Page')}"></a>
+                <a th:replace="~{fragments/script/paging :: paging(${currentPage - 1}, 'Prev', 'Previous Page')}"></a>
             </li>
             <li class="page-item disabled" th:if="${currentPage - 2 > 1}">
                 <a class="page-link" href="#">...</a>
             </li>
             <li class="page-item" th:classappend="${page == currentPage} ? 'active'"
                 th:each="page : ${#numbers.sequence(currentPage > 2 ? currentPage - 2 : 1, currentPage + 2 < totalPages ? currentPage + 2 : totalPages)}">
-                <a th:replace="~{fragments/etl_instance/paging :: paging(${page}, ${page}, 'Page ' + ${page})}"></a>
+                <a th:replace="~{fragments/script/paging :: paging(${page}, ${page}, 'Page ' + ${page})}"></a>
             </li>
             <li class="page-item disabled" th:if="${currentPage + 2 < totalPages}">
                 <a class="page-link" href="#">...</a>
             </li>
             <li class="page-item font-weight-bold" th:classappend="${currentPage == totalPages} ? 'disabled'">
-                <a th:replace="~{fragments/etl_instance/paging :: paging(${currentPage + 1},'Next', 'Next Page')}"></a>
+                <a th:replace="~{fragments/script/paging :: paging(${currentPage + 1},'Next', 'Next Page')}"></a>
             </li>
             <li class="page-item" th:classappend="${currentPage == totalPages} ? 'disabled'">
-                <a th:replace="~{fragments/etl_instance/paging :: paging(${totalPages}, '>>', 'Last Page')}"></a>
+                <a th:replace="~{fragments/script/paging :: paging(${totalPages}, '>>', 'Last Page')}"></a>
             </li>
         </ul>
     </nav>
@@ -139,7 +157,7 @@
     </div>
 </div>
 
-<div th:replace="~{fragments/etl_instance/footer :: footer}"></div>
+<div th:replace="~{fragments/script/footer :: footer}"></div>
 
 <script type="text/javascript">
     $(document).ready(function () {
@@ -147,16 +165,16 @@
         e.preventDefault();
         link = $(this);
 
-        etlTitle = link.attr("etlTitle");
+        scriptTitle = link.attr("scriptTitle");
         $("#yesBtn").attr("href", link.attr("href"));
-        $("#confirmText").html("Do you want to delete the Etl \<strong\>" + etlTitle + "\<\/strong\>?");
+        $("#confirmText").html("Do you want to delete the Etl \<strong\>" + scriptTitle + "\<\/strong\>?");
         $("#confirmModal").modal();
       });
 
       $("#btnClear").on("click", function (e) {
         e.preventDefault();
         $("#keyword").text("");
-        window.location = "[[@{/etl_instance_browser}]]";
+        window.location = "[[@{/script_browser}]]";
       });
     });
 

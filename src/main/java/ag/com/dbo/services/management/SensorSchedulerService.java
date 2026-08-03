@@ -31,9 +31,9 @@ public class SensorSchedulerService {
 
     @Scheduled(fixedRateString = "${sensor.scheduler.testInterval}", timeUnit = TimeUnit.SECONDS)
     public void scheduling(){
-        log.info("sensor scheduled start !!!");
+        log.debug("sensor scheduled start !!!");
         List<StepInstance> result = stepInstanceService.getActiveSensors().stream().toList();
-        log.info("sensor scheduled !!!:{}" ,result.size());
+        log.debug("sensor scheduled !!!:{}" ,result.size());
         List<StepInstance> updatedTimeout = result.stream().map(SensorSchedulerService::addTimeOut).toList();
         List<StepInstance> updatedProcess = stepInstanceService.save(updatedTimeout);
         List<StepInstance> readyToProcess = updatedProcess

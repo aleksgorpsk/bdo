@@ -2,13 +2,9 @@ package ag.com.dbo.services.management;
 
 import ag.com.dbo.controllers.model.ScriptRequest;
 import ag.com.dbo.controllers.model.ScriptResponse;
-import ag.com.dbo.controllers.model.TaskRequest;
 import ag.com.dbo.models.checker.script.ScriptModel;
 import ag.com.dbo.models.management.StepInstance;
-import ag.com.dbo.models.script.Script;
-import ag.com.dbo.models.script.ScriptDefinition;
-import ag.com.dbo.models.script.ScriptId;
-import ag.com.dbo.models.script.ScriptType;
+import ag.com.dbo.models.script.*;
 import ag.com.dbo.repositories.management.ScriptRepository;
 import ag.com.dbo.repositories.management.StepInstanceRepository;
 import ag.com.dbo.services.Utils;
@@ -16,24 +12,33 @@ import ag.com.dbo.utils.Constants;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.client.RestClient;
 
+import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 
 import static ag.com.dbo.services.queue.utils.VarSupport.merge;
 import static ag.com.dbo.utils.Utils.*;
 
 
 @Slf4j
+@RequiredArgsConstructor
 @Service
 public class ScriptService {
 
@@ -42,21 +47,22 @@ public class ScriptService {
     private final StepInstanceRepository stepInstanceRepository;
     private final ObjectMapper objectMapper;
     private final ExternalService externalService;
-
+    private final ModelMapper modelMapper;
 
     @Value("${script.process.path}")
     private String scriptRunPath;
 
-    public ScriptService(ScriptRepository scriptRepository, RestClient scriptRestClient, StepInstanceRepository stepInstanceRepository, ObjectMapper objectMapper, ExternalService externalService) {
-        this.scriptRepository = scriptRepository;
-        this.scriptRestClient = scriptRestClient;
-        this.stepInstanceRepository = stepInstanceRepository;
-        this.objectMapper = objectMapper;
-        this.externalService = externalService;
+    public Optional<Script> retrieveById(BigInteger id) {
+        return scriptRepository.findById(id);
     }
 
-    public Optional<Script> retrieveById(ScriptId id) {
-        return scriptRepository.findById(id);
+    public Optional<Script> retrieveByScriptDefinition(ScriptDefinition definition) {
+        return scriptRepository.findByScriptDefinition(
+                definition.getName(),
+                definition.getLanguage(),
+                definition.getType(),
+                definition.getVersion()
+                );
 
     }
 
@@ -145,5 +151,89 @@ public class ScriptService {
             saveError(si, stepInstanceRepository, e, "cannot send to Script executor");
             return new ScriptResponse(scriptId, "Error", e.getMessage());
         }
+    }
+
+//-- UI -----
+    public Page<@NonNull ScriptDto> retrievePage(PageRequest pageable){
+        Page<Script> scripts = scriptRepository.findAll(pageable);
+        return scripts.map(this::getScriptDto);
+    }
+
+    public Page<@NonNull ScriptDto> retrievePage(Pageable pageable){
+        Page<@NonNull Script> scripts = scriptRepository.findAll(pageable);
+        return scripts.map(this::getScriptDto);
+
+    }
+
+    public Page<@NonNull ScriptDto> findByScriptContainingIgnoreCase(String keyword, Pageable pageable){
+        Page<@NonNull Script> etlPage = scriptRepository.findByNameContainingIgnoreCase( keyword,  pageable);
+        return convert(etlPage);
+    }
+
+
+    /*
+     * -------------------------------------------------------------------------
+     * Update
+     * -------------------------------------------------------------------------
+     */
+
+    public boolean update(ScriptDto scriptDto) {
+        if (scriptRepository.existsById(scriptDto.getId())) {
+            scriptRepository.save(getScript(scriptDto));
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /*
+     * -------------------------------------------------------------------------
+     * Delete
+     * -------------------------------------------------------------------------
+     */
+
+    public boolean delete(BigInteger sid ) {
+        if (scriptRepository.existsById(sid)) {
+            scriptRepository.deleteById(sid);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public Optional<ScriptDto> findById(BigInteger id){
+        Optional<Script> e=scriptRepository.findById(id);
+        if (e.isPresent()) {
+            return Optional.of(getScriptDto(e.get()));
+        }
+        return Optional.empty();
+    }
+
+
+    public Page<@NotNull ScriptDto> convert(Page<@NotNull Script> script){
+        return script.map(new Function<Script, ScriptDto>() {
+            @Override
+            public ScriptDto apply(Script entity) {
+                return getScriptDto(entity);
+            }
+        });
+    }
+
+    public Script getScript(ScriptDto sdto){
+        return mapFrom(sdto);
+    }
+
+
+    public ScriptDto getScriptDto(Script s){
+        return mapFrom(s);
+    }
+
+
+    public ScriptDto mapFrom(Script scriptl) {
+        return modelMapper.map(scriptl, ScriptDto.class);
+    }
+
+    public Script mapFrom(ScriptDto dto) {
+        return modelMapper.map(dto, Script.class);
     }
 }

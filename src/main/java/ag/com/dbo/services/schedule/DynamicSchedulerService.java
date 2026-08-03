@@ -1,9 +1,12 @@
-package ag.com.dbo.services.management;
+package ag.com.dbo.services.schedule;
 
 
 import ag.com.dbo.models.management.Etl;
 import ag.com.dbo.repositories.management.EtlRepository;
+import ag.com.dbo.services.management.ExternalService;
+import ag.com.dbo.services.management.SendUrlTask;
 import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.scheduling.support.CronTrigger;
@@ -16,6 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
 
 @Slf4j
+@RequiredArgsConstructor
 @Service
 public class DynamicSchedulerService   {
 
@@ -24,26 +28,23 @@ public class DynamicSchedulerService   {
     private final EtlRepository etlRepository;
     private final ExternalService externalService;
 
-    public DynamicSchedulerService(ThreadPoolTaskScheduler taskScheduler, EtlRepository etlRepository, ExternalService externalService) {
-        this.taskScheduler = taskScheduler;
-        this.etlRepository = etlRepository;
-        this.externalService = externalService;
-    }
-
     @PostConstruct
     public void init() {
         List<Etl> etls=etlRepository.findByActive();
-        etls.forEach(x-> scheduleTask(x.getId(),x.getCronScheduling(), new SendUrlTask(externalService, x.getId()) ));
+        etls.forEach(x-> scheduleTask(x.getId(),x.getCronScheduling()));
         log.info("!!");
     }
-    public void scheduleTask(BigInteger taskId, String cronExpression, Runnable task) {
-        // Если задача уже была запланирована — отменяем её перед созданием новой
+
+    public void scheduleTask(BigInteger taskId, String cronExpression) {
+
         cancelTask(taskId);
 
-        ScheduledFuture<?> future = taskScheduler.schedule(task, new CronTrigger(cronExpression) );
+        ScheduledFuture<?> future = taskScheduler
+                .schedule(new SendUrlTask(externalService, taskId), new CronTrigger(cronExpression) );
 
         scheduledTasks.put(taskId, future);
     }
+
 
     // Метод для отмены задачи
     public void cancelTask(BigInteger taskId) {

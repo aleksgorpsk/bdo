@@ -1,0 +1,21 @@
+{
+  "etl" : {
+    "startEtl" : "2026-07-30T12:44:00.117116+03:00",
+    "scheduling" : true,
+    "name" : "testSensor",
+    "cronScheduler" : "0 */2 * * * ?"
+  },
+  "Step2_1" : {
+    "directoryName" : "/Users/aleksgor/opt/data",
+    "result" : "\ntotal 1992\n-rw-r--r--@ 1 aleksgor  staff  1017544 Feb 19 12:50 over10k\ndrwxr-xr-x@ 6 aleksgor  staff      192 May  8 10:49 target\ncode result: 0"
+  },
+  "Step22_2" : {
+    "directoryName" : "/Users/aleksgor/opt/files",
+    "attemptTimeOut" : 25,
+    "failTimeout" : 300,
+    "result" : "\ntotal 8\n-rw-r--r--@ 1 aleksgor  staff   5 Jun  8 13:12 1\n-rw-r--r--@ 1 aleksgor  staff   0 Jul 23 14:39 2\ndrwxr-xr-x@ 2 aleksgor  staff  64 Jul 20 16:19 d1\ncode result: 0"
+  },
+  "directoryName" : "/Users/aleksgor/opt/files",
+  "attemptTimeOut" : 25,
+  "failTimeout" : 300
+}

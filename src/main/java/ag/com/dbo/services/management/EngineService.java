@@ -69,9 +69,11 @@ public class EngineService {
         Map<String, Object> jsonObject = new LinkedHashMap<>();
         jsonObject.put("startEtl", OffsetDateTime.now().toString() );
         jsonObject.put("scheduling", scheduling);
+        jsonObject.put("name", ei.getName());
+        jsonObject.put("cronScheduler", ei.getEtl().getCronScheduling());
         try {
             String varStr = getObjectMapper().writeValueAsString(jsonObject);
-            return merge(ei.getEtlVars(), varStr);
+            return merge(ei.getEtlVars(), varStr,"etl");
         } catch (JsonProcessingException e) {
             ei.addLog("Error: " + e.getMessage());
         }
@@ -80,9 +82,16 @@ public class EngineService {
 
     //Start !!!
     public void startEtl(Etl etl , boolean schedule) {
-        log.info("get one:{}", etl.getId());
+        if(!etl.getActive()){
+            log.info("etl {} inactive", etl.getId());
+            return;
+        }
+        log.info("Start  etl:{}", etl.getId());
         EtlInstance ei = new EtlInstance();
+
         ei.setEtl(etl);
+        ei.setActive(etl.getActive());
+        ei.setName(etl.getName());
         ei.setStart(OffsetDateTime.now());
         ei.setStatus(EtlStatus.InProgress.name());
         ei.setComment(etl.getComment());
@@ -183,8 +192,6 @@ public class EngineService {
             saveError(si, stepInstanceRepository, null, "Error in script(s):" + errors);
             return;
         }
-
-
 
 
         //TODO  check sensor
@@ -541,7 +548,6 @@ public class EngineService {
         if (!StepStatus.NotStartedYet.name().equals(currentSi.getStatus()) && !StepStatus.InWait.name().equals(currentSi.getStatus())) {
             return;
         }
-        //TODO are you sure ??
         if (fullEtlInstance == null) {
             try {
                 fullEtlInstance = getFullEtlInstance(currentSi.getEtlInstance());
@@ -550,7 +556,7 @@ public class EngineService {
                 return;
             }
         }
-// check if parent is ok
+        // check if parent is ok
         FullEtlInstance finalFullEtlInstance = fullEtlInstance;
         String[] parents = currentSi.getParentStepInstanceIds();
         List<StepInstance> parentNotProcessed = Collections.EMPTY_LIST;
@@ -584,6 +590,7 @@ public class EngineService {
 
         if (CollectionUtils.isEmpty(parentNotProcessed) ) {
             currentSi.addLog("Go to enqueue. si.active" + currentSi.getActive() );
+            runScripts(currentSi, ScriptType.PreExecution ,false);
             runScripts(currentSi, ScriptType.ShellCommand ,false);
         }
     }

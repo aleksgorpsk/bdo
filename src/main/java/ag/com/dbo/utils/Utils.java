@@ -4,6 +4,7 @@ import ag.com.dbo.controllers.queue.QueueStatus;
 import ag.com.dbo.models.management.StepInstance;
 import ag.com.dbo.models.management.StepStatus;
 import ag.com.dbo.models.queue.QueueStorage;
+import ag.com.dbo.models.script.Script;
 import ag.com.dbo.repositories.management.StepInstanceRepository;
 import ag.com.dbo.repositories.queue.QueueStorageRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -106,5 +107,10 @@ public class Utils {
 
     public static <T> boolean isArrayNullOrEmpty(T[] theArray) {
         return theArray == null || theArray.length == 0;
+    }
+
+
+    public static String getScriptIdString(Script script) {
+        return script.getLanguage() + ":" + script.getName() + "." + script.getType() + ":" + script.getVersion();
     }
 }

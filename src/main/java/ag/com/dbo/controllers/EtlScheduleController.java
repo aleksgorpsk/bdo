@@ -3,6 +3,7 @@ package ag.com.dbo.controllers;
 import ag.com.dbo.models.management.Etl;
 import ag.com.dbo.services.management.EngineService;
 import ag.com.dbo.services.management.EtlService;
+import ag.com.dbo.services.schedule.DynamicSchedulerService;
 import ag.com.dbo.utils.Constants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -20,20 +21,22 @@ public class EtlScheduleController {
 
     private final EngineService engineService;
     private final EtlService etlService;
+    private final DynamicSchedulerService dynamicSchedulerService;
 
-    public EtlScheduleController(EngineService engineService, EtlService etlService) {
+    public EtlScheduleController(EngineService engineService, EtlService etlService, DynamicSchedulerService dynamicSchedulerService) {
         this.engineService = engineService;
         this.etlService = etlService;
+        this.dynamicSchedulerService = dynamicSchedulerService;
     }
 
-    @PutMapping("/schedule")
-    public ResponseEntity<String> getAll(@RequestBody ScheduleData request) {
+    @PutMapping("/schedule/delete")
+    public ResponseEntity<String> cancelTask(@RequestBody ScheduleData request) {
         log.info("schedule:  model{}", request);
         if (request != null) {
             if (request.getEtlId() != null) {
                 Optional<Etl> etl = etlService.findEtlById(request.getEtlId());
                 if (etl.isPresent()) {
-                    engineService.startEtl(etl.get(), true);
+                    dynamicSchedulerService.cancelTask(etl.get().getId());
                     return ResponseEntity.status(HttpStatus.OK).body(Constants.OK);
                 }else{
                     return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Constants.ERROR);
@@ -45,4 +48,16 @@ public class EtlScheduleController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Constants.ERROR);
         }
     }
+    
+    @PutMapping("/schedule/update")
+    public ResponseEntity<String> updateTask(@RequestBody Etl request) {
+        log.info("updateTask schedule: model{}", request);
+        if (request != null) {
+            dynamicSchedulerService.scheduleTask(request.getId(), request.getCronScheduling());
+            return ResponseEntity.status(HttpStatus.OK).body(Constants.OK);
+        }else{
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Constants.ERROR);
+        }
+    }
+
 }

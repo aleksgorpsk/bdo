@@ -20,7 +20,6 @@ import java.math.BigInteger;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.stream.StreamSupport;
 
 @Service
 @RequiredArgsConstructor
@@ -108,7 +107,7 @@ public class EtlService {
     public List<EtlDTO> retrievePage() {
 
         log.info("retrievePage");
-        return StreamSupport.stream(etlRepository.findAll().spliterator(), false)
+        return etlRepository.findAll().stream()
                 .map(this::mapFrom)
                 .peek(x-> log.info("etl:"+ x.toString()))
                 .toList();

@@ -1,32 +1,39 @@
 package ag.com.dbo.models.script;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.EmbeddedId;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.io.Serializable;
+import java.math.BigInteger;
 
 @Entity
-@Table(name = "script", schema = "script" )
+@Table(name = "script", schema = "script")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-//  groovy:checkSensor:1
-public class Script implements Serializable {
+//  groovy:checkSensor.common:1
+public class Script{
 
-    @EmbeddedId
-    private ScriptId scriptId;
+    @Id
+    @SequenceGenerator(name = "mySeqGen", sequenceName = "script_id_seq", allocationSize = 1, initialValue = 1000)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "mySeqGen")
+    @Column(name = "id", updatable = false)
+    private BigInteger id;
 
-    @Column(columnDefinition = "Text")
+    private String language;
+
+    private String name;
+
+    @Column(name = "type", updatable = false)
+    private String type;
+
+    private String version;
+
+    @Column(name = "script", columnDefinition = "Text")
     private String script;
 
+    private Boolean active;
 
-    public String getScriptIdString(){
-        return scriptId.getLanguage()+":"+scriptId.getName()+":"+scriptId.getVersion();
-    }
 
 }

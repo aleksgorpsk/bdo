@@ -11,9 +11,9 @@
 </head>
 
 <body>
-<!--<div th:replace="~{fragments/header :: header}"></div>-->
 
 <div class="container-fluid">
+    <input type="hidden" name="id" th:value="${script.id}">
     <h2 class="text-center">[[${pageTitle}]] </h2>
     <div th:if="${message != null}" class="alert alert-success alert-dismissible fade show text-center message"
          role="alert">
@@ -23,14 +23,12 @@
         </button>
     </div>
     <div class="my-3">
-        <form th:action="@{/etl/save}" method="post" th:object="${etl}"
-              style="max-width: 550px; margin: 0 auto">
-
-            <input type="hidden" th:field="*{id}"/>
+        <form th:action="@{/script/save}" method="post" th:object="${script}"  style="max-width: 550px; margin: 0 auto">
+            <input type="hidden" name="id" th:value="${script.id}">
 
             <div class="p-3">
                 <div class="form-group row">
-                    <label class="col-sm-3 col-form-label" for="name">name</label>
+                    <label class="col-sm-3 col-form-label" for="name">Name</label>
                     <div class="col-sm-9">
                         <input type="text" th:field="*{name}" required minlength="2" maxlength="128"
                                class="form-control"
@@ -38,10 +36,47 @@
                     </div>
                 </div>
                 <div class="form-group row">
-                    <label class="col-sm-3 col-form-label" for="comment">comment</label>
+                    <label class="col-sm-3 col-form-label" for="name">language</label>
                     <div class="col-sm-9">
-                        <input type="text" th:field="*{comment}" minlength="2" maxlength="256" class="form-control"
-                               id="comment"/>
+                        <select id="language" th:field="*{language}">
+                            <option value="language">[[*{language}]]</option>
+                            <option th:each="lg : ${allLanguages}"
+                                    th:value="${{lg}}"
+                                    th:text="${lg}">
+                                Cinema
+                            </option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <label class="col-sm-3 col-form-label" for="name">ScriptType</label>
+                    <div class="col-sm-9">
+                        <select id="type" th:field="*{type}">
+                            <option value="language">[[*{type}]]</option>
+                            <option th:each="tp : ${allTypes}"
+                                    th:value="${{tp}}"
+                                    th:text="${tp}">
+                                Cinema
+                            </option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <label class="col-sm-3 col-form-label" for="name">Version</label>
+                    <div class="col-sm-9">
+                        <input type="text" th:field="*{version}" required minlength="1" maxlength="128"
+                               class="form-control"
+                               id="version"/>
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <label class="col-sm-3 col-form-label" for="name">script</label>
+                    <div class="col-sm-9">
+                    <textarea id="script" th:field="*{script}" rows="10" cols="50"
+                              placeholder="Enter your multi-line text here..."></textarea>
                     </div>
                 </div>
 
@@ -52,40 +87,6 @@
                     </div>
                 </div>
 
-                <div class="form-group row">
-                    <label class="col-sm-3 col-form-label" for="name">LastStatus </label>
-                    <div class="col-sm-9">
-                        <select id="status" th:field="*{status}">
-                            <option value="status">[[*{status}]]</option>
-                            <option th:each="st : ${allStatuses}"
-                                    th:value="${{st}}"
-                                    th:text="${st}">
-                                Cinema
-                            </option>
-                        </select>
-                    </div>
-                </div>
-                <div class="form-group row">
-                    <label class="col-sm-3 col-form-label" for="cronExpression">cronScheduling</label>
-                    <div class="col-sm-9">
-                        <input type="text" th:field="*{cronScheduling}" minlength="2" maxlength="256"
-                               class="form-control"
-                               id="cronScheduling"/>
-                    </div>
-                </div>
-
-                <div class="form-group row">
-                    <label class="col-sm-3 col-form-label" for="name">secondInterval</label>
-                    <div class="col-sm-9">
-                        <input type="number"
-                               id="secondInterval"
-                               th:field="*{secondInterval}"
-                               min="1"
-                               max="1000000"
-                               step="1"
-                               placeholder="secondInterval"/>
-                    </div>
-                </div>
 
                 <div class="text-center">
                     <input type="submit" value="Save" class="btn btn-primary btn-sm mr-2"/>
@@ -96,12 +97,12 @@
     </div>
 </div>
 
-<div th:replace="~{fragments/etl/footer :: footer}"></div>
+<div th:replace="~{fragments/script/footer :: footer}"></div>
 
 <script type="text/javascript">
     $(document).ready(function () {
       $("#btnCancel").on("click", function () {
-        window.location = "[[@{/etl_browser}]]";
+        window.location = "[[@{/script_browser}]]";
       });
     });
 </script>

@@ -42,4 +42,12 @@ public class RestConfig {
                 .enable(StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION)
                 .build();
     }
+
+    @Bean(name = "scheduleRestClient")
+    public RestClient scheduleRestClient(@Value("${schedule.url}") String queueBasePath, @Value("${server.port}") String port ){
+        return RestClient.builder()
+                .baseUrl(queueBasePath+port)
+                .build();
+    }
+
 }
