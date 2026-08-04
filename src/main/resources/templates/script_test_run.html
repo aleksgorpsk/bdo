@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0"/>
+    <link rel="stylesheet" type="text/css" th:href="@{/css/bootstrap.min.css}"/>
+    <link rel="stylesheet" type="text/css" th:href="@{/css/style.css}"/>
+    <script type="text/javascript" th:src="@{/css/jquery-1.7.1.min.js}"></script>
+    <script type="text/javascript" th:src="@{/css/bootstrap.min.js}"></script>
+</head>
+
+<body>
+
+<div class="container-fluid">
+    <input type="hidden" name="id" th:value="${script.id}">
+    <h2 class="text-center">[[${pageTitle}]] </h2>
+    <div th:if="${message != null}" class="alert alert-success alert-dismissible fade show text-center message"
+         role="alert">
+        [[${message}]]
+        <button type="button" class="close btn-sm" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    <div class="my-3">
+        <form th:action="@{/script/save}" method="post" th:object="${script}" style="max-width: 550px; margin: 0 auto">
+            <input type="hidden" name="id" th:value="${script.id}">
+            <input type="hidden" name="language" th:value="${script.language}">
+            <input type="hidden" name="name" th:value="${script.name}">
+            <input type="hidden" name="type" th:value="${script.type}">
+            <input type="hidden" name="version" th:value="${script.version}">
+            [[script.language]][[script.name]][[script.type]][[script.version]]
+
+            <div class="form-group row">
+                <label class="col-sm-3 col-form-label" for="vars">vars</label>
+                <div class="col-sm-9">
+                        <textarea id="vars" th:field="*{vars}" rows="5" cols="100"
+                                  placeholder="Vars json"></textarea>
+                </div>
+            </div>
+
+            <div class="form-group row">
+                <label class="col-sm-3 col-form-label" for="etlResults">etlResults</label>
+                <div class="col-sm-9">
+                        <textarea id="etlResults" th:field="*{etlResults}" rows="5" cols="100"
+                                  placeholder="etlResults json"></textarea>
+                </div>
+            </div>
+
+            <div class="form-group row">
+                <label class="col-sm-3 col-form-label" for="localResults">localResults</label>
+                <div class="col-sm-9">
+                        <textarea id="localResults" th:field="*{localResults}" rows="5" cols="100"
+                                  placeholder="localResults json"></textarea>
+                </div>
+            </div>
+
+            <div class="form-group row">
+                <label class="col-sm-3 col-form-label" for="script">script</label>
+                <div class="col-sm-9">
+                    <textarea id="script" th:field="*{script}" rows="15" cols="150"
+                              placeholder="Enter your multi-line text here..."></textarea>
+                </div>
+            </div>
+
+
+            <div class="text-center">
+                <input type="submit" value="Save" class="btn btn-primary btn-sm mr-2"/>
+                <input type="button" value="Cancel" id="btnCancel" class="btn btn-secondary btn-sm"/>
+                <input type="submit" formaction="/script_test" value="Test" id="btnTest"
+                       class="btn btn-secondary btn-sm"/>
+            </div>
+
+            <div class="form-group row">
+                <label class="col-sm-3 col-form-label" for="error">error</label>
+                <div class="col-sm-9">
+                    <input type="text" th:field="*{error}"  maxlength="128"
+                           class="form-control"
+                           id="error"/>
+                </div>
+            </div>
+
+            <div class="form-group row">
+                <label class="col-sm-3 col-form-label" for="response">response</label>
+                <div class="col-sm-9">
+                    <input type="text" th:field="*{response}"  maxlength="128"
+                           class="form-control"
+                           id="response"/>
+                </div>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+<div th:replace="~{fragments/script/footer :: footer}"></div>
+
+<script type="text/javascript">
+    $(document).ready(function () {
+      $("#btnCancel").on("click", function () {
+        window.location = "[[@{/script_browser}]]";
+      });
+    });
+</script>
+
+</body>
+
+</html>

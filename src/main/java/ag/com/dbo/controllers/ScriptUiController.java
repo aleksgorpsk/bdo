@@ -1,5 +1,7 @@
 package ag.com.dbo.controllers;
 
+import ag.com.dbo.controllers.model.ScriptResponse;
+import ag.com.dbo.controllers.model.ScriptTest;
 import ag.com.dbo.models.script.*;
 import ag.com.dbo.services.management.ScriptService;
 import ag.com.dbo.services.script.GroovyService;
@@ -32,7 +34,6 @@ public class ScriptUiController {
     private final List<String> allTypes;
 
 
-
     public ScriptUiController(ScriptService scriptService, GroovyService groovyService, PythonService pythonService) {
         this.scriptService = scriptService;
         this.groovyService = groovyService;
@@ -42,53 +43,53 @@ public class ScriptUiController {
 
     }
 
-/// -------- script UI controller
+    /// -------- script UI controller
 
 
-@GetMapping("/script_browser")
-public String getAll(Model model, @RequestParam(required = false) String keyword,
-                     @RequestParam(defaultValue = "1") int page,
-                     @RequestParam(defaultValue = "6") int size,
-                     @RequestParam(defaultValue = "id,asc") String[] sort) {
-    try {
+    @GetMapping("/script_browser")
+    public String getAll(Model model, @RequestParam(required = false) String keyword,
+                         @RequestParam(defaultValue = "1") int page,
+                         @RequestParam(defaultValue = "6") int size,
+                         @RequestParam(defaultValue = "id,asc") String[] sort) {
+        try {
 
-        String sortField = sort[0];
-        String sortDirection = sort[1];
+            String sortField = sort[0];
+            String sortDirection = sort[1];
 
-        Sort.Direction direction = sortDirection.equals("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
-        Sort.Order order = new Sort.Order(direction, sortField);
+            Sort.Direction direction = sortDirection.equals("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
+            Sort.Order order = new Sort.Order(direction, sortField);
 
-        Pageable pageable = PageRequest.of(page - 1, size, Sort.by(order));
+            Pageable pageable = PageRequest.of(page - 1, size, Sort.by(order));
 
-        Page<ScriptDto> scriptPage;
-        if (keyword == null) {
-            scriptPage = scriptService.retrievePage(pageable);
-        } else {
-            scriptPage = scriptService.findByScriptContainingIgnoreCase(keyword, pageable);
-            model.addAttribute("keyword", keyword);
+            Page<ScriptDto> scriptPage;
+            if (keyword == null) {
+                scriptPage = scriptService.retrievePage(pageable);
+            } else {
+                scriptPage = scriptService.findByScriptContainingIgnoreCase(keyword, pageable);
+                model.addAttribute("keyword", keyword);
+            }
+
+            List<ScriptDto> scriptDtoList = scriptPage.getContent();
+
+            model.addAttribute("scriptList", scriptDtoList);
+            model.addAttribute("currentPage", scriptPage.getNumber() + 1);
+            model.addAttribute("totalItems", scriptPage.getTotalElements());
+            model.addAttribute("totalPages", scriptPage.getTotalPages());
+            model.addAttribute("pageSize", size);
+            model.addAttribute("sortField", sortField);
+            model.addAttribute("sortDirection", sortDirection);
+            model.addAttribute("reverseSortDirection", sortDirection.equals("asc") ? "desc" : "asc");
+        } catch (Exception e) {
+            model.addAttribute("message", e.getMessage());
         }
 
-        List<ScriptDto> scriptDtoList = scriptPage.getContent();
-
-        model.addAttribute("scriptList", scriptDtoList);
-        model.addAttribute("currentPage", scriptPage.getNumber() + 1);
-        model.addAttribute("totalItems", scriptPage.getTotalElements());
-        model.addAttribute("totalPages", scriptPage.getTotalPages());
-        model.addAttribute("pageSize", size);
-        model.addAttribute("sortField", sortField);
-        model.addAttribute("sortDirection", sortDirection);
-        model.addAttribute("reverseSortDirection", sortDirection.equals("asc") ? "desc" : "asc");
-    } catch (Exception e) {
-        model.addAttribute("message", e.getMessage());
+        return "script_browser";
     }
-
-    return "script_browser";
-}
 
     @GetMapping("/script/new")
     public String addScript(Model model,
-                         @RequestParam Optional<String> message,
-                         RedirectAttributes redirectAttributes) {
+                            @RequestParam Optional<String> message,
+                            RedirectAttributes redirectAttributes) {
         ScriptDto script = new ScriptDto();
         script.setActive(true);
         message.ifPresent(s -> model.addAttribute("message", s));
@@ -107,7 +108,7 @@ public String getAll(Model model, @RequestParam(required = false) String keyword
     public String saveScript(ScriptDto script, Model model, RedirectAttributes redirectAttributes) {
         Script scr = scriptService.getScript(script);
         try {
-             scriptService.update(script);
+            scriptService.update(script);
             redirectAttributes.addFlashAttribute("message", "The Script has been saved successfully!");
         } catch (Exception e) {
             redirectAttributes.addAttribute("message", e.getMessage());
@@ -123,10 +124,10 @@ public String getAll(Model model, @RequestParam(required = false) String keyword
 //    @GetMapping("/etl/{id}")
 
     @GetMapping("/script/update/{id}")
-    public String editScript( @PathVariable BigInteger id,
-                          Model model,
-                          RedirectAttributes redirectAttributes,
-                          @RequestParam Optional<String> message) {
+    public String editScript(@PathVariable BigInteger id,
+                             Model model,
+                             RedirectAttributes redirectAttributes,
+                             @RequestParam Optional<String> message) {
         try {
             Optional<ScriptDto> oscript = scriptService.findById(id);
             if (oscript.isPresent()) {
@@ -183,6 +184,69 @@ public String getAll(Model model, @RequestParam(required = false) String keyword
         }
 
         return "redirect:/script_browser";
+    }
+
+    @GetMapping("/script/test/{id}")
+    public String testScript(@PathVariable BigInteger id,
+                             Model model,
+                             RedirectAttributes redirectAttributes,
+                             @RequestParam Optional<String> message) {
+        try {
+            Optional<ScriptDto> oscript = scriptService.findById(id);
+            if (oscript.isPresent()) {
+                ScriptTest scripTest = scriptService.mapTestFrom(scriptService.mapFrom(oscript.get()));
+
+                message.ifPresent(s -> model.addAttribute("message", s));
+                model.addAttribute("script", scripTest);
+                model.addAttribute("pageTitle", "Test Script (ID: " + id + ")");
+                return "script_test_run";
+            } else {
+                redirectAttributes.addFlashAttribute("message", "Script not found: " + id);
+            }
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("message", e.getMessage());
+        }
+        return "redirect:/script_browser";
+    }
+
+    @PostMapping("/script_test")
+    public String testScript(
+            ScriptTest scriptTest,
+            Model model,
+            RedirectAttributes redirectAttributes,
+            @RequestParam Optional<String> message) {
+
+        try {
+
+            Optional<ScriptDto> oscriptDto = scriptService.findById(scriptTest.getId());
+
+            if (oscriptDto.isPresent()) {
+
+                Script scriptDt = scriptService.mapFrom(oscriptDto.get());
+                ScriptDefinition scriptDefinition = new ScriptDefinition();
+                scriptDefinition.setName(scriptDt.getName());
+                scriptDefinition.setType(scriptDt.getType());
+                scriptDefinition.setLanguage(scriptDt.getLanguage());
+                scriptDefinition.setVersion(scriptDt.getVersion());
+
+                ScriptResponse response = scriptService.sendTestScript(scriptTest.getStepName(), scriptTest.getVars(), scriptTest.getLocalResults(), scriptTest.getEtlResults(), scriptDefinition);
+
+                scriptTest.setError(response.getStatus());
+                scriptTest.setResponse(response.getResponse());
+
+
+                message.ifPresent(s -> model.addAttribute("message", s));
+                model.addAttribute("script", scriptTest);
+                model.addAttribute("pageTitle", "Test Script (ID: " + scriptTest.getId() + ")");
+                return "script_test_run";
+            } else {
+                redirectAttributes.addFlashAttribute("message", "Script not found: " + scriptTest.getId());
+            }
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("message", e.getMessage());
+        }
+
+        return "redirect:/script/test/" + scriptTest.getId();
     }
 
 }

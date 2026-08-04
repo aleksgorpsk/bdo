@@ -91,6 +91,10 @@
                     <a th:href="@{'/script/update/' + ${script.id}}"
                        title="Edit this script">   <img th:src="@{/images/icons8-edit-24.png}"/>
                     </a>
+                    <a th:href="@{'/script/test/' + ${script.id}}" th:etlTitle="${script.name}" id="btnTest"
+                       title="Test this script">
+                        <img th:src="@{/images/icons8-scorecard-16.png}"/>
+                    </a>
                     <a th:href="@{'/script/delete/' + ${script.id}}" th:etlTitle="${script.name}" id="btnDelete"
                        title="Delete this script">
                         <img th:src="@{/images/icons8-delete-24.png}"/>

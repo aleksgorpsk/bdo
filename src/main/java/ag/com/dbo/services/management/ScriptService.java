@@ -2,6 +2,7 @@ package ag.com.dbo.services.management;
 
 import ag.com.dbo.controllers.model.ScriptRequest;
 import ag.com.dbo.controllers.model.ScriptResponse;
+import ag.com.dbo.controllers.model.ScriptTest;
 import ag.com.dbo.models.checker.script.ScriptModel;
 import ag.com.dbo.models.management.StepInstance;
 import ag.com.dbo.models.script.*;
@@ -138,7 +139,7 @@ public class ScriptService {
 
         scriptRequest.setScriptDefinition(scriptId);
         scriptRequest.setStepName(si.getName());
-        scriptRequest.setVars(merge(si.getEtlInstance().getEtlVars(),si.getVars()));
+        scriptRequest.setVars(si.getVars());
         scriptRequest.setLocalResults(si.getLocalResults());
         scriptRequest.setEtlResults(si.getEtlInstance().getEtlVars());
         try {
@@ -153,7 +154,26 @@ public class ScriptService {
         }
     }
 
-//-- UI -----
+    public ScriptResponse sendTestScript(String name , String vars, String localResult, String etlVars, ScriptDefinition scriptDef) throws JsonProcessingException {
+        ScriptRequest scriptRequest = new ScriptRequest();
+
+        scriptRequest.setScriptDefinition(scriptDef);
+        scriptRequest.setStepName("test");
+        scriptRequest.setVars(vars);
+        scriptRequest.setLocalResults(localResult);
+        scriptRequest.setEtlResults(etlVars);
+        try {
+            return this.scriptRestClient.put().uri(scriptRunPath)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(scriptRequest)
+                    .retrieve()
+                    .body(ScriptResponse.class);
+        } catch (Throwable e) {
+            return new ScriptResponse(scriptDef, "Error", e.getMessage());
+        }
+    }
+
+    //-- UI -----
     public Page<@NonNull ScriptDto> retrievePage(PageRequest pageable){
         Page<Script> scripts = scriptRepository.findAll(pageable);
         return scripts.map(this::getScriptDto);
@@ -178,6 +198,10 @@ public class ScriptService {
      */
 
     public boolean update(ScriptDto scriptDto) {
+        if(scriptDto.getId()==null){
+            scriptRepository.saveAndFlush(mapFrom(scriptDto));
+            return true;
+        }
         if (scriptRepository.existsById(scriptDto.getId())) {
             scriptRepository.save(getScript(scriptDto));
             return true;
@@ -235,5 +259,13 @@ public class ScriptService {
 
     public Script mapFrom(ScriptDto dto) {
         return modelMapper.map(dto, Script.class);
+    }
+
+    public ScriptTest mapTestFrom(Script scriptl) {
+        return modelMapper.map(scriptl, ScriptTest.class);
+    }
+
+    public Script mapTestFrom(ScriptTest test) {
+        return modelMapper.map(test, Script.class);
     }
 }
