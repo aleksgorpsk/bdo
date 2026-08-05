@@ -20,5 +20,7 @@ public class EtlInstanceDTO {
     private Boolean active;
     private String etlVars;
     private OffsetDateTime executionDate;
+    private String logMessage;
+
 
 }

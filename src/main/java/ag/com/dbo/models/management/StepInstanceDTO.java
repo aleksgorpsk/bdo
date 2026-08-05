@@ -16,7 +16,6 @@ public class StepInstanceDTO {
     private Step step;
     private Etl etl;
     private String log;
-    private String vars;
     private Integer maxAttempts;
     private Integer attempts;
     private Boolean active;
@@ -24,16 +23,18 @@ public class StepInstanceDTO {
     private OffsetDateTime stop;
     private String name;
 
-    @Column(columnDefinition = "Text")
     private String etlVars;
 
-    @Column(columnDefinition = "TEXT")
     private String script; // comma separated scriptLink
 
-    @Column(columnDefinition = "TEXT")
     private String stepType; // comma separated type (maybe many types)
 
     private OffsetDateTime nextTest;
+
+    private String vars;  // step result
+
+    private String localResults;  // vars
+    private String logMessage;  // vars
 
 
     /**

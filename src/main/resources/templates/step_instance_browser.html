@@ -17,7 +17,7 @@
 <body>
 <div th:replace="~{fragments/step_instance/header :: header}"></div>
 
-<div class="container-fluid" style="max-width: 900px; margin: 0 auto;">
+<div class="container-fluid" style="max-width: 100%; margin: 0 auto;">
     <h2 class="text-center">Step instances</h2>
 
     <div th:if="${message != null}" class="alert alert-success alert-dismissible fade show text-center message"
@@ -33,7 +33,6 @@
             <div class="row d-flex">
                 <div class="col-md-6 mt-2">
                     <div class="search">
-                        <i class="fa fa-search"></i>
                         <input type="hidden" name="etlInstanceId" th:value="${etlInstanceId}">
                         <input id="keyword" type="search" name="keyword" th:value="${keyword}" class="form-control"
                                placeholder="Enter keyword">
@@ -43,11 +42,11 @@
                 <div class="col-md-3 input-group mt-2">
                     <div class="input-group-prepend">
                         <label class="input-group-text" for="pageSize">Items per page:</label>
-                    </div>
                     <select form="searchForm" name="size" th:value="${pageSize}" onchange="changePageSize()" class="size-select"
                             id="pageSize">
-                        <option th:each="s : ${ {3, 6, 9} }" th:value="${s}" th:text="${s}" th:selected="${s == pageSize}"></option>
+                        <option th:each="s : ${ {19, 25, 100} }" th:value="${s}" th:text="${s}" th:selected="${s == pageSize}"></option>
                     </select>
+                    </div>
                 </div>
                 <div class="col-md-1 mt-2">
                     <button id="btnClear" class="btn btn-info">Clear</button>
@@ -64,21 +63,35 @@
                 <th th:replace="~{fragments/step_instance/sorting :: sorting('name','Name')}"></th>
                 <th th:replace="~{fragments/step_instance/sorting :: sorting('start','Start')}"></th>
                 <th th:replace="~{fragments/step_instance/sorting :: sorting('stop','Stop')}"></th>
+                <th>Script</th>
                 <th>Active</th>
                 <th>Last status</th>
+                <th>vars</th>
+                <th>local results</th>
+                <th>log message</th>
             </tr>
             </thead>
             <tbody>
-            <tr th:each="stepInstance : ${stepInstanceList}">
+                <tr th:each="stepInstance : ${stepInstanceList}">
                 <td> [[${stepInstance.stepInstanceId}]] </td>
                 <td> [[${stepInstance.name}]] </td>
                 <td> <p th:text="${#temporals.format(stepInstance.start, 'dd-MM-yyyy HH:mm')}"> </td>
                 <td> <p th:text="${#temporals.format(stepInstance.stop, 'dd-MM-yyyy HH:mm')}">  </td>
                 <td>
-                    <img th:if="${stepInstance.active == true}"  th:src="@{/images/icons8-check-24.png}" alt="Disable this etl"/>
-                    <img th:if="${stepInstance.active == false}"  th:src="@{/images/icons8-indeterminate-checkbox-24.png}" alt="Enable this etl"/>
+                    [[${stepInstance.script}]]
+                </td>
+                <td>
+                <img th:if="${stepInstance.active == true}"  th:src="@{/images/icons8-check-24.png}" alt="Disable this etl"/>
+                <img th:if="${stepInstance.active == false}"  th:src="@{/images/icons8-indeterminate-checkbox-24.png}" alt="Enable this etl"/>
                 </td>
                 <td>       [[${stepInstance.status}]]               </td>
+
+                <td> [[${stepInstance.vars}]] </td>
+                <td> [[${stepInstance.localResults}]] </td>
+                <td class="double-click-cell">
+                    <span class="initial-text">Double-click to view</span>
+                    <span class="hidden-text" style="display: none;" th:text="${stepInstance.logMessage}">Hidden Content</span>
+                </td>
             </tr>
 
             </tbody>
@@ -163,6 +176,17 @@
     function changePageSize() {
       $("#searchForm").submit();
     }
+ document.querySelectorAll('.double-click-cell').forEach(cell => {
+    cell.addEventListener('dblclick', function() {
+      const initial = this.querySelector('.initial-text');
+      const hidden = this.querySelector('.hidden-text');
+
+      if (hidden) {
+        initial.style.display = 'none';
+        hidden.style.display = 'inline';
+      }
+    });
+  });
 </script>
 </body>
 

@@ -209,7 +209,16 @@ public class ScriptUiController {
         return "redirect:/script_browser";
     }
 
-    @PostMapping("/script_test")
+    @PostMapping("/script_test_data")
+    public String testScript(
+        Model model,
+        RedirectAttributes redirectAttributes,
+        @RequestParam Optional<String> message   ){
+
+        log.info("test data");
+        return "script_test_data";
+}
+            @PostMapping("/script_test")
     public String testScript(
             ScriptTest scriptTest,
             Model model,

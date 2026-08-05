@@ -33,7 +33,6 @@
             <div class="row d-flex">
                 <div class="col-md-6 mt-2">
                     <div class="search">
-                        <i class="fa fa-search"></i>
                         <input id="keyword" type="search" name="keyword" th:value="${keyword}" required
                                class="form-control"
                                placeholder="Enter keyword">
@@ -69,10 +68,9 @@
             </thead>
             <tbody>
             <tr th:each="etl : ${etlList}">
-                <td><a th:href="@{/etl_instance_browser/{id}(id=${etl.id})}" th:text="${etl.id}"></a></td>
-                <td><a th:href="@{/etl_step/{id}(id=${etl.id})}" th:text="${etl.name}"></a></td>
-                <td><a th:href="@{/etl_step/{id}(id=${etl.id})}" th:text="${etl.comment}"></a></td>
-
+                <td> [[${etl.id}]]</td>
+                <td>[[${etl.name}]]</td>
+                <td>[[${etl.comment}]]</td>
                 <td>
                     <a th:if="${etl.active == true}" th:href="@{'/etl/' + ${etl.id} + '/active/false'}"
                        title="Disable this etl">
@@ -89,18 +87,24 @@
                     <a th:href="@{'/steps_field/' + ${etl.id}}" title="Show steps.">
                         Pipes
                     </a>
-                    <a th:href="@{'/etl/' + ${etl.id}}" title="Edit this etl">
-                        <img th:src="@{/images/icons8-edit-24.png}"/>
+                    <a th:href="@{'/etl_instance_browser/' + ${etl.id}}" title="Show Instance.">
+                        etlInstance
                     </a>
+                    <a th:href="@{'/etl/' + ${etl.id}}" title="Edit this etl">
+                        <img th:src="@{/images/icons8-edit-24.png}"/>        </a>
+
                     <a th:href="@{'/etl/delete/' + ${etl.id}}" th:etlTitle="${etl.name}" id="btnDelete"
                        title="Delete this etl">
-                        <img th:src="@{/images/icons8-delete-24.png}"/>
-                    </a>
+                        <img th:src="@{/images/icons8-delete-24.png}"/>      </a>
+
+                    <a th:href="@{/etl_step/{id}(id=${etl.id})}" th:etlTitle="${etl.comment}" id="btnGraph"
+                       title="step schema">
+                        <img th:src="@{/images/icons8-flowchart-24.png}"/>    </a>
+
                     <a th:href="@{'/etl/start/' + ${etl.id}}" th:etlTitle="${etl.name}" id="btnStart"
                        title="Start this etl">
-                        <img th:src="@{/images/icons8-play-24.png}"/>
+                        <img th:src="@{/images/icons8-play-24.png}"/>    </a>
 
-                    </a>
                 </td>
                 <td>
                     <img th:text="${etl.status}" />

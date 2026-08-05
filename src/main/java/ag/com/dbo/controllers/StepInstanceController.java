@@ -33,19 +33,10 @@ public class StepInstanceController {
         this.stepInstanceService = stepInstanceService;
     }
 
-    @GetMapping("/step_instance_browser/{etlInstanceId}")
-    public String getInstanceAll(
-            @PathVariable("etlInstanceId") BigInteger etlId,
-            RedirectAttributes redirectAttributes,
-            Model model
-    ) {
-        redirectAttributes.addFlashAttribute("etlInstanceId", etlId);
-        return "redirect:/step_instance_browser";
-    }
 
-
-    @GetMapping("/step_instance_browser")
+    @GetMapping(value = {"/step_instance_browser", "/step_instance_browser/{etlInstanceId}"})
     public String getAll(
+            @PathVariable(name="etlInstanceId", required = false ) BigInteger etlInstanceId,
             Model model,
             @ModelAttribute("etlInstanceId") String etlInstanceId2,
             RedirectAttributes redirectAttributes,
@@ -57,7 +48,7 @@ public class StepInstanceController {
 
             String sortField = sort[0];
             String sortDirection = sort[1];
-            BigInteger etlInstanceId = getEtlId(model.getAttribute("etlInstanceId"));
+       //     BigInteger etlInstanceId = getEtlId(model.getAttribute("etlInstanceId"));
 
             Direction direction = sortDirection.equals("desc") ? Direction.DESC : Direction.ASC;
             Order order = new Order(direction, sortField);

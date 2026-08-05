@@ -8,7 +8,6 @@
 
     <link rel="stylesheet" type="text/css" th:href="@{/css/bootstrap.min.css}" />
     <link rel="stylesheet" type="text/css" th:href="@{/css/style.css}" />
-    <link rel="stylesheet" type="text/css" th:href="@{/css/style.css}" />
     <link rel="stylesheet" th:href="@{/css/all.min.css}"/>
     <script type="text/javascript" th:src="@{/css/jquery-1.7.1.min.js}"></script>
     <script type="text/javascript" th:href="@{/css/bootstrap.min.js}"></script>
@@ -17,8 +16,8 @@
 <body>
 <div th:replace="~{fragments/etl_instance/header :: header}"></div>
 
-<div class="container-fluid" style="max-width: 900px; margin: 0 auto;">
-    <h2 class="text-center">Etl instances</h2>
+<div class="container-fluid"  style="max-width: 100%; margin: 0 auto;">
+    <h2 class="text-center">Etl instances [[${etlDto.name}]]</h2>
 
     <div th:if="${message != null}" class="alert alert-success alert-dismissible fade show text-center message"
          role="alert">
@@ -33,7 +32,7 @@
             <div class="row d-flex">
                 <div class="col-md-6 mt-2">
                     <div class="search">
-                        <i class="fa fa-search"></i>
+<!--                        <i class="fa fa-search"></i> -->
                         <input type="hidden" name="etlId" th:value="${etlId}">
                         <input id="keyword" type="search" name="keyword" th:value="${keyword}" class="form-control"
                                placeholder="Enter keyword">
@@ -46,7 +45,7 @@
                     </div>
                     <select form="searchForm" name="size" th:value="${pageSize}" onchange="changePageSize()" class="size-select"
                             id="pageSize">
-                        <option th:each="s : ${ {3, 6, 9} }" th:value="${s}" th:text="${s}" th:selected="${s == pageSize}"></option>
+                        <option th:each="s : ${ {10, 25, 100} }" th:value="${s}" th:text="${s}" th:selected="${s == pageSize}"></option>
                     </select>
                 </div>
                 <div class="col-md-1 mt-2">
@@ -60,31 +59,42 @@
         <table class="table table-hover table-responsive-xl">
             <thead class="thead-light">
             <tr>
-                <th th:replace="~{fragments/etl_instance/sorting :: sorting('id','Id')}"></th>
+           -     <th th:replace="~{fragments/etl_instance/sorting :: sorting('id','Id')}"></th>
                 <th th:replace="~{fragments/etl_instance/sorting :: sorting('name','Name')}"></th>
                 <th th:replace="~{fragments/etl_instance/sorting :: sorting('comment','Comment')}"></th>
                 <th th:replace="~{fragments/etl_instance/sorting :: sorting('start','Start')}"></th>
                 <th th:replace="~{fragments/etl_instance/sorting :: sorting('stop','Stop')}"></th>
                 <th>Active</th>
                 <th>Last status</th>
+                <th>etlVars</th>
+                <th>log message</th>
+                <th>Action</th>
             </tr>
             </thead>
             <tbody>
             <tr th:each="etlInstance : ${etlInstanceList}">
-                <td><a th:href="@{/step_instance_browser/{id}(id=${etlInstance.etlInstanceId})}"  th:text="${etlInstance.etlInstanceId}"></a> </td>
-
-                <td> [[${etlInstance.etlInstanceId}]] </td>
-                <td> [[${etlInstance.name}]] </td>
-                <td><a th:href="@{/etl_step/{id}(id=${etlInstance.etlInstanceId})}"  th:text="${etlInstance.comment}"></a> </td>
+                <td>[[${etlInstance.etlInstanceId}]] </td>
+                <td>[[${etlInstance.name}]] </td>
+                <td>[[${etlInstance.comment}]]</td>
                 <td> <p th:text="${#temporals.format(etlInstance.start, 'dd-MM-yyyy HH:mm')}"> </td>
                 <td> <p th:text="${#temporals.format(etlInstance.stop, 'dd-MM-yyyy HH:mm')}">  </td>
                 <td>
-
-
                     <img th:if="${etlInstance.active == true}"  th:src="@{/images/icons8-check-24.png}" alt="Disable this etl"/>
                     <img th:if="${etlInstance.active == false}"  th:src="@{/images/icons8-indeterminate-checkbox-24.png}" alt="Enable this etl"/>
                 </td>
-                <td>       [[${etlInstance.status}]]               </td>
+                <td> [[${etlInstance.status}]]</td>
+                <td> [[${etlInstance.etlVars}]]</td>
+
+                <td class="double-click-cell">
+                    <span class="initial-text">Double-click to view</span>
+                    <span class="hidden-text" style="display: none;" th:text="${etlInstance.logMessage}">Hidden Content</span>
+                </td>
+
+                </td>
+                <td>
+                    <a th:href="@{'/step_instance_browser/' + ${etlInstance.etlInstanceId}}" title="Show Instance.">etlInstance</a>
+                </td>
+
             </tr>
 
             </tbody>
@@ -169,6 +179,17 @@
     function changePageSize() {
       $("#searchForm").submit();
     }
+  document.querySelectorAll('.double-click-cell').forEach(cell => {
+    cell.addEventListener('dblclick', function() {
+      const initial = this.querySelector('.initial-text');
+      const hidden = this.querySelector('.hidden-text');
+
+      if (hidden) {
+        initial.style.display = 'none';
+        hidden.style.display = 'inline';
+      }
+    });
+  });
 </script>
 </body>
 

@@ -1,9 +1,11 @@
 package ag.com.dbo.controllers;
 
+import ag.com.dbo.models.management.EtlDTO;
 import ag.com.dbo.models.management.EtlInstanceDTO;
 import ag.com.dbo.services.management.EtlInstanceService;
+import ag.com.dbo.services.management.EtlService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -17,46 +19,33 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigInteger;
 import java.util.List;
+import java.util.Optional;
 
 
 @Slf4j
+@RequiredArgsConstructor
 @Controller
 //@ConditionalOnProperty(name = "dbo.management", havingValue = "true")
 public class EtlInstanceController {
 
     private final EtlInstanceService etlInstanceService;
+    private final EtlService etlService;
 
 
-    public EtlInstanceController(EtlInstanceService etlInstanceService
-    ) {
-        this.etlInstanceService = etlInstanceService;
-    }
-
-    @GetMapping("/etl_instance_browser/{etlId}")
-    public String getInstanceAll(
-            @PathVariable("etlId") BigInteger etlId,
-            RedirectAttributes redirectAttributes,
-            Model model
-    ) {
-        redirectAttributes.addFlashAttribute("etlId", etlId);
-        return "redirect:/etl_instance_browser";
-    }
-
-
-    @GetMapping("/etl_instance_browser")
+    @GetMapping(value = {"/etl_instance_browser","/etl_instance_browser/{etlId}"})
     public String getAll(
+            @PathVariable(name="etlId", required = false) BigInteger etlId,
             Model model,
-            @ModelAttribute("etlId") String etlId2,
+//            @ModelAttribute("etlId") String etlId,
             RedirectAttributes redirectAttributes,
             @RequestParam(required = false) String keyword,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "6") int size,
             @RequestParam(defaultValue = "id,asc") String[] sort) {
         try {
-
             String sortField = sort[0];
             String sortDirection = sort[1];
-            BigInteger etlId = getEtlId(model.getAttribute("etlId"));
+//            etlId = getEtlId(model.getAttribute("etlId"));
 
             Direction direction = sortDirection.equals("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
             Order order = new Order(direction, sortField);
@@ -66,6 +55,7 @@ public class EtlInstanceController {
             if (etlId == null) {
                 return "redirect:/etl_browser";
             }
+            Optional<EtlDTO> etlDto = etlService.findById(etlId);
             Page<EtlInstanceDTO> etlInstances;
             if (keyword == null) {
                 etlInstances = etlInstanceService.retrievePage(etlId, pageable);
@@ -74,9 +64,10 @@ public class EtlInstanceController {
                 model.addAttribute("keyword", keyword);
             }
 
-            List<EtlInstanceDTO> etlDto = etlInstances.getContent();
+            List<EtlInstanceDTO> etlInstanceDto = etlInstances.getContent();
 
-            model.addAttribute("etlInstanceList", etlDto);
+            model.addAttribute("etlInstanceList", etlInstanceDto);
+            etlDto.ifPresent(etlDTO -> model.addAttribute("etlDto", etlDTO));
             model.addAttribute("etlId", etlId);
             model.addAttribute("currentPage", etlInstances.getNumber() + 1);
             model.addAttribute("totalItems", etlInstances.getTotalElements());
@@ -91,7 +82,6 @@ public class EtlInstanceController {
             e.printStackTrace();
             model.addAttribute("message", e.getMessage());
         }
-
         return "etl_instance_browser";
     }
 
