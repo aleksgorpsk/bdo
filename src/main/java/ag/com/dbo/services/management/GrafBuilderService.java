@@ -1,8 +1,7 @@
 package ag.com.dbo.services.management;
 
-import ag.com.dbo.controllers.model.FieldPlace;
 import ag.com.dbo.controllers.model.StepData;
-import ag.com.dbo.models.management.EtlDTO;
+import ag.com.dbo.models.management.EtlDto;
 import ag.com.dbo.models.management.EtlInstance;
 import ag.com.dbo.models.management.Step;
 import ag.com.dbo.models.graf.Figure;
@@ -47,7 +46,7 @@ public class GrafBuilderService {
     public List<Figure> getFigures(BigInteger etlId) {
         log.info("getFigures:{}", etlId);
 
-        Optional<EtlDTO> etlDto = etlService.findById(etlId);
+        Optional<EtlDto> etlDto = etlService.findById(etlId);
         if (etlDto.isEmpty()) {
             log.error("etn {} not found !", etlId);
             return Collections.emptyList();
@@ -203,7 +202,7 @@ public class GrafBuilderService {
         log.info("getStepsField:{}", etlId);
         StepData stepDate = new StepData();
 
-        Optional<EtlDTO> etlDto = etlService.findById(etlId);
+        Optional<EtlDto> etlDto = etlService.findById(etlId);
         if (etlDto.isEmpty()) {
             log.error("etn {} not found !", etlId);
             return stepDate;

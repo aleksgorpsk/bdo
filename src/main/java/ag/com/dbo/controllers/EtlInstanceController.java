@@ -1,7 +1,7 @@
 package ag.com.dbo.controllers;
 
-import ag.com.dbo.models.management.EtlDTO;
-import ag.com.dbo.models.management.EtlInstanceDTO;
+import ag.com.dbo.models.management.EtlDto;
+import ag.com.dbo.models.management.EtlInstanceDto;
 import ag.com.dbo.services.management.EtlInstanceService;
 import ag.com.dbo.services.management.EtlService;
 import lombok.RequiredArgsConstructor;
@@ -55,8 +55,8 @@ public class EtlInstanceController {
             if (etlId == null) {
                 return "redirect:/etl_browser";
             }
-            Optional<EtlDTO> etlDto = etlService.findById(etlId);
-            Page<EtlInstanceDTO> etlInstances;
+            Optional<EtlDto> etlDto = etlService.findById(etlId);
+            Page<EtlInstanceDto> etlInstances;
             if (keyword == null) {
                 etlInstances = etlInstanceService.retrievePage(etlId, pageable);
             } else {
@@ -64,7 +64,7 @@ public class EtlInstanceController {
                 model.addAttribute("keyword", keyword);
             }
 
-            List<EtlInstanceDTO> etlInstanceDto = etlInstances.getContent();
+            List<EtlInstanceDto> etlInstanceDto = etlInstances.getContent();
 
             model.addAttribute("etlInstanceList", etlInstanceDto);
             etlDto.ifPresent(etlDTO -> model.addAttribute("etlDto", etlDTO));

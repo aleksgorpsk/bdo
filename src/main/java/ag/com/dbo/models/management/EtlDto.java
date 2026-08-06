@@ -7,7 +7,7 @@ import lombok.Data;
 import java.math.BigInteger;
 
 @Data
-public class EtlDTO {
+public class EtlDto {
     @Id
     private BigInteger id;
     @NotBlank

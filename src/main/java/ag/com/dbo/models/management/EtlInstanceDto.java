@@ -8,7 +8,7 @@ import java.math.BigInteger;
 import java.time.OffsetDateTime;
 
 @Data
-public class EtlInstanceDTO {
+public class EtlInstanceDto {
     @Id
     private BigInteger etlInstanceId;
     private String status;

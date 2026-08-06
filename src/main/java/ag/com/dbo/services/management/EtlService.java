@@ -1,7 +1,7 @@
 package ag.com.dbo.services.management;
 
 import ag.com.dbo.models.management.Etl;
-import ag.com.dbo.models.management.EtlDTO;
+import ag.com.dbo.models.management.EtlDto;
 import ag.com.dbo.repositories.management.EtlRepository;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -36,7 +36,7 @@ public class EtlService {
      */
 
     @CachePut(value = "etls", key = "#etlDTO.id")
-    public EtlDTO create(EtlDTO etlDTO) {
+    public EtlDto create(EtlDto etlDTO) {
             Etl etl = mapFrom(etlDTO);
             Etl newEtl =etlRepository.saveAndFlush(etl);
             return mapFrom(newEtl);
@@ -48,7 +48,7 @@ public class EtlService {
      * -------------------------------------------------------------------------
      */
 
-    public EtlDTO retrieveById(BigInteger id) {
+    public EtlDto retrieveById(BigInteger id) {
         return etlRepository.findById(id)
                 .map(this::mapFrom)
                 .orElse(null);
@@ -56,24 +56,24 @@ public class EtlService {
 
 
 
-    public Page<@NonNull EtlDTO> retrievePage(PageRequest pageable){
+    public Page<@NonNull EtlDto> retrievePage(PageRequest pageable){
         Page<@NonNull Etl> entities = etlRepository.findAll(pageable);
-        return entities.map(e-> modelMapper.map(e, EtlDTO.class));
+        return entities.map(e-> modelMapper.map(e, EtlDto.class));
     }
 
-    public Page<@NonNull EtlDTO> retrievePage(Pageable pageable){
+    public Page<@NonNull EtlDto> retrievePage(Pageable pageable){
         Page<@NonNull Etl> entities = etlRepository.findAll(pageable);
-        return entities.map(e-> modelMapper.map(e, EtlDTO.class));
+        return entities.map(e-> modelMapper.map(e, EtlDto.class));
 
     }
 
-    public Page<@NonNull EtlDTO> findByEtlContainingIgnoreCase(String keyword, Pageable pageable){
+    public Page<@NonNull EtlDto> findByEtlContainingIgnoreCase(String keyword, Pageable pageable){
         Page<@NonNull Etl> etlPage = etlRepository.findByNameContainingIgnoreCase( keyword,  pageable);
         return convert(etlPage);
 
     }
 
-    public Optional<EtlDTO> findById(BigInteger id){
+    public Optional<EtlDto> findById(BigInteger id){
         Optional<Etl> e=etlRepository.findById(id);
         if (e.isPresent()) {
             return Optional.of(mapFrom(e.get()));
@@ -85,7 +85,7 @@ public class EtlService {
         return  etlRepository.findById(id);
     }
 
-    public List<EtlDTO> findByStatus(Integer status){
+    public List<EtlDto> findByStatus(Integer status){
         return etlRepository.findByStatus(status).stream()
                 .map(this::mapFrom)
                 .peek(x-> log.info("etl by status:"+ x.toString()))
@@ -93,7 +93,7 @@ public class EtlService {
 
     }
 
-    public List<EtlDTO> retrieveAll() {
+    public List<EtlDto> retrieveAll() {
         return etlRepository.findAll().stream()
                 .map(this::mapFrom)
                 .peek(x-> log.info("etl:"+ x.toString()))
@@ -104,7 +104,7 @@ public class EtlService {
         return etlRepository.findAll();
     }
 
-    public List<EtlDTO> retrievePage() {
+    public List<EtlDto> retrievePage() {
 
         log.info("retrievePage");
         return etlRepository.findAll().stream()
@@ -121,7 +121,7 @@ public class EtlService {
      * -------------------------------------------------------------------------
      */
 
-    public boolean update(EtlDTO etlDTO) {
+    public boolean update(EtlDto etlDTO) {
         if (etlRepository.existsById(etlDTO.getId())) {
             etlRepository.save(mapFrom(etlDTO));
             return true;
@@ -146,10 +146,10 @@ public class EtlService {
         }
     }
 
-    public Page<@NotNull EtlDTO> convert(Page<@NotNull Etl> etlp){
-        return etlp.map(new Function<Etl, EtlDTO>() {
+    public Page<@NotNull EtlDto> convert(Page<@NotNull Etl> etlp){
+        return etlp.map(new Function<Etl, EtlDto>() {
             @Override
-            public EtlDTO apply(Etl entity) {
+            public EtlDto apply(Etl entity) {
                 return mapFrom(entity);
             }
         });
@@ -157,11 +157,11 @@ public class EtlService {
     }
 
 
-    public EtlDTO mapFrom(Etl etl) {
-        return modelMapper.map(etl, EtlDTO.class);
+    public EtlDto mapFrom(Etl etl) {
+        return modelMapper.map(etl, EtlDto.class);
     }
 
-    public Etl mapFrom(EtlDTO dto) {
+    public Etl mapFrom(EtlDto dto) {
         return modelMapper.map(dto, Etl.class);
     }
 

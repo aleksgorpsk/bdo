@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Optional;
 
 import ag.com.dbo.models.management.Etl;
-import ag.com.dbo.models.management.EtlDTO;
+import ag.com.dbo.models.management.EtlDto;
 import ag.com.dbo.models.management.EtlStatus;
 import ag.com.dbo.services.management.EngineService;
 import ag.com.dbo.services.management.EtlService;
@@ -58,7 +58,7 @@ public class EtlController {
 
             Pageable pageable = PageRequest.of(page - 1, size, Sort.by(order));
 
-            Page<EtlDTO> pageTuts;
+            Page<EtlDto> pageTuts;
             if (keyword == null) {
                 pageTuts = etlService.retrievePage(pageable);
             } else {
@@ -66,7 +66,7 @@ public class EtlController {
                 model.addAttribute("keyword", keyword);
             }
 
-            List<EtlDTO> etlDto = pageTuts.getContent();
+            List<EtlDto> etlDto = pageTuts.getContent();
 
             model.addAttribute("etlList", etlDto);
             model.addAttribute("currentPage", pageTuts.getNumber() + 1);
@@ -88,7 +88,7 @@ public class EtlController {
             Model model,
             @RequestParam Optional<String> message,
             RedirectAttributes redirectAttributes) {
-        EtlDTO etl = new EtlDTO();
+        EtlDto etl = new EtlDto();
         etl.setActive(true);
         etl.setCronScheduling("");
         message.ifPresent(s -> model.addAttribute("message", s));
@@ -101,7 +101,7 @@ public class EtlController {
     }
 
     @PostMapping("/etl/save")
-    public String saveEtl(EtlDTO etl, Model model, RedirectAttributes redirectAttributes) {
+    public String saveEtl(EtlDto etl, Model model, RedirectAttributes redirectAttributes) {
         try {
             if (!org.quartz.CronExpression.isValidExpression(etl.getCronScheduling())) {
                 redirectAttributes.addAttribute("message", "Incorrect Cron expression: " + etl.getCronScheduling());
@@ -136,9 +136,9 @@ public class EtlController {
                           RedirectAttributes redirectAttributes,
                           @RequestParam Optional<String> message) {
         try {
-            Optional<EtlDTO> oetl = etlService.findById(id);
+            Optional<EtlDto> oetl = etlService.findById(id);
             if (oetl.isPresent()) {
-                EtlDTO etl = oetl.get();
+                EtlDto etl = oetl.get();
                 message.ifPresent(s -> model.addAttribute("message", s));
                 model.addAttribute("etl", etl);
                 model.addAttribute("allStatuses", etlStatuses);
@@ -171,9 +171,9 @@ public class EtlController {
     public String updateEtlPublishedStatus(@PathVariable("id") BigInteger id, @PathVariable("status") boolean active,
                                            Model model, RedirectAttributes redirectAttributes) {
         try {
-            Optional<EtlDTO> etl = etlService.findById(id);
+            Optional<EtlDto> etl = etlService.findById(id);
             if (etl.isPresent()) {
-                EtlDTO etlDto = etl.get();
+                EtlDto etlDto = etl.get();
                 etlDto.setActive(active);
                 etlService.update(etlDto);
             }
@@ -192,7 +192,7 @@ public class EtlController {
     public String StartEtl(@PathVariable("id") BigInteger id, Model model, RedirectAttributes redirectAttributes) {
         log.info("start: model {}", model);
         try {
-            Optional<EtlDTO> etldto = etlService.findById(id);
+            Optional<EtlDto> etldto = etlService.findById(id);
             if (etldto.isPresent()) {
                 engineService.startEtl(etlService.mapFrom(etldto.get()), false);
                 redirectAttributes.addFlashAttribute("message", "The Etl with id=" + id + " has been started successfully!");

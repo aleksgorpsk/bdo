@@ -3,7 +3,7 @@ package ag.com.dbo.controllers;
 import ag.com.dbo.models.graf.Figure;
 import ag.com.dbo.models.management.StepDTO;
 import ag.com.dbo.models.management.StepType;
-import ag.com.dbo.models.management.EtlDTO;
+import ag.com.dbo.models.management.EtlDto;
 import ag.com.dbo.models.management.Etl;
 import ag.com.dbo.repositories.management.StepRepository;
 import ag.com.dbo.services.management.EtlService;
@@ -64,7 +64,7 @@ public class EtlStepsController {
                 stepDto.setStepType(StepType.Simple.name());
             }
            stepDto.setStepType(String.join(",", stepDto.getStepTypeList()));
-           Optional<EtlDTO>etlDTO = etlService.findById(stepDto.getEtlId());
+           Optional<EtlDto>etlDTO = etlService.findById(stepDto.getEtlId());
             etlDTO.ifPresent(dto -> stepDto.setEtl(etlService.mapFrom(dto)));
             if (stepDto.getStepId()!=null) {
                 stepService.update(stepDto);
@@ -83,7 +83,7 @@ public class EtlStepsController {
     public String addEtlStep(
             @PathVariable("etlId") BigInteger etlId,
             Model model) {
-        Optional<EtlDTO> etlDto =etlService.findById(etlId);
+        Optional<EtlDto> etlDto =etlService.findById(etlId);
         StepDTO step = new StepDTO();
         step.setMaxAttempts(2);
         if(etlDto.isPresent()) {
