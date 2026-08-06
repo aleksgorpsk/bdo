@@ -44,7 +44,7 @@
                         <label class="input-group-text" for="pageSize">Items per page:</label>
                     <select form="searchForm" name="size" th:value="${pageSize}" onchange="changePageSize()" class="size-select"
                             id="pageSize">
-                        <option th:each="s : ${ {19, 25, 100} }" th:value="${s}" th:text="${s}" th:selected="${s == pageSize}"></option>
+                        <option th:each="s : ${ {10, 25, 100} }" th:value="${s}" th:text="${s}" th:selected="${s == pageSize}"></option>
                     </select>
                     </div>
                 </div>
@@ -78,7 +78,17 @@
                 <td> <p th:text="${#temporals.format(stepInstance.start, 'dd-MM-yyyy HH:mm')}"> </td>
                 <td> <p th:text="${#temporals.format(stepInstance.stop, 'dd-MM-yyyy HH:mm')}">  </td>
                 <td>
-                    [[${stepInstance.script}]]
+<!--                    [[${stepInstanceList}]] -->
+                    <div th:each=" scr : ${stepInstance.scriptList}">
+                        <a th:href="@{'/script_test_data/' + ${stepInstance.stepInstanceId}}+'/'+${scr}" th:etlTitle="Test" id="btnTest"
+                           title="Test this Script with data">
+                            [[${scr}]]
+                        </a>
+
+<!--                        <span th:text="${iterStat.count} + '.'">1.</span> -->
+<!--                        <a th:href="@{/details(id=${item.id})}" th:text="${scr}">Item Link</a> -->
+                    </div>
+
                 </td>
                 <td>
                 <img th:if="${stepInstance.active == true}"  th:src="@{/images/icons8-check-24.png}" alt="Disable this etl"/>

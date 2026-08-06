@@ -3,6 +3,7 @@ package ag.com.dbo.controllers;
 import ag.com.dbo.models.management.StepInstanceDTO;
 import ag.com.dbo.services.management.StepInstanceService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -19,6 +20,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigInteger;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 
@@ -48,7 +51,6 @@ public class StepInstanceController {
 
             String sortField = sort[0];
             String sortDirection = sort[1];
-       //     BigInteger etlInstanceId = getEtlId(model.getAttribute("etlInstanceId"));
 
             Direction direction = sortDirection.equals("desc") ? Direction.DESC : Direction.ASC;
             Order order = new Order(direction, sortField);
@@ -66,7 +68,18 @@ public class StepInstanceController {
                 model.addAttribute("keyword", keyword);
             }
 
-            List<StepInstanceDTO> stepInstanceList = stepInstances.getContent();
+         //   stepInstances = stepInstances.stream().map(StepInstanceController::buildScriptList).toList();
+            Page<StepInstanceDTO> updatedPage = stepInstances.map(si -> {
+//                StepInstanceDTO si = new StepInstanceDTO();
+                if(StringUtils.isNotEmpty(si.getScript())) {
+                    List<String> lsi = Arrays.stream(si.getScript().split(",")).toList();
+                    si.setScriptList(lsi);
+//                    return lsi;
+                }
+                return si;
+            });
+
+            List<StepInstanceDTO> stepInstanceList = updatedPage.getContent();
 
             model.addAttribute("stepInstanceList", stepInstanceList);
             model.addAttribute("etlInstanceId", etlInstanceId);
@@ -86,6 +99,7 @@ public class StepInstanceController {
 
         return "step_instance_browser";
     }
+
 
     private BigInteger getEtlId(Object data) {
         BigInteger etlId = null;

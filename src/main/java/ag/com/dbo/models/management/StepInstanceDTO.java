@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 
 @Data
 public class StepInstanceDTO {
@@ -36,6 +37,7 @@ public class StepInstanceDTO {
     private String localResults;  // vars
     private String logMessage;  // vars
 
+    private List<String> scriptList;
 
     /**
      * Add String to log

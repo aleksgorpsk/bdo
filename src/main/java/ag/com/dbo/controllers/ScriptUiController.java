@@ -2,10 +2,13 @@ package ag.com.dbo.controllers;
 
 import ag.com.dbo.controllers.model.ScriptResponse;
 import ag.com.dbo.controllers.model.ScriptTest;
+import ag.com.dbo.models.management.StepInstanceDTO;
 import ag.com.dbo.models.script.*;
 import ag.com.dbo.services.management.ScriptService;
+import ag.com.dbo.services.management.StepInstanceService;
 import ag.com.dbo.services.script.GroovyService;
 import ag.com.dbo.services.script.PythonService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -21,12 +24,15 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import static ag.com.dbo.services.Utils.getScriptDefinitionFromFullName;
+
 @Controller
 //@RequestMapping("/queue")
 @Slf4j
 public class ScriptUiController {
 
     private final ScriptService scriptService;
+    private final StepInstanceService stepInstanceService;
     private final GroovyService groovyService;
     private final PythonService pythonService;
 
@@ -34,8 +40,9 @@ public class ScriptUiController {
     private final List<String> allTypes;
 
 
-    public ScriptUiController(ScriptService scriptService, GroovyService groovyService, PythonService pythonService) {
+    public ScriptUiController(ScriptService scriptService, StepInstanceService stepInstanceService, GroovyService groovyService, PythonService pythonService) {
         this.scriptService = scriptService;
+        this.stepInstanceService = stepInstanceService;
         this.groovyService = groovyService;
         this.pythonService = pythonService;
         this.allLanguages = Arrays.stream(ScriptLanguage.values()).map(Enum::name).toList();
@@ -194,7 +201,10 @@ public class ScriptUiController {
         try {
             Optional<ScriptDto> oscript = scriptService.findById(id);
             if (oscript.isPresent()) {
-                ScriptTest scripTest = scriptService.mapTestFrom(scriptService.mapFrom(oscript.get()));
+                ScriptTest scripTest= (ScriptTest) model.getAttribute("script");
+                if (model.getAttribute("script") == null){
+                     scripTest = scriptService.mapTestFrom(scriptService.mapFrom(oscript.get()));
+                }
 
                 message.ifPresent(s -> model.addAttribute("message", s));
                 model.addAttribute("script", scripTest);
@@ -209,16 +219,7 @@ public class ScriptUiController {
         return "redirect:/script_browser";
     }
 
-    @PostMapping("/script_test_data")
-    public String testScript(
-        Model model,
-        RedirectAttributes redirectAttributes,
-        @RequestParam Optional<String> message   ){
-
-        log.info("test data");
-        return "script_test_data";
-}
-            @PostMapping("/script_test")
+    @PostMapping("/script_test")
     public String testScript(
             ScriptTest scriptTest,
             Model model,
@@ -231,19 +232,7 @@ public class ScriptUiController {
 
             if (oscriptDto.isPresent()) {
 
-                Script scriptDt = scriptService.mapFrom(oscriptDto.get());
-                ScriptDefinition scriptDefinition = new ScriptDefinition();
-                scriptDefinition.setName(scriptDt.getName());
-                scriptDefinition.setType(scriptDt.getType());
-                scriptDefinition.setLanguage(scriptDt.getLanguage());
-                scriptDefinition.setVersion(scriptDt.getVersion());
-
-                ScriptResponse response = scriptService.sendTestScript(scriptTest.getStepName(), scriptTest.getVars(), scriptTest.getLocalResults(), scriptTest.getEtlResults(), scriptDefinition);
-
-                scriptTest.setError(response.getStatus());
-                scriptTest.setResponse(response.getResponse());
-
-
+                scriptTest = test(scriptService.mapFrom(oscriptDto.get()), scriptTest);
                 message.ifPresent(s -> model.addAttribute("message", s));
                 model.addAttribute("script", scriptTest);
                 model.addAttribute("pageTitle", "Test Script (ID: " + scriptTest.getId() + ")");
@@ -256,6 +245,70 @@ public class ScriptUiController {
         }
 
         return "redirect:/script/test/" + scriptTest.getId();
+    }
+
+    private ScriptTest test(Script scr, ScriptTest scrTest) throws JsonProcessingException {
+
+        ScriptDefinition scriptDefinition = new ScriptDefinition();
+        scriptDefinition.setName(scr.getName());
+        scriptDefinition.setType(scr.getType());
+        scriptDefinition.setLanguage(scr.getLanguage());
+        scriptDefinition.setVersion(scr.getVersion());
+
+        ScriptResponse response = scriptService.sendTestScript(scrTest.getStepName(), scrTest.getVars(), scrTest.getLocalResults(), scrTest.getEtlResults(), scriptDefinition);
+
+        scrTest.setError(response.getStatus());
+        scrTest.setResponse(response.getResponse());
+
+        return scrTest;
+
+    }
+
+    @GetMapping("/script_test_data/{stepInstanceId}/{scriptName}")
+    public String testScript(
+            @PathVariable("stepInstanceId") String stepInstanceId,
+            @PathVariable("scriptName") String scriptName,
+            Model model,
+            RedirectAttributes redirectAttributes,
+            @RequestParam Optional<String> message) {
+
+        log.info("test data");
+        Optional<StepInstanceDTO> siDto = stepInstanceService.findById(stepInstanceId);
+        ScriptTest st = new ScriptTest();
+
+        ScriptDefinition sd = getScriptDefinitionFromFullName(scriptName);
+        Optional<Script> script = scriptService.retrieveByScriptDefinition(sd);
+
+        if (siDto.isPresent() && script.isPresent()) {
+
+            Script scr = script.get();
+
+            st.setId(scr.getId());
+            st.setLanguage(scr.getLanguage());
+            st.setName(scr.getName());
+            st.setType(scr.getType());
+            st.setVersion(scr.getVersion());
+            st.setScript(scr.getScript());
+            st.setStepName(siDto.get().getName());
+
+            st.setVars(siDto.get().getVars());
+            st.setLocalResults(siDto.get().getLocalResults());
+            st.setEtlResults(siDto.get().getEtlInstance().getEtlVars());
+            try {
+                st = test(script.get(), st);
+//                model.addAttribute("script", st);
+                redirectAttributes.addFlashAttribute("script", st);
+
+            } catch (JsonProcessingException e) {
+                redirectAttributes.addFlashAttribute("message", "error: " + e.getMessage());
+            }
+        } else {
+            redirectAttributes.addFlashAttribute("message", "Script not found: " + sd);
+
+        }
+
+
+        return "redirect:/script/test/" + st.getId();
     }
 
 }
