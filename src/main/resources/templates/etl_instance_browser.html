@@ -28,7 +28,9 @@
     </div>
 
     <div class="my-3">
-        <form th:action="@{/etl_instance_browser}" id="searchForm" th:object="${etlId}">
+<!--        <a th:href="@{/etl_step/{id}(id=${etl.id})}" th:etlTitle="${etl.comment}" id="btnGraph" </a> -->
+
+        <form th:action="@{/etl_instance_browser/{etlId}(etlId=${etlId})}" id="searchForm" th:object="${etlId}">
             <div class="row d-flex">
                 <div class="col-md-6 mt-2">
                     <div class="search">

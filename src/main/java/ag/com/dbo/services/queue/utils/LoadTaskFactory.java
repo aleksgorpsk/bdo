@@ -11,7 +11,7 @@ public class LoadTaskFactory {
 
     public static Callable<PropData> getTask(QueueStorage task , Environment env,
                                              QueueStorageRepository queueStorageRepository                                             ) {
-        String calculateType = task.getCalculateType();
+        String calculateType = task.getScriptType();
         if (TaskName.HIVEOPERATOR.name().equals(calculateType)) {
             return new HiveOperatorTask(task, env, queueStorageRepository);
         }

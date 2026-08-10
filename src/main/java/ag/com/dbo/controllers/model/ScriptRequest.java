@@ -6,9 +6,15 @@ import lombok.Data;
 @Data
 public class ScriptRequest {
     private ScriptDefinition scriptDefinition;
+    private String requestId;
     private String stepName;
-    private String vars;
+    // TODO ????
     private String resultName;
+
+    private String vars;
     private String localResults;
     private String etlResults;
+
+    private String tags;
+    private Integer maxAttempts;
 }

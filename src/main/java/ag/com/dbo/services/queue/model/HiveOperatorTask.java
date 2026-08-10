@@ -2,7 +2,6 @@ package ag.com.dbo.services.queue.model;
 
 import ag.com.dbo.controllers.queue.QueueStatus;
 import ag.com.dbo.models.queue.QueueStorage;
-import ag.com.dbo.models.script.ScriptType;
 import ag.com.dbo.repositories.queue.QueueStorageRepository;
 import ag.com.dbo.services.queue.ResultTemplate;
 import ag.com.dbo.services.queue.TaskProperties;
@@ -19,6 +18,8 @@ import java.time.OffsetDateTime;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
+import static ag.com.dbo.services.queue.utils.QueueConstants.ERROR_IN_PROCESS;
+import static ag.com.dbo.services.queue.utils.QueueConstants.TOO_MUCH_ATTEMPTS;
 import static ag.com.dbo.services.queue.utils.VarSupport.*;
 import static ag.com.dbo.utils.Utils.saveError;
 
@@ -30,7 +31,6 @@ public class HiveOperatorTask extends TaskProperties implements Callable<PropDat
      *  -106 : process error
      */
     protected final QueueStorage task;
-    protected String out;
     protected final Environment env;
     protected final QueueStorageRepository queueStorageRepository;
 
@@ -55,12 +55,12 @@ public class HiveOperatorTask extends TaskProperties implements Callable<PropDat
                 task.setStatus(QueueStatus.FAIL.name());
                 task.setStop(OffsetDateTime.now());
                 queueStorageRepository.saveAndFlush(task);
-                return new PropData(-105, task, error);
+                return new PropData(TOO_MUCH_ATTEMPTS, task, error);
             }
             task.setStart(OffsetDateTime.now());
             queueStorageRepository.saveAndFlush(task);
           //  StepModel sModel = externalStepTypeService.checkStep(task);
-            String logic = task.getCommandProfile();
+            String logic = task.getScript();
 
             Map<String,Object> allEtlVars=stringToJsonVar(merge(task.getVars(), task.getLocalResults()));
             log.info("Start hiveServer2 vars:{} {} logic:{}", allEtlVars, System.lineSeparator(), logic);
@@ -74,10 +74,10 @@ public class HiveOperatorTask extends TaskProperties implements Callable<PropDat
             processBuilder.redirectErrorStream(true); // Combine stdout and stderr
             Process process = processBuilder.start();
             BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            String taskLog = fullReadStr(reader);
+            String taskLogSource = fullReadStr(reader);
 
             int processCode = process.waitFor();
-            taskLog = taskLog+ System.lineSeparator() + "code result: "+processCode;
+            String taskLog = taskLogSource+ System.lineSeparator() + "code result: "+processCode;
             task.addLog(taskLog);
             task.addResultToLocalResult(new ResultTemplate(taskLog));
 
@@ -93,11 +93,11 @@ public class HiveOperatorTask extends TaskProperties implements Callable<PropDat
             }catch(Throwable e){
                 saveError(task,queueStorageRepository, e, "Error");
             }
-            return new PropData(processCode, task, out);
+            return new PropData(processCode, task, taskLogSource);
 
         } catch (IOException | InterruptedException e) {
             saveError(task,queueStorageRepository, e, "Error process");
-            return new PropData(-106, task, System.lineSeparator()+ ExceptionUtils.getStackTrace(e) + e.getMessage());
+            return new PropData(ERROR_IN_PROCESS, task, System.lineSeparator()+ ExceptionUtils.getStackTrace(e) + e.getMessage());
         }
     }
 

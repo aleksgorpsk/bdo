@@ -4,14 +4,34 @@
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="topNavbar">
-            <input type="hidden" name="etlId" th:value="${etlId}">
             <ul class="navbar-nav">
                 <li class="nav-item">
                     <a class="nav-link" th:href="@{/etl_browser}">Etls</a>
                 </li>
-
+            </ul>
+            <ul class="navbar-nav">
                 <li class="nav-item">
                     <a class="nav-link" th:href="@{/step/new/{etlid}(etlid=${etlId})}">Add step</a>
+                </li>
+            </ul>
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/node_browser}">Hosts</a>
+                </li>
+            </ul>
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/script_browser}">Script</a>
+                </li>
+            </ul>
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/etl_browser}">etl</a>
+                </li>
+            </ul>
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/etl_instance_browser}">etl instances</a>
                 </li>
             </ul>
         </div>

@@ -16,6 +16,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.concurrent.*;
 
+import static ag.com.dbo.services.queue.utils.QueueConstants.ERROR_IN_PROCESS;
+
 @Slf4j
 @Service
 public class MultithreadExecutor implements InitializingBean {
@@ -53,7 +55,7 @@ public class MultithreadExecutor implements InitializingBean {
         Callable<PropData> task = LoadTaskFactory.getTask(request, env, queueStorageRepository);
         log.info("task!!!: {}",task);
         if (task==null){
-            request.addLog("incorrect task name: "+ request.getCalculateType());
+            request.addLog("incorrect task name: "+ request.getScriptType());
             request.setStatus(QueueStatus.SYS_ERROR.name());
             queueStorageRepository.saveAndFlush(request);
             sendToManager(request);
@@ -96,6 +98,47 @@ public class MultithreadExecutor implements InitializingBean {
             queueStorageRepository.saveAndFlush(queueStorage);
         }
     }
+
+
+    public PropData syncRun(QueueStorage request){
+        log.info("SyncRun: {}",request);
+        Callable<PropData> task = LoadTaskFactory.getTask(request, env, queueStorageRepository);
+        log.info("SyncRun task: {}",task);
+        if (task==null){
+            request.addLog("incorrect task name: "+ request.getScriptType());
+            request.setStatus(QueueStatus.SYS_ERROR.name());
+            queueStorageRepository.saveAndFlush(request);
+            PropData res= new PropData();
+            res.setQs(request);
+            res.setMessage("incorrect task name: "+ request.getScriptType());
+            res.setResultStatus(ERROR_IN_PROCESS);
+            return res;
+
+        }
+
+        try {
+            request.setStatus(QueueStatus.IN_PROGRES.name());
+            queueStorageRepository.saveAndFlush(request);
+            PropData pData = task.call();
+            // send response
+            log.debug("pData: {}", pData);
+            return pData;
+        } catch (Exception e) {
+            log.error("!!!!Error in task : {0}, {1}", task, e);
+            request.setStatus(QueueStatus.FAIL.name());
+            request.addLog("task interrupted !"+e.getMessage());
+            int attempt = request.getAttempt() +1;
+            request.setAttempt(attempt);
+            queueStorageRepository.saveAndFlush(request);
+
+            PropData res= new PropData();
+            res.setQs(request);
+            res.setMessage(e.getMessage());
+            res.setResultStatus(ERROR_IN_PROCESS);
+            return res;
+        }
+    }
+
     /**
      *
      * @return  number of free threads slots and busy threads

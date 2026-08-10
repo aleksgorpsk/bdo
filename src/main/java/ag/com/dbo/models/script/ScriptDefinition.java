@@ -15,5 +15,8 @@ public class ScriptDefinition implements Serializable {
     String name;
     String type;
     String version;
-    
+
+    public String getFullName() {
+        return String.format("%s:%s.%s:%s", language, name, type, version);
+    }
 }

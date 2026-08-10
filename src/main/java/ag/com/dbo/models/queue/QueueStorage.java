@@ -21,30 +21,29 @@ import static io.micrometer.common.docs.KeyName.merge;
 public class QueueStorage {
     @Id
     @Column(name = "taskId", updatable = false)
-    private String TaskId;
+    private String taskId;
 
-    private String name;
+//    private String name;
     private Integer attempt;
     private Integer maxAttempts;
 
-    @Column(columnDefinition = "TEXT")
-    private String commandProfile;
+//    @Column(columnDefinition = "TEXT")
+//    private String commandProfile;
 
-    private String dboVersion;  // current :1
+//    private String dboVersion;  // current :1
 
     private String status;
-    private String calculateType; // processing type
+//    private String calculateType; // processing type
 
     @Column(columnDefinition = "TEXT")
     private String vars;
     @Column(columnDefinition = "Text")
     private String localResults;
-
     @Column(columnDefinition = "Text")
     private String etlResults;
 
     @Column(columnDefinition = "TEXT")
-    private String log;
+    private String logMessage;
 
     private OffsetDateTime start;
     private OffsetDateTime stop;
@@ -52,8 +51,10 @@ public class QueueStorage {
 
     @Column(columnDefinition = "TEXT")
     private String script;
-
-    private String stepType;
+    private String scriptType;
+    private String scriptVersion;
+    private String scriptLanguage;
+    private String scriptName;
 
     @Column(columnDefinition = "TEXT")
     private String results;
@@ -65,12 +66,12 @@ public class QueueStorage {
      * @return
      */
     public void addLog(String message){
-        if (log==null){
-            log ="";
+        if (logMessage==null){
+            logMessage ="";
         }else{
-            log=  log +System.lineSeparator();
+            logMessage=  logMessage +System.lineSeparator();
         }
-        log = log + message;
+        logMessage = logMessage + message;
     }
 
     public String addResultToLocalVar( String name, String value ) throws JsonProcessingException {

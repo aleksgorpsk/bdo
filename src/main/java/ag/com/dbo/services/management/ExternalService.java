@@ -1,6 +1,9 @@
 package ag.com.dbo.services.management;
 
-import ag.com.dbo.controllers.model.TaskRequest;
+import ag.com.dbo.controllers.model.ScriptRequest;
+
+import ag.com.dbo.controllers.model.ScriptResponse;
+import ag.com.dbo.controllers.queue.QueueStatus;
 import ag.com.dbo.models.management.Etl;
 import ag.com.dbo.models.management.Node;
 import ag.com.dbo.models.management.NodeType;
@@ -12,6 +15,7 @@ import ag.com.dbo.models.script.ScriptDefinition;
 import ag.com.dbo.repositories.management.NodeRepository;
 import ag.com.dbo.repositories.management.ScriptRepository;
 import ag.com.dbo.repositories.management.StepInstanceRepository;
+import ag.com.dbo.services.queue.model.PropData;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -26,11 +30,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
 import java.math.BigInteger;
+
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Stream;
 import ag.com.scheduling.models.ScheduleData;
 
+import static ag.com.dbo.services.Utils.getScriptDefinition;
+import static ag.com.dbo.services.queue.utils.QueueConstants.UNKNOWN_ERROR;
 import static ag.com.dbo.utils.Utils.saveError;
 
 @Service
@@ -290,26 +297,12 @@ public class ExternalService implements InitializingBean {
         Script script = opScript.get();
         log.info("sendToQueue:{}", si);
 
-        TaskRequest taskRequest = getTaskRequest(si, script);
-        /*
-        taskRequest.setTaskId(si.getStepInstanceId());
-        taskRequest.setName(si.getName());
+        ScriptRequest scriptRequest = getScriptRequest(si, script);
 
-        taskRequest.setCommandProfile(script.getScript());
-        taskRequest.setCalculateType(script.getType());
-
-        taskRequest.setMaxAttempts(si.getStep().getMaxAttempts());
-        taskRequest.setVars(si.getVars());
-        taskRequest.setLocalResult(si.getLocalResults());
-        taskRequest.setEtlResult(si.getEtlInstance().getEtlVars());
-        taskRequest.setScript(si.getScript());
-        taskRequest.setStepType(si.getStepType());
-        taskRequest.setResults(si.getEtlInstance().getEtlVars());
-         */
-        return sendTrToQueue(taskRequest, si);
+        return sendTrToQueue(scriptRequest, si);
     }
 
-    public boolean sendTrToQueue(TaskRequest taskRequest, StepInstance si) throws JsonProcessingException {
+    public boolean sendTrToQueue(ScriptRequest scriptRequest, StepInstance si) throws JsonProcessingException {
         //TODO
         Node node = getHost(si.getTags());
         if (node == null) {
@@ -326,7 +319,7 @@ public class ExternalService implements InitializingBean {
         try {
             ResponseEntity<Void> resp= rc.put().uri(enqueuePath)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(taskRequest)
+                    .body(scriptRequest)
                     .retrieve()
                     .toBodilessEntity();
             if( resp.getStatusCode().is2xxSuccessful()){
@@ -342,21 +335,50 @@ public class ExternalService implements InitializingBean {
         }
         return false;
     }
-    private static @NotNull TaskRequest getTaskRequest(StepInstance si, Script script) {
-        TaskRequest taskRequest = new TaskRequest();
-        taskRequest.setTaskId(si.getStepInstanceId());
-        taskRequest.setName(si.getName());
 
-        taskRequest.setCommandProfile(script.getScript());
-        taskRequest.setCalculateType(script.getType());
 
-        taskRequest.setMaxAttempts(si.getStep().getMaxAttempts());
+    public PropData sendTestReqst(ScriptRequest testTaskRequest) throws JsonProcessingException {
+        //TODO
+        Node node = getHost(testTaskRequest.getTags());
+        if (node == null) {
+            log.error("No host for {}", testTaskRequest.getTags());
+            return new PropData(UNKNOWN_ERROR, null,"Node not found!!");
+        }
+
+        RestClient rc = nodeMap.get(node.getId());
+        if (rc == null) {
+            log.info("Cannot found rest client !");
+            return new PropData(UNKNOWN_ERROR, null,"Node not found!!");
+        }
+
+        try {
+
+            return rc.put().uri("/sync/request")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(testTaskRequest)
+                    .retrieve()
+                    .body(PropData.class);
+
+
+        } catch (Throwable e) {
+            log.error("Error !!!!",e);
+            return new PropData(UNKNOWN_ERROR, null,e.getMessage());
+        }
+
+    }
+    private static @NotNull ScriptRequest getScriptRequest(StepInstance si, Script script) {
+        ScriptRequest taskRequest = new ScriptRequest();
+        taskRequest.setRequestId(si.getStepInstanceId());
+        ScriptDefinition definition= getScriptDefinition(script);
+        taskRequest.setScriptDefinition(definition);
+        taskRequest.setStepName(si.getName());
         taskRequest.setVars(si.getVars());
-        taskRequest.setLocalResult(si.getLocalResults());
-        taskRequest.setEtlResult(si.getEtlInstance().getEtlVars());
-        taskRequest.setScript(si.getScript());
-        taskRequest.setStepType(si.getStepType());
-        taskRequest.setResults(si.getEtlInstance().getEtlVars());
+        taskRequest.setLocalResults(si.getLocalResults());
+        taskRequest.setEtlResults(si.getEtlInstance().getEtlVars());
+        taskRequest.setTags(si.getTags());
+        taskRequest.setMaxAttempts(si.getMaxAttempts());
+
+
         return taskRequest;
     }
 

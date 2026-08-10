@@ -4,6 +4,7 @@ import ag.com.dbo.models.checker.SensorModel;
 import ag.com.dbo.models.management.Step;
 import ag.com.dbo.models.management.StepInstance;
 import ag.com.dbo.models.management.StepType;
+import ag.com.dbo.models.script.Script;
 import ag.com.dbo.models.script.ScriptDefinition;
 import ag.com.dbo.utils.Constants;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -62,6 +63,16 @@ public class Utils {
        }
     }
 
+
+
+    public static ScriptDefinition getScriptDefinition(Script script) {
+        ScriptDefinition result = new ScriptDefinition();
+        result.setLanguage(script.getLanguage());
+        result.setVersion(script.getVersion());
+        result.setName(script.getName());
+        result.setType(script.getType());
+        return result;
+    }
 
     public static ScriptDefinition getScriptDefinitionFromFullName(String fullScriptName) {
         ScriptDefinition result = new ScriptDefinition();

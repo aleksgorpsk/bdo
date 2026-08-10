@@ -1,7 +1,6 @@
 <th scope="col" th:fragment="sorting(field, label)">
-  <a th:href="@{'/etl_instance_browser?' + ${keyword!=null && keyword!=''? 'keyword=' + keyword + '&' : ''}
+  <a th:href="@{'/etl_instance_browser/'+${etlId} +'?' + ${keyword!=null && keyword!=''? 'keyword=' + keyword + '&' : ''}
                 + 'page=' + ${currentPage} + '&size=' + ${pageSize}
-                + '&etlId=${etlId}'
                 + ${sortField!=null ? '&sort=' + field + ',' + (sortField == field ? reverseSortDirection : sortDirection) : ''}}">
     [[${label}]] </a>
   <span th:if="${sortField == field}"

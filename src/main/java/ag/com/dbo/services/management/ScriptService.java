@@ -9,6 +9,7 @@ import ag.com.dbo.models.script.*;
 import ag.com.dbo.repositories.management.ScriptRepository;
 import ag.com.dbo.repositories.management.StepInstanceRepository;
 import ag.com.dbo.services.Utils;
+import ag.com.dbo.services.queue.model.PropData;
 import ag.com.dbo.utils.Constants;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -34,7 +35,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
-import static ag.com.dbo.services.queue.utils.VarSupport.merge;
 import static ag.com.dbo.utils.Utils.*;
 
 
@@ -162,14 +162,21 @@ public class ScriptService {
         scriptRequest.setVars(vars);
         scriptRequest.setLocalResults(localResult);
         scriptRequest.setEtlResults(etlVars);
-        try {
-            return this.scriptRestClient.put().uri(scriptRunPath)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(scriptRequest)
-                    .retrieve()
-                    .body(ScriptResponse.class);
-        } catch (Throwable e) {
-            return new ScriptResponse(scriptDef, "Error", e.getMessage());
+        scriptRequest.setMaxAttempts(1);
+        if(ScriptLanguage.SHELL_COMMAND.name().equals(scriptDef.getLanguage())){
+           PropData res= externalService.sendTestReqst(scriptRequest);
+            return new ScriptResponse(scriptDef,""+ res.getResultStatus() ,res.getMessage());
+
+        }else {
+            try {
+                return this.scriptRestClient.put().uri(scriptRunPath)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(scriptRequest)
+                        .retrieve()
+                        .body(ScriptResponse.class);
+            } catch (Throwable e) {
+                return new ScriptResponse(scriptDef, "Error", e.getMessage());
+            }
         }
     }
 
