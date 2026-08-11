@@ -1,0 +1,26 @@
+{
+  "branchScript": {
+    "scriptName": "GROOVY:test1:11",
+    "failTimeout": 441
+  },
+  "sensorScript": {
+    "scriptName": "GROOVY:test2:12",
+    "attemptTimeOut": 33,
+    "failTimeout": 442
+  },
+  "shellCommandScript": {
+    "scriptName": "GROOVY:test3:13",
+    "failTimeout": 22,
+    "resultName": "test"
+  },
+  "prepareScript": {
+    "scriptName": "GROOVY:test4:14",
+    "timeout": 444
+  },
+  "postProcessScript": {
+    "scriptName": "GROOVY:test5:15",
+    "timeout": 445,
+    "resultName": "ttest"
+  }
+
+}

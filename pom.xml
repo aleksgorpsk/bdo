@@ -152,6 +152,11 @@
             <version>25.0.3</version>
             <type>pom</type>
         </dependency>
+        <dependency>
+            <groupId>org.json</groupId>
+            <artifactId>json</artifactId>
+            <version>20260719</version>
+        </dependency>
 <!-- tests -->
         <dependency>
             <groupId>org.springframework</groupId>

@@ -3,7 +3,6 @@ package ag.com.dbo.services.management;
 import ag.com.dbo.controllers.model.ScriptRequest;
 import ag.com.dbo.controllers.model.ScriptResponse;
 import ag.com.dbo.controllers.model.ScriptTest;
-import ag.com.dbo.models.checker.script.ScriptModel;
 import ag.com.dbo.models.management.StepInstance;
 import ag.com.dbo.models.script.*;
 import ag.com.dbo.repositories.management.ScriptRepository;
@@ -12,7 +11,6 @@ import ag.com.dbo.services.Utils;
 import ag.com.dbo.services.queue.model.PropData;
 import ag.com.dbo.utils.Constants;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -77,10 +75,6 @@ public class ScriptService {
 
     }
 
-    private ScriptModel getScriptModel(StepInstance si) throws JsonProcessingException {
-        return getExtendedObjectMapper().readValue(si.getVars(), new TypeReference<>() {
-        });
-    }
 
 
     public ScriptDefinition[] getAppropriateScript(StepInstance si, ScriptType type) {
