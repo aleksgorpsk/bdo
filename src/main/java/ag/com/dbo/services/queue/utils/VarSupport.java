@@ -1,6 +1,7 @@
 package ag.com.dbo.services.queue.utils;
 
 import ag.com.dbo.controllers.model.ScriptResponse;
+import ag.com.dbo.models.checker.ModelName;
 import ag.com.dbo.models.management.StepInstance;
 import ag.com.dbo.models.script.ScriptDefinition;
 import ag.com.dbo.models.script.ScriptType;
@@ -79,22 +80,22 @@ public class VarSupport {
     }
 
 
-    public static void saveResult(StepInstance si, ScriptResponse result) throws JsonProcessingException {
-        ScriptDefinition scriptId = result.getScriptDefinition();
-        if (ScriptType.Common.name().equals(scriptId.getType())){
+    public static void saveResult(StepInstance si, ScriptResponse result, ModelName scriptType) throws JsonProcessingException {
+        ///ScriptDefinition scriptId = result.getScriptDefinition();
+        if (ModelName.prepareScript.name().equals(scriptType.name())){
             si.setLocalResults( merge(si.getLocalResults(), result.getResponse()));
-        }else if (ScriptType.Branch.name().equals(scriptId.getType())){
+        }else if (ModelName.branchScript.name().equals(scriptType.name())){
             si.setLocalResults( merge(si.getLocalResults(),result.getResponse(), Constants.BRANCH_RESULT_NAME));
-        }else if (ScriptType.Sensor.name().equals(scriptId.getType())){
+        }else if (ModelName.sensorScript.name().equals(scriptType.name())){
             si.setLocalResults( merge(si.getLocalResults(),result.getResponse(), Constants.SENSOR_RESULT_NAME));
-        }else if (ScriptType.ShellCommand.name().equals(scriptId.getType())){
+        }else if (ModelName.shellCommandScript.name().equals(scriptType.name())){
             si.setLocalResults( merge(si.getLocalResults(), result.getResponse()));
-        }else if (ScriptType.PreExecution.name().equals(scriptId.getType())){
+        }else if (ModelName.postProcessScript.name().equals(scriptType.name())){
             si.setLocalResults( merge(si.getLocalResults(), result.getResponse()));
         }else {
             String err= "Cannot define result to localVars";
-            log.error("{} {} scriptId:",err, scriptId);
-            si.addLog(err+ " scriptId: "+scriptId);
+            log.error("{} {} scriptId:",err, scriptType);
+            si.addLog(err+ " scriptId: "+scriptType);
         }
     }
 

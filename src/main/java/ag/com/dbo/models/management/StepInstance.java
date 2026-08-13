@@ -1,5 +1,9 @@
 package ag.com.dbo.models.management;
 
+import ag.com.dbo.models.checker.ModelName;
+import ag.com.dbo.models.checker.ModelParser;
+import ag.com.dbo.models.checker.varmodel.CommonModel;
+import ag.com.dbo.models.script.ScriptDefinition;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -63,8 +67,8 @@ public class StepInstance {
     @Column(columnDefinition = "Text")
     private String localResults;  // vars
 
-    @Column(columnDefinition = "TEXT")
-    private String script; // comma separated scriptLink
+//    @Column(columnDefinition = "TEXT")
+//    private String script; // comma separated scriptLink
 
     @Column(columnDefinition = "TEXT")
     private String stepType; // comma separated type (maybe many types)
@@ -72,11 +76,39 @@ public class StepInstance {
     private Long nextTest; // UTC Epoch
     private String tags; // comma separated
 
+    @Transient
+    private ModelParser scriptModelFactory;
+
+    public CommonModel getScriptModel(ModelName type){
+        if (scriptModelFactory==null){
+            scriptModelFactory = new ModelParser(this.getVars());
+        }
+        return scriptModelFactory.getModel(type);
+    }
+    public CommonModel getModelByScriptDefinition(ScriptDefinition scriptDefinition){
+        if (scriptModelFactory==null){
+            scriptModelFactory = new ModelParser(this.getVars());
+        }
+        return scriptModelFactory.getModelByScriptDefinition(scriptDefinition);
+    }
+
+    public boolean isSensor(){
+        return getScriptModel(ModelName.sensorScript)!=null;
+    }
+    public boolean isShellCommand(ScriptDefinition scriptDefinition){
+        CommonModel scriptModel = getScriptModel(ModelName.shellCommandScript);
+        if(scriptDefinition == null || scriptModel == null){
+            return false;
+        }
+        return scriptDefinition.equals(scriptModel.getScriptDefinition());
+    }
+
     /**
      * Add String to log
      * @param message message to add
      * @return return this object
      */
+
     public void addLog(String message){
         log.info("{}-{}", OffsetDateTime.now(), message);
 

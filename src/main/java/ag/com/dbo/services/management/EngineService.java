@@ -2,7 +2,9 @@ package ag.com.dbo.services.management;
 
 import ag.com.dbo.controllers.FullEtlInstance;
 import ag.com.dbo.controllers.model.ScriptResponse;
+import ag.com.dbo.models.checker.ModelName;
 import ag.com.dbo.models.checker.SensorModel;
+import ag.com.dbo.models.checker.varmodel.CommonModel;
 import ag.com.dbo.models.management.*;
 import ag.com.dbo.models.script.ScriptDefinition;
 import ag.com.dbo.models.script.ScriptType;
@@ -28,8 +30,7 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static ag.com.dbo.services.Utils.addVarToStep;
-import static ag.com.dbo.services.Utils.getSensorModel;
+import static ag.com.dbo.services.Utils.*;
 import static ag.com.dbo.services.queue.utils.VarSupport.*;
 import static ag.com.dbo.utils.Utils.getObjectMapper;
 import static ag.com.dbo.utils.Utils.saveError;
@@ -115,12 +116,10 @@ public class EngineService {
                 si.setStep(step);
                 si.setStart(OffsetDateTime.now());
                 si.setEtlInstance(etl);
-                si.setVars(step.getVars());
+                si.setVars(merge(step.getVars(), etl.getEtlVars()));
                 si.setActive(step.getStepActive());
                 si.setMaxAttempts(step.getMaxAttempts());
                 si.setName(step.getName());
-                si.setScript(step.getScript());
-                etl.setEtlVars(merge(etl.getEtlVars(), si.getVars(), si.getName()));
                 si.setStepType(step.getStepType());
                 si.setStatus(StepStatus.NotStartedYet.name());
                 si.setTags(step.getTags());
@@ -186,29 +185,24 @@ public class EngineService {
         }
         // TODO   run script
         stepInstanceRepository.saveAndFlush(si);
-        List<ScriptResponse> responses = runScripts(si, ScriptType.Common, true);
-        List<ScriptResponse> errors = responses.stream().filter(x -> !Constants.OK.equals(x.getStatus())).toList();
-        if (!CollectionUtils.isEmpty(errors)) {
-            saveError(si, stepInstanceRepository, null, "Error in script(s):" + errors);
-            return;
-        }
+//        List<ScriptResponse> responses = runScripts(si, ScriptType.Common);
+  //      List<ScriptResponse> errors = responses.stream().filter(x -> !Constants.OK.equals(x.getStatus())).toList();
+//        if (!CollectionUtils.isEmpty(errors)) {
+//            saveError(si, stepInstanceRepository, null, "Error in script(s):" + errors);
+  //          return;
+//        }
 
 
         //TODO  check sensor
 
-        if (StepStatus.InWait.name().equals(si.getStatus()) && StepType.Sensor.name().equals(si.getStepType())) {
+        if (StepStatus.InWait.name().equals(si.getStatus()) &&  si.isSensor()) {
             try {
-                List<ScriptResponse> sResp = runScripts(si, ScriptType.Sensor, false);
-                if (CollectionUtils.isEmpty(sResp)) {
-                    saveError(si, stepInstanceRepository, null, "No script for sensor:" + si.getName());
+                ScriptResponse sResp = runScripts(si, ModelName.sensorScript );
+                if (!Boolean.parseBoolean(sResp.getResponse())) {
+                    si.addLog("Check attempt false "+si.getName()+" : "+sResp);
+                    si.setStatus(StepStatus.InWait.name());
+                    stepInstanceRepository.saveAndFlush(si);
                     return;
-                } else {
-                    if (!Boolean.parseBoolean(sResp.get(0).getResponse())) {
-                        si.addLog("Check attempt false "+si.getName()+" : "+sResp);
-                        si.setStatus(StepStatus.InWait.name());
-                        stepInstanceRepository.saveAndFlush(si);
-                        return;
-                    }
                 }
             } catch (Exception e) {
                 saveError(si, stepInstanceRepository, e, " Sensor Error");
@@ -320,7 +314,6 @@ public class EngineService {
 
     private ScriptResponse runOneScript(StepInstance si, ScriptDefinition script) {
         try {
-
             ScriptResponse scriptResponse = scriptService.runScript(si, script);
             si.addLog("Process script:  " + script + " response: " + scriptResponse);
             return scriptResponse;
@@ -330,69 +323,45 @@ public class EngineService {
         }
 
     }
-
-    private List<ScriptResponse> runScripts(StepInstance si, ScriptType scriptType, boolean manyScripts) {
-        ScriptDefinition[] scripts = scriptService.getAppropriateScript(si, scriptType);
-        if (ArrayUtils.isEmpty(scripts)) {
-            return Collections.EMPTY_LIST;
-        }
-        List<ScriptResponse> responses = new ArrayList<>(scripts.length);
-        try {
-            if (manyScripts) {
-                for (ScriptDefinition script : scripts) {
-                    try {
-                        ScriptResponse response = runOneScript(si, script);
-                        responses.add(response);
-                        if (!Constants.OK.equals(response.getStatus())) {
-                            si.addLog("Error in " + script + " error:" + response.getResponse());
-                        } else {
-                            saveResult(si, response);
-                        }
-                    } catch (Exception x) {
-                        saveError(si, stepInstanceRepository, x, "Error in :" + scripts);
-                        return Collections.EMPTY_LIST;
+//    private List<ScriptResponse> runScripts(StepInstance si, ScriptType scriptType) {
+    private ScriptResponse runScripts(StepInstance si, ModelName scriptType) {
+        CommonModel scriptModel =si.getScriptModel(scriptType);
+        if(scriptModel!= null ) {
+            ScriptDefinition scriptDefinition = getScriptDefinitionByName(scriptModel.getScriptName());
+            ScriptResponse response = null;
+            try {
+                try {
+                    response = runOneScript(si, scriptDefinition);
+                    if (!Constants.OK.equals(response.getStatus())) {
+                        si.addLog("Error send Script:" + response.getResponse());
+                        si.setStatus(StepStatus.Failed.name());
+                        return response;
                     }
-                    return responses;
-                }
-            } else {
-                if (scripts.length != 1) {
-                    String err = "Scripts with type " + scriptType.name() + " must be only one!!!";
-                    si.addLog(err);
-                    si.setStatus(StepStatus.Failed.name());
-                } else {
                     try {
-                        ScriptResponse scriptResponse = runOneScript(si, scripts[0]);
-                        responses.add(scriptResponse);
-                        if (!Constants.OK.equals(scriptResponse.getStatus())) {
-                            log.error("Error send Script:" + scriptResponse.getResponse());
-                            si.setStatus(StepStatus.Failed.name());
-                            return Collections.EMPTY_LIST;
-                        }
-                        try {
-                            saveResult(si, scriptResponse);
-
-                        } catch (JsonProcessingException e) {
-                            si.addLog("Cannot parse response: " + e.getMessage());
-                        }
-                        si.addLog("Process script(s) 1 : " + Arrays.toString(scripts));
-                        return responses;
-                    } catch (Exception x) {
-                        saveError(si, null, x, "Error in :" + scripts);
-                        return Collections.EMPTY_LIST;
+                        saveResult(si, response, scriptType);
+                    } catch (JsonProcessingException e) {
+                        si.addLog("Cannot parse response: " + " response " + " Error:" + e.getMessage());
                     }
+                    si.addLog("Process script : " + scriptDefinition.getFullName());
+                    return response;
+                } catch (Exception x) {
+                    saveError(si, null, x, "Error in :" + scriptDefinition);
+                    return response;
                 }
+            } finally {
+                stepInstanceRepository.saveAndFlush(si);
             }
-        } finally {
-            stepInstanceRepository.saveAndFlush(si);
         }
-        return Collections.EMPTY_LIST;
+        return  new ScriptResponse(null, Constants.OK,null);
     }
 
     private List<String> getBranches(StepInstance si) throws Exception {
-        ScriptDefinition[] scripts = scriptService.getAppropriateScript(si, ScriptType.Branch);
-        if (scripts.length > 0) {
+        CommonModel branchScript = si.getScriptModel(ModelName.branchScript);
+//        ScriptDefinition[] scripts = scriptService.getAppropriateScript(si, ScriptType.Branch);
+        if (branchScript != null) {
+            ScriptDefinition definition= getScriptDefinitionByName(branchScript.getScriptName());
             try {
-                ScriptResponse scriptResponse = scriptService.runScript(si, scripts[0]);
+                ScriptResponse scriptResponse = scriptService.runScript(si, definition);
                 if (!Constants.OK.equals(scriptResponse.getStatus())) {
                     log.error("Error send Script:" + scriptResponse.getResponse());
                     si.setStatus(StepStatus.Failed.name());
@@ -400,16 +369,16 @@ public class EngineService {
                     return Collections.EMPTY_LIST;
                 }
                 try {
-                    saveResult(si, scriptResponse);
+                    saveResult(si, scriptResponse, ModelName.branchScript);
 
                 } catch (JsonProcessingException e) {
                     si.addLog("Cannot parse response: " + e.getMessage());
                 }
-                si.addLog("Process script(s) branch : " + Arrays.toString(scripts));
+                si.addLog("Process script(s) branch : " + definition);
                 stepInstanceRepository.saveAndFlush(si);
                 return stringToObject(scriptResponse.getResponse(), List.class);
             } catch (Exception x) {
-                saveError(si, stepInstanceRepository, x, "Error in :" + scripts);
+                saveError(si, stepInstanceRepository, x, "Error in :" + definition);
                 return Collections.EMPTY_LIST;
             }
         } else {
@@ -484,7 +453,7 @@ public class EngineService {
 
     private void makeStep(EtlInstance etlInstance) throws Exception {
 
-        log.info("make first step etlInstance id:" + etlInstance.getEtlInstanceId());
+        log.info("make first step etlInstance id:{}", etlInstance.getEtlInstanceId());
 
         FullEtlInstance fullEtlInstance = getFullEtlInstance(etlInstance);
         // root steps can be with condition ? I suppose not.
@@ -566,15 +535,16 @@ public class EngineService {
                     .filter(x -> !StepStatus.Success.name().equals(x.getStatus()))
                     .toList();
         }
+        // if all parent OK
         if (!CollectionUtils.isEmpty(parentNotProcessed)){
             return;
         }
         if (currentSi.getActive()) {
 
-            if (currentSi.getStepType().contains(StepType.Sensor.name())) {
+            if(currentSi.isSensor()){
                 currentSi.setStatus(StepStatus.InWait.name());
                 ///  set timing for scheduling
-                SensorModel sm = prepareSensorStepInstance(currentSi);
+                CommonModel sm = currentSi.getScriptModel(ModelName.sensorScript);
                 currentSi.setNextTest(Instant.now().getEpochSecond() + sm.getAttemptTimeOut());
             } else {
                 currentSi.setStatus(StepStatus.InProcess.name());
@@ -590,8 +560,9 @@ public class EngineService {
 
         if (CollectionUtils.isEmpty(parentNotProcessed) ) {
             currentSi.addLog("Go to enqueue. si.active" + currentSi.getActive() );
-            runScripts(currentSi, ScriptType.PreExecution ,false);
-            runScripts(currentSi, ScriptType.ShellCommand ,false);
+            runScripts(currentSi, ModelName.prepareScript );
+//            runScripts(currentSi, ScriptType.PreExecution ,false);
+            runScripts(currentSi, ModelName.shellCommandScript );
         }
     }
 

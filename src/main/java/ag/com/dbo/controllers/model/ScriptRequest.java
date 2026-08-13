@@ -1,11 +1,11 @@
 package ag.com.dbo.controllers.model;
 
-import ag.com.dbo.models.script.ScriptDefinition;
+import ag.com.dbo.models.checker.varmodel.CommonModel;
 import lombok.Data;
 
 @Data
 public class ScriptRequest {
-    private ScriptDefinition scriptDefinition;
+    private CommonModel commonModel;
     private String requestId;
     private String stepName;
     // TODO ????
@@ -16,5 +16,4 @@ public class ScriptRequest {
     private String etlResults;
 
     private String tags;
-    private Integer maxAttempts;
 }

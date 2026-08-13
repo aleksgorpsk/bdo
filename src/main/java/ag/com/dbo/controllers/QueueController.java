@@ -3,6 +3,7 @@ package ag.com.dbo.controllers;
 import ag.com.dbo.controllers.model.ScriptRequest;
 import ag.com.dbo.controllers.model.ScriptResponse;
 import ag.com.dbo.controllers.queue.QueueStatus;
+import ag.com.dbo.models.checker.varmodel.CommonModel;
 import ag.com.dbo.models.queue.QueueStorage;
 import ag.com.dbo.models.script.Script;
 import ag.com.dbo.models.script.ScriptDefinition;
@@ -55,7 +56,7 @@ public class QueueController {
         log.info("QueueService :{}", scriptRequest);
         QueueStorage req = new QueueStorage();
         req.setTaskId((scriptRequest.getRequestId()==null)? UUID.randomUUID().toString():  scriptRequest.getRequestId());
-        ScriptDefinition definition = scriptRequest.getScriptDefinition();
+        ScriptDefinition definition = scriptRequest.getCommonModel().getScriptDefinition();
         Optional<Script> sc = scriptService.getLastScript(definition.getLanguage(), definition.getName());
         if(sc.isEmpty()){
             ScriptResponse resp  = new ScriptResponse();
@@ -64,14 +65,14 @@ public class QueueController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).header("Content-Type","application/json").body(resp);
 
         }
+        CommonModel shellModel= scriptRequest.getCommonModel();
         Script script = sc.get();
 
-        req.setMaxAttempts((scriptRequest.getMaxAttempts()==null)? 2: scriptRequest.getMaxAttempts());
+        req.setMaxAttempts(shellModel.getMaxAttempts());
         req.setStatus(QueueStatus.QUEUE.name());
         req.setStart(OffsetDateTime.now());
 
         req.setScript(script.getScript());
-        req.setScriptType(definition.getType());
         req.setScriptVersion(definition.getVersion());
         req.setScriptLanguage(definition.getLanguage());
         req.setScriptName(definition.getName());
@@ -92,8 +93,10 @@ public class QueueController {
         log.info("QueueService :{}", scriptRequest);
         QueueStorage req = new QueueStorage();
         req.setTaskId((scriptRequest.getRequestId()==null)? UUID.randomUUID().toString():  scriptRequest.getRequestId());
-        ScriptDefinition definition = scriptRequest.getScriptDefinition();
+        ScriptDefinition definition = scriptRequest.getCommonModel().getScriptDefinition();
         Optional<Script> sc = scriptService.getLastScript(definition.getLanguage(), definition.getName());
+        CommonModel shellModel= scriptRequest.getCommonModel();
+
         if(sc.isEmpty()){
             PropData resp  = new PropData();
             resp.setResultStatus(SCRIPT_NOT_FOUND);
@@ -103,12 +106,12 @@ public class QueueController {
         }
         Script script = sc.get();
 
-        req.setMaxAttempts((scriptRequest.getMaxAttempts()==null)? 2: scriptRequest.getMaxAttempts());
+        req.setMaxAttempts(shellModel.getMaxAttempts());
         req.setStatus(QueueStatus.QUEUE.name());
         req.setStart(OffsetDateTime.now());
 
         req.setScript(script.getScript());
-        req.setScriptType(definition.getType());
+//        req.setScriptType(definition.getType());
         req.setScriptVersion(definition.getVersion());
         req.setScriptLanguage(definition.getLanguage());
         req.setScriptName(definition.getName());

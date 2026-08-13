@@ -2,8 +2,7 @@ package ag.com.dbo.services.management;
 
 import ag.com.dbo.controllers.model.ScriptRequest;
 
-import ag.com.dbo.controllers.model.ScriptResponse;
-import ag.com.dbo.controllers.queue.QueueStatus;
+import ag.com.dbo.models.checker.varmodel.CommonModel;
 import ag.com.dbo.models.management.Etl;
 import ag.com.dbo.models.management.Node;
 import ag.com.dbo.models.management.NodeType;
@@ -81,10 +80,10 @@ public class ExternalService implements InitializingBean {
         this.scriptRepository = scriptRepository;
     }
 
-    public boolean  prepareToQueue(StepInstance si, ScriptDefinition scriptDefinition) {
+    public boolean  prepareToQueue(StepInstance si, ScriptDefinition scriptDefinition,  CommonModel shellCommandModel) {
         log.info("-------!!!!!!startStep: {}", si);
         try {
-            boolean send = sendToQueue(si, scriptDefinition);
+            boolean send = sendToQueue(si, scriptDefinition, shellCommandModel);
             log.info("sent to queue:{} {}", si.getStepInstanceId(), send);
             return send;
         } catch (Throwable e) {
@@ -283,11 +282,10 @@ public class ExternalService implements InitializingBean {
         return result;
     }
 
-    public  boolean  sendToQueue(StepInstance si,  ScriptDefinition scriptDefinition) throws JsonProcessingException {
+    public  boolean  sendToQueue(StepInstance si,  ScriptDefinition scriptDefinition, CommonModel shellCommandModel) throws JsonProcessingException {
         Optional<Script> opScript = scriptRepository.findByScriptDefinition(
                 scriptDefinition.getName(),
                 scriptDefinition.getLanguage(),
-                scriptDefinition.getType(),
                 scriptDefinition.getVersion()
                 );
         if (opScript.isEmpty()){
@@ -297,9 +295,7 @@ public class ExternalService implements InitializingBean {
         Script script = opScript.get();
         log.info("sendToQueue:{}", si);
 
-        ScriptRequest scriptRequest = getScriptRequest(si, script);
-
-        return sendTrToQueue(scriptRequest, si);
+        return sendTrToQueue(getScriptRequest(si, script, shellCommandModel), si);
     }
 
     public boolean sendTrToQueue(ScriptRequest scriptRequest, StepInstance si) throws JsonProcessingException {
@@ -366,19 +362,17 @@ public class ExternalService implements InitializingBean {
         }
 
     }
-    private static @NotNull ScriptRequest getScriptRequest(StepInstance si, Script script) {
+    private static @NotNull ScriptRequest getScriptRequest(StepInstance si, Script script, CommonModel shellCommandModel) {
         ScriptRequest taskRequest = new ScriptRequest();
         taskRequest.setRequestId(si.getStepInstanceId());
-        ScriptDefinition definition= getScriptDefinition(script);
-        taskRequest.setScriptDefinition(definition);
+//        ScriptDefinition definition= getScriptDefinition(script);
+//        taskRequest.setScriptDefinition(definition);
         taskRequest.setStepName(si.getName());
         taskRequest.setVars(si.getVars());
         taskRequest.setLocalResults(si.getLocalResults());
         taskRequest.setEtlResults(si.getEtlInstance().getEtlVars());
         taskRequest.setTags(si.getTags());
-        taskRequest.setMaxAttempts(si.getMaxAttempts());
-
-
+        taskRequest.setCommonModel(shellCommandModel);
         return taskRequest;
     }
 

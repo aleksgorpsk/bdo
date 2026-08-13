@@ -1,7 +1,6 @@
 package ag.com.dbo.repositories.management;
 
 import ag.com.dbo.models.script.Script;
-import ag.com.dbo.models.script.ScriptDefinition;
 import org.jspecify.annotations.NonNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -24,11 +23,10 @@ public interface ScriptRepository extends JpaRepository<  @NonNull Script,  @Non
                               @Param("name") String name);
     Page<Script> findByNameContainingIgnoreCase(String keyword, Pageable pageable);
 
-    @Query("SELECT s FROM Script s WHERE s.name=:name and s.language=:language and s.type=:type and s.version = :version")
+    @Query("SELECT s FROM Script s WHERE s.name=:name and s.language=:language and s.version = :version")
     Optional<Script>  findByScriptDefinition(
             @Param("name") String name,
             @Param("language") String language,
-            @Param("type") String type,
             @Param("version") String version
     );
 

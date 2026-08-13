@@ -33,8 +33,8 @@ public class Step {
     private String vars;
     private Integer maxAttempts;
 
-    @Column(columnDefinition = "TEXT")
-    private String script; // comma separated scriptLink
+//    @Column(columnDefinition = "TEXT")
+  //  private String script; // comma separated scriptLink
 
     @Column(columnDefinition = "TEXT")
     private String stepType; // comma separated type (maybe many types)

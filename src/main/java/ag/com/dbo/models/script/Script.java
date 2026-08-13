@@ -25,8 +25,8 @@ public class Script{
 
     private String name;
 
-    @Column(name = "type", updatable = false)
-    private String type;
+//    @Column(name = "type", updatable = false)
+//    private String type;
 
     private String version;
 

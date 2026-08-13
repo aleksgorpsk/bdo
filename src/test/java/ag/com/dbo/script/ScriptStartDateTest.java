@@ -74,7 +74,8 @@ Map.of("partitionPrefix", y.format(formatter))
         String name;
         String type;
         String version;
-        Script script = new Script( new BigInteger("-2")  , "GROOVY","test", ScriptType.Common.name(),"1.1",scripText,Boolean.TRUE);
+//        Script script = new Script( new BigInteger("-2")  , "GROOVY","test", ScriptType.Common.name(),"1.1",scripText,Boolean.TRUE);
+        Script script = new Script( new BigInteger("-2")  , "GROOVY","test","1.1", scripText, Boolean.TRUE);
         ScriptResponse resp= service.execGroovyScript(script , varsContent, "", "",   "test");
         log.info("ops!");
         assertEquals(Constants.OK, resp.getStatus());

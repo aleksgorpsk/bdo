@@ -69,9 +69,10 @@ public class StepInstanceController {
             }
 
          //   stepInstances = stepInstances.stream().map(StepInstanceController::buildScriptList).toList();
+            /*
             Page<StepInstanceDTO> updatedPage = stepInstances.map(si -> {
 //                StepInstanceDTO si = new StepInstanceDTO();
-                if(StringUtils.isNotEmpty(si.getScript())) {
+                if(StringUtils.isNotEmpty(si.get.getScript())) {
                     List<String> lsi = Arrays.stream(si.getScript().split(",")).toList();
                     si.setScriptList(lsi);
 //                    return lsi;
@@ -79,9 +80,12 @@ public class StepInstanceController {
                 return si;
             });
 
+
             List<StepInstanceDTO> stepInstanceList = updatedPage.getContent();
 
             model.addAttribute("stepInstanceList", stepInstanceList);
+             */
+
             model.addAttribute("etlInstanceId", etlInstanceId);
             model.addAttribute("currentPage", stepInstances.getNumber() + 1);
             model.addAttribute("totalItems", stepInstances.getTotalElements());

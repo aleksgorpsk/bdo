@@ -187,12 +187,6 @@ public class StepInstanceService {
         }
     }
 
-    private void scriptExecute(StepInstance si){
-        if (StringUtils.isNotEmpty(si.getScript())){
-            List<String> scripts = List.of(si.getScript().split(","));
-
-        }
-    }
 
 
     public List<StepInstance> getActiveSensors(){

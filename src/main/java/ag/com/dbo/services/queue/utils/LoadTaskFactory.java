@@ -11,11 +11,11 @@ public class LoadTaskFactory {
 
     public static Callable<PropData> getTask(QueueStorage task , Environment env,
                                              QueueStorageRepository queueStorageRepository                                             ) {
-        String calculateType = task.getScriptType();
-        if (TaskName.HIVEOPERATOR.name().equals(calculateType)) {
+        String calculateType = task.getScriptLanguage();
+        if (TaskName.SHELL_COMMAND.name().equals(calculateType)) {
             return new HiveOperatorTask(task, env, queueStorageRepository);
         }
-        if (TaskName.ShellCommand.name().equals(calculateType)) {
+        if (TaskName.SHELL_COMMAND.name().equals(calculateType)) {
             return new HiveOperatorTask(task, env, queueStorageRepository);
         }
 

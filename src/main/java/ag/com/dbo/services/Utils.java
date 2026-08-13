@@ -70,7 +70,18 @@ public class Utils {
         result.setLanguage(script.getLanguage());
         result.setVersion(script.getVersion());
         result.setName(script.getName());
-        result.setType(script.getType());
+        return result;
+    }
+
+    public static ScriptDefinition getScriptDefinitionByName(String fullScriptName) {
+        ScriptDefinition result = new ScriptDefinition();
+        String[] ar = fullScriptName.split(":");
+        result.setLanguage(ar[0]);
+        String name= ar[1];
+        result.setName(name);
+        if (ar.length > 2) {
+            result.setVersion(ar[2]);
+        }
         return result;
     }
 
@@ -83,7 +94,6 @@ public class Utils {
         if(name.contains(".")){
             String[] nameWithExtension = name.split("\\.");
             result.setName(nameWithExtension[0]);
-            result.setType(nameWithExtension[1]);
         }else{ //TODO legacy, remove !
             result.setName(name);
         }

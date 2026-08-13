@@ -111,6 +111,6 @@ public class Utils {
 
 
     public static String getScriptIdString(Script script) {
-        return script.getLanguage() + ":" + script.getName() + "." + script.getType() + ":" + script.getVersion();
+        return script.getLanguage() + ":" + script.getName() + ":" + script.getVersion();
     }
 }

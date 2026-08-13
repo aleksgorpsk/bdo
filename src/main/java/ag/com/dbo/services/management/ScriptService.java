@@ -3,11 +3,13 @@ package ag.com.dbo.services.management;
 import ag.com.dbo.controllers.model.ScriptRequest;
 import ag.com.dbo.controllers.model.ScriptResponse;
 import ag.com.dbo.controllers.model.ScriptTest;
+import ag.com.dbo.models.checker.ModelName;
+import ag.com.dbo.models.checker.varmodel.CommonModel;
 import ag.com.dbo.models.management.StepInstance;
 import ag.com.dbo.models.script.*;
 import ag.com.dbo.repositories.management.ScriptRepository;
 import ag.com.dbo.repositories.management.StepInstanceRepository;
-import ag.com.dbo.services.Utils;
+
 import ag.com.dbo.services.queue.model.PropData;
 import ag.com.dbo.utils.Constants;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -15,7 +17,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,7 +29,6 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.web.client.RestClient;
 
 import java.math.BigInteger;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
@@ -59,7 +59,6 @@ public class ScriptService {
         return scriptRepository.findByScriptDefinition(
                 definition.getName(),
                 definition.getLanguage(),
-                definition.getType(),
                 definition.getVersion()
                 );
 
@@ -76,7 +75,8 @@ public class ScriptService {
     }
 
 
-
+// TODO depricated
+    /*
     public ScriptDefinition[] getAppropriateScript(StepInstance si, ScriptType type) {
         return Arrays.stream(si.getScript().split(","))
                 .filter(StringUtils::isNotEmpty)
@@ -85,6 +85,7 @@ public class ScriptService {
                 .filter(z -> type.name().equals(z.getType()))
                 .toArray(ScriptDefinition[]::new);
     }
+     */
 
 
     /**
@@ -94,9 +95,12 @@ public class ScriptService {
      */
     public ScriptResponse runScript(StepInstance si, ScriptDefinition scriptDefinition) {//throws JsonProcessingException {
         ScriptResponse response = null;
-        si.addLog("RunScript step:" + si.getName() + " script: " + si.getScript() + " var:" + si.getVars());
-        if (ScriptType.ShellCommand.name().equals(scriptDefinition.getType())) {
-            boolean resp = this.externalService.prepareToQueue(si, scriptDefinition);
+
+
+        si.addLog("RunScript step:" + si.getName() + " script: " + scriptDefinition + " var:" + si.getVars());
+        if (si.isShellCommand( scriptDefinition)) {
+            CommonModel  shellCommandModel =  si.getScriptModel(ModelName.shellCommandScript);
+            boolean resp = this.externalService.prepareToQueue(si, scriptDefinition, shellCommandModel);
             if (resp) {
                 return new ScriptResponse(scriptDefinition, Constants.OK, "");
             } else{
@@ -106,15 +110,15 @@ public class ScriptService {
         try {
             response = sendScript(si, scriptDefinition);
             if (!"OK".equals(response.getStatus())) {
-                si.addLog("Error in " + si.getScript() + " " + response);
-                si.addLog("RunScript step:" + si.getName() + " script: " + si.getScript() + " var:" + si.getVars() + " response:" + response);
+                si.addLog("Error in " + scriptDefinition + " " + response);
+                si.addLog("RunScript step:" + si.getName() + " script: " + scriptDefinition + " var:" + si.getVars() + " response:" + response);
             }
             return response;
         } catch (JsonProcessingException e) {
             response = new ScriptResponse();
             response.setStatus("ERROR");
             response.setResponse(e.getMessage());
-            si.addLog("Error in " + si.getScript() + " " + e.getMessage());
+            si.addLog("Error in " + scriptDefinition + " " + e.getMessage());
             return response;
         } finally {
             stepInstanceRepository.saveAndFlush(si);
@@ -131,7 +135,7 @@ public class ScriptService {
     public ScriptResponse sendScript(StepInstance si, ScriptDefinition scriptId) throws JsonProcessingException {
         ScriptRequest scriptRequest = new ScriptRequest();
 
-        scriptRequest.setScriptDefinition(scriptId);
+        scriptRequest.setCommonModel(si.getModelByScriptDefinition(scriptId));
         scriptRequest.setStepName(si.getName());
         scriptRequest.setVars(si.getVars());
         scriptRequest.setLocalResults(si.getLocalResults());
@@ -151,12 +155,12 @@ public class ScriptService {
     public ScriptResponse sendTestScript(String name , String vars, String localResult, String etlVars, ScriptDefinition scriptDef) throws JsonProcessingException {
         ScriptRequest scriptRequest = new ScriptRequest();
 
-        scriptRequest.setScriptDefinition(scriptDef);
+//        scriptRequest.setScriptDefinition(scriptDef);
         scriptRequest.setStepName("test");
         scriptRequest.setVars(vars);
         scriptRequest.setLocalResults(localResult);
         scriptRequest.setEtlResults(etlVars);
-        scriptRequest.setMaxAttempts(1);
+//        scriptRequest.setMaxAttempts(1);
         if(ScriptLanguage.SHELL_COMMAND.name().equals(scriptDef.getLanguage())){
            PropData res= externalService.sendTestReqst(scriptRequest);
             return new ScriptResponse(scriptDef,""+ res.getResultStatus() ,res.getMessage());

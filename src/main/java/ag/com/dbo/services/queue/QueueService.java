@@ -20,7 +20,7 @@ public class QueueService {
     private final MultithreadExecutor multithreadExecutor;
 
 
-    @Scheduled(fixedRateString = "${queue.scheduler.testInterval}", timeUnit = TimeUnit.SECONDS)
+//    @Scheduled(fixedRateString = "${queue.scheduler.testInterval}", timeUnit = TimeUnit.SECONDS)
     private void checkQueue(){
         OffsetDateTime borderTime =OffsetDateTime.now().minusSeconds(3);
         int free = multithreadExecutor.getFreeSpots().getFreeSlots();

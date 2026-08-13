@@ -37,7 +37,6 @@ public class ScriptUiController {
     private final PythonService pythonService;
 
     private final List<String> allLanguages;
-    private final List<String> allTypes;
 
 
     public ScriptUiController(ScriptService scriptService, StepInstanceService stepInstanceService, GroovyService groovyService, PythonService pythonService) {
@@ -46,7 +45,7 @@ public class ScriptUiController {
         this.groovyService = groovyService;
         this.pythonService = pythonService;
         this.allLanguages = Arrays.stream(ScriptLanguage.values()).map(Enum::name).toList();
-        this.allTypes = Arrays.stream(ScriptType.values()).map(Enum::name).toList();
+//        this.allTypes = Arrays.stream(ScriptType.values()).map(Enum::name).toList();
 
     }
 
@@ -104,7 +103,7 @@ public class ScriptUiController {
 
         model.addAttribute("script", script);
         model.addAttribute("allLanguages", allLanguages);
-        model.addAttribute("allTypes", allTypes);
+//        model.addAttribute("allTypes", allTypes);
 
         model.addAttribute("pageTitle", "Create new Script");
 
@@ -251,7 +250,7 @@ public class ScriptUiController {
 
         ScriptDefinition scriptDefinition = new ScriptDefinition();
         scriptDefinition.setName(scr.getName());
-        scriptDefinition.setType(scr.getType());
+//        scriptDefinition.setType(scr.getType());
         scriptDefinition.setLanguage(scr.getLanguage());
         scriptDefinition.setVersion(scr.getVersion());
 
@@ -286,7 +285,7 @@ public class ScriptUiController {
             st.setId(scr.getId());
             st.setLanguage(scr.getLanguage());
             st.setName(scr.getName());
-            st.setType(scr.getType());
+//            st.setType(scr.getType());
             st.setVersion(scr.getVersion());
             st.setScript(scr.getScript());
             st.setStepName(siDto.get().getName());

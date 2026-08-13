@@ -41,13 +41,13 @@ public class ScriptController {
 
 
         Script script = null;
-        if (request.getScriptDefinition().getVersion() == null) {
-            Optional<Script> sc = scriptService.getLastScript(request.getScriptDefinition().getLanguage(), request.getScriptDefinition().getName());
+        if (request.getCommonModel().getScriptDefinition().getVersion() == null) {
+            Optional<Script> sc = scriptService.getLastScript(request.getCommonModel().getScriptDefinition().getLanguage(), request.getCommonModel().getScriptDefinition().getName());
             if (sc.isPresent()) {
                 script = sc.get();
             }
         } else {
-            ScriptDefinition definition = request.getScriptDefinition();
+            ScriptDefinition definition = request.getCommonModel().getScriptDefinition();
 
             Optional<Script> sc = scriptService.retrieveByScriptDefinition(definition);
             if (sc.isPresent()) {
@@ -55,18 +55,18 @@ public class ScriptController {
             }
 
         }
-        if (script != null) {
+        if (script != null) {  //TODO remove nullChecker
             if (ScriptLanguage.GROOVY.name().equals(script.getLanguage())) {
                 ScriptResponse response = groovyService.execGroovyScript(script, request.getVars(), request.getEtlResults(), request.getLocalResults(), request.getStepName());
-                response.setScriptDefinition(request.getScriptDefinition());
+                response.setScriptDefinition(request.getCommonModel().getScriptDefinition());
                 return ResponseEntity.status(HttpStatus.OK).header("Content-Type", "application/json").body(response);
             } else if (ScriptLanguage.PYTHON.name().equals(script.getLanguage())) {
                 ScriptResponse response = pythonService.execPythonScript(script, request.getVars(), request.getEtlResults(), request.getLocalResults(), request.getStepName());
-                response.setScriptDefinition(request.getScriptDefinition());
+                response.setScriptDefinition(request.getCommonModel().getScriptDefinition());
                 return ResponseEntity.status(HttpStatus.OK).header("Content-Type", "application/json").body(response);
             }else if (ScriptLanguage.SHELL_COMMAND.name().equals(script.getLanguage())) {
                     ScriptResponse  response = pythonService.execPythonScript(script, request.getVars(), request.getEtlResults(), request.getLocalResults(), request.getStepName());
-                    response.setScriptDefinition(request.getScriptDefinition());
+                    response.setScriptDefinition(request.getCommonModel().getScriptDefinition());
                     return ResponseEntity.status(HttpStatus.OK).header("Content-Type", "application/json").body(response);
             } else {
                 ScriptResponse response = new ScriptResponse();
@@ -75,9 +75,9 @@ public class ScriptController {
             }
         } else {
             ScriptResponse response = new ScriptResponse();
-            response.setScriptDefinition(request.getScriptDefinition());
+            response.setScriptDefinition(request.getCommonModel().getScriptDefinition());
             response.setStatus(Constants.ERROR);
-            response.setResponse(request.getScriptDefinition()+" not found!");
+            response.setResponse(request.getCommonModel().getScriptDefinition()+" not found!");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).header("Content-Type", "application/json").body(response);
         }
     }
