@@ -3,17 +3,14 @@ package ag.com.dbo.services.management;
 import ag.com.dbo.controllers.FullEtlInstance;
 import ag.com.dbo.controllers.model.ScriptResponse;
 import ag.com.dbo.models.checker.ModelName;
-import ag.com.dbo.models.checker.SensorModel;
 import ag.com.dbo.models.checker.varmodel.CommonModel;
 import ag.com.dbo.models.management.*;
 import ag.com.dbo.models.script.ScriptDefinition;
-import ag.com.dbo.models.script.ScriptType;
 import ag.com.dbo.repositories.management.EtlInstanceRepository;
 import ag.com.dbo.repositories.management.EtlRepository;
 import ag.com.dbo.repositories.management.StepInstanceRepository;
 import ag.com.dbo.repositories.management.StepRepository;
 
-import ag.com.dbo.services.Utils;
 import ag.com.dbo.utils.Constants;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
@@ -120,9 +117,10 @@ public class EngineService {
                 si.setActive(step.getStepActive());
                 si.setMaxAttempts(step.getMaxAttempts());
                 si.setName(step.getName());
-                si.setStepType(step.getStepType());
+//                si.setStepType(step.getStepType());
                 si.setStatus(StepStatus.NotStartedYet.name());
                 si.setTags(step.getTags());
+                si.setIsSensor( getStepSensorFlag(si.getVars()) );
                 log.debug("si:{} ", si);
                 sis.add(si);
             }
@@ -185,12 +183,13 @@ public class EngineService {
         }
         // TODO   run script
         stepInstanceRepository.saveAndFlush(si);
-//        List<ScriptResponse> responses = runScripts(si, ScriptType.Common);
-  //      List<ScriptResponse> errors = responses.stream().filter(x -> !Constants.OK.equals(x.getStatus())).toList();
-//        if (!CollectionUtils.isEmpty(errors)) {
-//            saveError(si, stepInstanceRepository, null, "Error in script(s):" + errors);
-  //          return;
-//        }
+        ScriptResponse response = runScripts(si, ModelName.postProcessScript);
+        if (Constants.OK.equals(response.getStatus()) || Constants.NO_SCRIPT.equals(response.getStatus()) ) {
+            si.addLog("script postProcessScript passed "+response.getStatus());
+        }else{
+            saveError(si, stepInstanceRepository, null, "Error in script(s):" + response.getStatus() + ":" + response.getResponse());
+            return;
+        }
 
 
         //TODO  check sensor
@@ -215,7 +214,7 @@ public class EngineService {
         Set<String> children = fullEtlInstance.getParentToChildrenStep().get(si.getStepInstanceId());
         List<String> incorrectWayId = null;
 
-        if (Utils.isContainsStepType(si, StepType.Branch)) {
+        if (si.isBranch()) {
             try {
                 List<String> correctWsyNames = getBranches(si);
                 List<String> correctWayId = fullEtlInstance.getCorrectWayInIds(correctWsyNames, si.getStepInstanceId());
@@ -338,7 +337,7 @@ public class EngineService {
                         return response;
                     }
                     try {
-                        saveResult(si, response, scriptType);
+                        saveResult(si, response, scriptModel);
                     } catch (JsonProcessingException e) {
                         si.addLog("Cannot parse response: " + " response " + " Error:" + e.getMessage());
                     }
@@ -352,7 +351,7 @@ public class EngineService {
                 stepInstanceRepository.saveAndFlush(si);
             }
         }
-        return  new ScriptResponse(null, Constants.OK,null);
+        return  new ScriptResponse(null, Constants.NO_SCRIPT,null);
     }
 
     private List<String> getBranches(StepInstance si) throws Exception {
@@ -369,7 +368,7 @@ public class EngineService {
                     return Collections.EMPTY_LIST;
                 }
                 try {
-                    saveResult(si, scriptResponse, ModelName.branchScript);
+                    saveResult(si, scriptResponse, branchScript);
 
                 } catch (JsonProcessingException e) {
                     si.addLog("Cannot parse response: " + e.getMessage());
@@ -532,7 +531,7 @@ public class EngineService {
         if (ArrayUtils.isNotEmpty(parents)){
              parentNotProcessed = Arrays.stream(parents)
                     .map(x -> finalFullEtlInstance.getSiBase().get(x))
-                    .filter(x -> !StepStatus.Success.name().equals(x.getStatus()))
+                    .filter(x -> !StepStatus.Success.name().equals(x.getStatus())) // add skipped and failed
                     .toList();
         }
         // if all parent OK
@@ -561,53 +560,12 @@ public class EngineService {
         if (CollectionUtils.isEmpty(parentNotProcessed) ) {
             currentSi.addLog("Go to enqueue. si.active" + currentSi.getActive() );
             runScripts(currentSi, ModelName.prepareScript );
-//            runScripts(currentSi, ScriptType.PreExecution ,false);
-            runScripts(currentSi, ModelName.shellCommandScript );
-        }
-    }
-
-    private SensorModel prepareSensorStepInstance(StepInstance si){
-        try {
-            if (si.getStepType().contains(StepType.Sensor.name())) {
-                SensorModel sm = getSensorModel(si.getVars());
-                if (sm.getFailTimeout() == null) {
-                    addVarToStep(si,"failTimeout", failTimeoutDefault);
-                    sm.setFailTimeout(failTimeoutDefault);
-                    si.addLog(" failTimeout was added to vars ");
-                }
-                if (sm.getAttemptTimeOut() == null) {
-                    addVarToStep(si,"attemptTimeOut", attemptTimeoutDefault);
-                    si.addLog(" attemptTimeOut was added to vars ");
-                    sm.setAttemptTimeOut(attemptTimeoutDefault);
-                }
-                si.setStatus(StepStatus.InWait.name());
-                return sm;
-            } else {
-                si.setStatus(StepStatus.InProcess.name());
+            ScriptResponse sr2= runScripts(currentSi, ModelName.shellCommandScript );
+            if (Constants.NO_SCRIPT.equals(sr2.getStatus())) { // in case no big script
+                stepFrom(currentSi);
             }
-        } catch ( JsonProcessingException e) {
-            saveError(si, stepInstanceRepository, e, "cannot send to queue");
-        }
-        return null;
-    }
-
-    /**
-     * Enqueue step
-     *
-     * @param si
-     * @return
-     */
-    /*
-    public void  prepareToQueue(StepInstance si) {
-        log.info("-------!!!!!!startStep: {}", si);
-        try {
-            this.externalService.sendToQueue(si);
-            log.info("sent to queue:{}", si.getStepInstanceId());
-        } catch (
-                Throwable e) {
-            saveError(si, stepInstanceRepository, e, "cannot send to queue");
         }
     }
 
-     */
+
 }

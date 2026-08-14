@@ -2,6 +2,7 @@ package ag.com.dbo.utils;
 
 public class Constants {
     public static String OK= "OK";
+    public static String NO_SCRIPT = "NO_SCRIPT";
     public static String ERROR= "ERROR";
     public static String RESULT= "result";
     public static String BRANCH_RESULT_NAME= "branchResult";

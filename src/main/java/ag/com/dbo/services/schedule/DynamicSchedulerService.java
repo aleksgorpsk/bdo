@@ -31,7 +31,7 @@ public class DynamicSchedulerService   {
     @PostConstruct
     public void init() {
         List<Etl> etls=etlRepository.findByActive();
-        etls.forEach(x-> scheduleTask(x.getId(),x.getCronScheduling()));
+//        etls.forEach(x-> scheduleTask(x.getId(),x.getCronScheduling()));
         log.info("!!");
     }
 

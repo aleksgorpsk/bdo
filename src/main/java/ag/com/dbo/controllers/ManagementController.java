@@ -1,5 +1,6 @@
 package ag.com.dbo.controllers;
 
+import ag.com.dbo.models.management.StepInstance;
 import ag.com.dbo.models.queue.QueueStorage;
 import ag.com.dbo.services.management.EngineService;
 import ag.com.dbo.services.management.StepInstanceService;
@@ -26,12 +27,12 @@ public class ManagementController {
     public ResponseEntity<@Nullable String> returnTask(@RequestBody QueueStorage queueResult) {
         log.info("Manager returnTask: {}", queueResult);
         try {
-            stepInstanceService.updateStepInstance(queueResult);
+            StepInstance si =stepInstanceService.updateStepInstance(queueResult);
+            engineService.stepFrom(si);
         }catch (Exception e){
-
+            log.error("Error "+ e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).header("Content-Type","application/json").body("Error: "+e.getMessage());
         }
-        engineService.stepFrom(queueResult.getTaskId());
-        log.info("msg:{}",queueResult);
         return ResponseEntity.status(HttpStatus.OK).header("Content-Type","application/json").body("OK");
     }
 

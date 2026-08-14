@@ -70,11 +70,13 @@ public class StepInstance {
 //    @Column(columnDefinition = "TEXT")
 //    private String script; // comma separated scriptLink
 
-    @Column(columnDefinition = "TEXT")
-    private String stepType; // comma separated type (maybe many types)
+//    @Column(columnDefinition = "TEXT")
+//    ..    private String stepType; // comma separated type (maybe many types)
 
     private Long nextTest; // UTC Epoch
     private String tags; // comma separated
+    @Column(columnDefinition = "is_sensor")
+    private Boolean isSensor;
 
     @Transient
     private ModelParser scriptModelFactory;
@@ -95,6 +97,11 @@ public class StepInstance {
     public boolean isSensor(){
         return getScriptModel(ModelName.sensorScript)!=null;
     }
+
+    public boolean isBranch(){
+        return getScriptModel(ModelName.branchScript)!=null;
+    }
+
     public boolean isShellCommand(ScriptDefinition scriptDefinition){
         CommonModel scriptModel = getScriptModel(ModelName.shellCommandScript);
         if(scriptDefinition == null || scriptModel == null){

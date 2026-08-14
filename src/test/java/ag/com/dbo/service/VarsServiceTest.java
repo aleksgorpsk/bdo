@@ -14,7 +14,9 @@ import org.springframework.test.context.ActiveProfiles;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
+import static ag.com.dbo.services.Utils.getSensor;
 import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 
 @SpringBootTest
@@ -29,9 +31,12 @@ public class VarsServiceTest {
         String varsContent = resource.getContentAsString(StandardCharsets.UTF_8);
 
         ModelParser modelFactory = new ModelParser(varsContent);
-        BranchModel model= modelFactory.getBranch();
+        CommonModel model= modelFactory.getBranch();
         assertEquals("GROOVY:test1:11", model.getScriptName());
         assertEquals(441L, model.getFailTimeout().longValue());
+        assertEquals(ModelName.branchScript, model.getModelName());
+
+
     }
 
     @Test
@@ -39,10 +44,11 @@ public class VarsServiceTest {
         Resource resource = new ClassPathResource("testData/varTest.json");
         String varsContent = resource.getContentAsString(StandardCharsets.UTF_8);
         ModelParser modelFactory = new ModelParser(varsContent);
-        SensorModel model= modelFactory.getSensor();
+        CommonModel model= modelFactory.getSensor();
         assertEquals("GROOVY:test2:12", model.getScriptName());
         assertEquals(33, model.getAttemptTimeOut().longValue());
         assertEquals(442, model.getFailTimeout().longValue());
+        assertEquals(ModelName.sensorScript, model.getModelName());
 
     }
 
@@ -52,9 +58,11 @@ public class VarsServiceTest {
         String varsContent = resource.getContentAsString(StandardCharsets.UTF_8);
 
         ModelParser modelFactory = new ModelParser(varsContent);
-        PrepareDataModel model= modelFactory.getPrepareDataModel();
+        CommonModel model= modelFactory.getPrepareDataModel();
         assertEquals("GROOVY:test4:14", model.getScriptName());
         assertEquals(444L, model.getTimeout().longValue());
+        assertEquals(ModelName.prepareScript, model.getModelName());
+
     }
 
     @Test
@@ -63,10 +71,12 @@ public class VarsServiceTest {
         String varsContent = resource.getContentAsString(StandardCharsets.UTF_8);
 
         ModelParser modelFactory = new ModelParser(varsContent);
-        ShellCommandModel model= modelFactory.getShellCommand();
+        CommonModel model= modelFactory.getShellCommand();
         assertEquals("GROOVY:test3:13", model.getScriptName());
         assertEquals(22L, model.getFailTimeout().longValue());
         assertEquals("test", model.getResultName());
+        assertEquals(ModelName.shellCommandScript, model.getModelName());
+
     }
 
     @Test
@@ -75,10 +85,11 @@ public class VarsServiceTest {
         String varsContent = resource.getContentAsString(StandardCharsets.UTF_8);
 
         ModelParser modelFactory = new ModelParser(varsContent);
-        PostProcessModel model= modelFactory.getPostProcessModel();
+        CommonModel model= modelFactory.getPostProcessModel();
         assertEquals("GROOVY:test5:15", model.getScriptName());
         assertEquals("ttest", model.getResultName());
         assertEquals(445L, model.getTimeout().longValue());
+        assertEquals(ModelName.postProcessScript, model.getModelName());
 
     }
 
@@ -87,8 +98,9 @@ public class VarsServiceTest {
         Resource resource = new ClassPathResource("testData/varTest2.json");
         String varsContent = resource.getContentAsString(StandardCharsets.UTF_8);
         ModelParser modelFactory = new ModelParser(varsContent);
-        SensorModel model= modelFactory.getSensor();
+        CommonModel model= modelFactory.getSensor();
         assertNull(model);
+
     }
 
 
@@ -97,10 +109,12 @@ public class VarsServiceTest {
         Resource resource = new ClassPathResource("testData/varTest2.json");
         String varsContent = resource.getContentAsString(StandardCharsets.UTF_8);
         ModelParser modelFactory = new ModelParser(varsContent);
-        ShellCommandModel model= modelFactory.getShellCommand();
+        CommonModel model= modelFactory.getShellCommand();
         assertEquals("GROOVY:test3:13", model.getScriptName());
         assertEquals(1L, model.getFailTimeout().longValue());
         assertEquals("test", model.getResultName());
+        assertEquals(ModelName.shellCommandScript, model.getModelName());
+
     }
 
     @Test
@@ -126,6 +140,15 @@ public class VarsServiceTest {
         CommonModel cm4 = modelFactory.getModel(ModelName.postProcessScript);
         assertNotNull(cm4);
         assertEquals("GROOVY:test5:15", cm4.getScriptName());
+
+    }
+
+    @Test
+    public void getModelTest3() throws IOException, JSONException {
+        Resource resource = new ClassPathResource("testData/varTest3.json");
+        String varsContent = resource.getContentAsString(StandardCharsets.UTF_8);
+        CommonModel cmModel = getSensor(varsContent);
+        assertEquals(ModelName.sensorScript, cmModel.getModelName());
 
     }
 }

@@ -1,10 +1,12 @@
 package ag.com.dbo.services.management;
 
 import ag.com.dbo.controllers.queue.QueueStatus;
+import ag.com.dbo.models.checker.ModelParser;
 import ag.com.dbo.models.management.*;
 import ag.com.dbo.models.queue.QueueStorage;
 import ag.com.dbo.repositories.management.EtlInstanceRepository;
 import ag.com.dbo.repositories.management.StepInstanceRepository;
+import ag.com.dbo.services.Utils;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -17,11 +19,13 @@ import org.springframework.stereotype.Service;
 import java.math.BigInteger;
 import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 
+import static ag.com.dbo.services.Utils.setStepInstanceSensorFlag;
 import static ag.com.dbo.services.queue.utils.VarSupport.merge;
 
 @Slf4j
@@ -45,7 +49,7 @@ public class StepInstanceService {
      */
 
     public StepInstanceDTO create(StepInstanceDTO stepInstanceDTO) {
-        StepInstance etl = mapFrom(stepInstanceDTO);
+        StepInstance etl = setStepInstanceSensorFlag(mapFrom(stepInstanceDTO));
         StepInstance newEtl =stepInstanceRepository.saveAndFlush(etl);
         return mapFrom(newEtl);
     }
@@ -112,7 +116,7 @@ public class StepInstanceService {
     //    @CachePut(value = "etlInstances", key = "#etlInstanceDTO.etlInstanceId")
     public boolean update(StepInstanceDTO stepInstanceDTO) {
         if (stepInstanceRepository.existsById(stepInstanceDTO.getStepInstanceId())) {
-            stepInstanceRepository.save(mapFrom(stepInstanceDTO));
+            stepInstanceRepository.save( setStepInstanceSensorFlag(mapFrom(stepInstanceDTO)));
             return true;
         } else {
             return false;
@@ -141,7 +145,7 @@ public class StepInstanceService {
     }
 
     public List<StepInstance> save(List<StepInstance> list){
-        return stepInstanceRepository.saveAllAndFlush(list);
+        return stepInstanceRepository.saveAllAndFlush(list.stream().toList().stream().map(Utils::setStepInstanceSensorFlag).toList());
     }
 
     public StepInstanceDTO mapFrom(StepInstance step) {
@@ -153,23 +157,20 @@ public class StepInstanceService {
     }
 
 
-    public void updateStepInstance(QueueStorage result)  {
+    public StepInstance updateStepInstance(QueueStorage result)  {
         Optional<StepInstance> oSi = stepInstanceRepository.findById(result.getTaskId());
         if (oSi.isPresent()){
             StepInstance si = oSi.get();
 
             if (Objects.equals(result.getStatus(), QueueStatus.SUCCESS.name())) {
-                if (!StepType.Sensor.name().equals(si.getStepType())) {
-                    si.setStatus(StepStatus.Success.name());
-                }
+             /*   if (si.isSensor()) {
+                    si.setStatus(StepStatus.InWait.name());
+                } */
+                ;
             }else {
                 si.setStatus(StepStatus.Failed.name());
             }
             si.addLog("From queue:"+result.getLogMessage());
-//TODO!
-//         si.setStart(result.getStart());
-//            si.setStop(result.getStop());
-//            si.setAttempts(result.getAttempt());
             EtlInstance ei = si.getEtlInstance();
             try {
                 si.setLocalResults(merge(si.getLocalResults(), result.getLocalResults()));
@@ -182,8 +183,10 @@ public class StepInstanceService {
                 stepInstanceRepository.saveAndFlush(si);
                 etlInstanceRepository.saveAndFlush(ei);
             }
+            return si;
         }else{
-            log.error("{} not found !!!", result.getTaskId());
+            throw new RuntimeException(result.getTaskId()+" not found !!!");
+//            log.error("{} not found !!!", result.getTaskId());
         }
     }
 
@@ -191,6 +194,7 @@ public class StepInstanceService {
 
     public List<StepInstance> getActiveSensors(){
 //        OffsetDateTime.now()
-        return stepInstanceRepository.findActiveSensors(StepStatus.InWait.name(), StepType.Sensor.name(),Instant.now().getEpochSecond());
+        log.info("Sensor Instant.now().getEpochSecond():"+Instant.now().getEpochSecond());
+        return stepInstanceRepository.findActiveSensors(StepStatus.InWait.name(), Instant.now().getEpochSecond());
     }
 }

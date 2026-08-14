@@ -26,8 +26,8 @@ public class StepDTO {
 
     private String script;
 
-    String stepType;
-    String[] stepTypeList;
+//    String stepType;
+//    String[] stepTypeList;
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     private OffsetDateTime nextTest;
 

@@ -10,6 +10,8 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigInteger;
 
+import static ag.com.dbo.services.Utils.setStepSensorFlag;
+
 
 @Slf4j
 @Service
@@ -30,7 +32,7 @@ public class StepService {
 
     public boolean update(StepDTO stepDTO) {
         if (stepRepository.existsById(stepDTO.getStepId())) {
-            stepRepository.save(mapFrom(stepDTO));
+            stepRepository.save(setStepSensorFlag(mapFrom(stepDTO)));
             return true;
         } else {
             return false;
@@ -44,8 +46,7 @@ public class StepService {
      */
 
     public StepDTO create(StepDTO stepDTO) {
-        Step etl = mapFrom(stepDTO);
-        Step newEtl =stepRepository.saveAndFlush(etl);
+        Step newEtl =stepRepository.saveAndFlush(setStepSensorFlag(mapFrom(stepDTO)));
         return mapFrom(newEtl);
     }
 

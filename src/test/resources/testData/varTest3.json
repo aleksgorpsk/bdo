@@ -1,0 +1,23 @@
+{
+  "directoryName" : "/Users/aleksgor/opt/files",
+  "prepareScript" : {
+    "scriptName" : "GROOVY:transformStartDate:1",
+    "timeout" : 4
+  },
+  "shellCommandScript" : {
+    "scriptName" : "SHELL_COMMAND:getList:1",
+    "failTimeout" : 22,
+    "resultName" : "test"
+  },
+  "sensorScript" : {
+    "scriptName" : "GROOVY:TestSensor:1",
+    "failTimeout" : 300,
+    "attemptTimeOut" : 20
+  },
+  "etl" : {
+    "startEtl" : "2026-08-14T14:31:16.679929+03:00",
+    "scheduling" : false,
+    "name" : "Test Sensor",
+    "cronScheduler" : "* */2 * * * ?"
+  }
+}

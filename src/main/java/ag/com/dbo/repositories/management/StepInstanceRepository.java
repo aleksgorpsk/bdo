@@ -32,10 +32,9 @@ public interface StepInstanceRepository extends JpaRepository<@NonNull StepInsta
     @Query("SELECT si FROM StepInstance si WHERE si.etl.id = :etlid")
     List<StepInstance> findByEtl(@Param("etlid") BigInteger etlId);
 
-    @Query("SELECT si FROM StepInstance si WHERE si.status= :status and si. stepType= :type and nextTest <= :tm")
+    @Query("SELECT si FROM StepInstance si WHERE si.status= :status and si.isSensor=true and si.nextTest <= :tm")
     List<StepInstance> findActiveSensors(
             @Param("status") String status,
-            @Param("type") String type,
             @Param("tm") Long now);
 
 

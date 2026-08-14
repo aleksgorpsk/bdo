@@ -2,6 +2,7 @@ package ag.com.dbo.services.queue.utils;
 
 import ag.com.dbo.controllers.model.ScriptResponse;
 import ag.com.dbo.models.checker.ModelName;
+import ag.com.dbo.models.checker.varmodel.CommonModel;
 import ag.com.dbo.models.management.StepInstance;
 import ag.com.dbo.models.script.ScriptDefinition;
 import ag.com.dbo.models.script.ScriptType;
@@ -80,17 +81,17 @@ public class VarSupport {
     }
 
 
-    public static void saveResult(StepInstance si, ScriptResponse result, ModelName scriptType) throws JsonProcessingException {
+    public static void saveResult(StepInstance si, ScriptResponse result, CommonModel scriptType) throws JsonProcessingException {
         ///ScriptDefinition scriptId = result.getScriptDefinition();
-        if (ModelName.prepareScript.name().equals(scriptType.name())){
+        if (ModelName.prepareScript.name().equals(scriptType.getModelName().name())){
             si.setLocalResults( merge(si.getLocalResults(), result.getResponse()));
-        }else if (ModelName.branchScript.name().equals(scriptType.name())){
+        }else if (ModelName.branchScript.name().equals(scriptType.getModelName().name())){
             si.setLocalResults( merge(si.getLocalResults(),result.getResponse(), Constants.BRANCH_RESULT_NAME));
-        }else if (ModelName.sensorScript.name().equals(scriptType.name())){
+        }else if (ModelName.sensorScript.name().equals(scriptType.getModelName().name())){
             si.setLocalResults( merge(si.getLocalResults(),result.getResponse(), Constants.SENSOR_RESULT_NAME));
-        }else if (ModelName.shellCommandScript.name().equals(scriptType.name())){
+        }else if (ModelName.shellCommandScript.name().equals(scriptType.getModelName().name())){
             si.setLocalResults( merge(si.getLocalResults(), result.getResponse()));
-        }else if (ModelName.postProcessScript.name().equals(scriptType.name())){
+        }else if (ModelName.postProcessScript.name().equals(scriptType.getModelName().name())){
             si.setLocalResults( merge(si.getLocalResults(), result.getResponse()));
         }else {
             String err= "Cannot define result to localVars";

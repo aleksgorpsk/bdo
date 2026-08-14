@@ -16,9 +16,10 @@ public class FullEtlInstance {
     List<StepInstance> steps = Collections.emptyList();
 
     public List<String> getCorrectWayInIds(List<String> correctNames, String stepInstanceId){
+
         return parentToChildrenStep.get(stepInstanceId).stream()
                 .map(id-> siBase.get(id))
-                .filter(x-> correctNames.contains(x.getName()))
+                .filter(x-> correctNames.contains(x.getName().trim()))
                 .map(StepInstance::getStepInstanceId).toList();
     }
 
@@ -29,5 +30,6 @@ public class FullEtlInstance {
                 .map(StepInstance::getStepInstanceId).toList();
 
     }
-
+// Branch1
+// Branch1
 }

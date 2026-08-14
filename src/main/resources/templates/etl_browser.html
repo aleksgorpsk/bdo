@@ -61,6 +61,7 @@
                 <th th:replace="~{fragments/etl/sorting :: sorting('id','Id')}"></th>
                 <th th:replace="~{fragments/etl/sorting :: sorting('name','Name')}"></th>
                 <th th:replace="~{fragments/etl/sorting :: sorting('comment','Comment')}"></th>
+                <th>Scheduling</th>
                 <th>Active</th>
                 <th>Published</th>
                 <th>Last status</th>
@@ -71,6 +72,8 @@
                 <td> [[${etl.id}]]</td>
                 <td>[[${etl.name}]]</td>
                 <td>[[${etl.comment}]]</td>
+                <td>[[${etl.cronScheduling}]]</td>
+
                 <td>
                     <a th:if="${etl.active == true}" th:href="@{'/etl/' + ${etl.id} + '/active/false'}"
                        title="Disable this etl">

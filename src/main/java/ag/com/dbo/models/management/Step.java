@@ -36,8 +36,10 @@ public class Step {
 //    @Column(columnDefinition = "TEXT")
   //  private String script; // comma separated scriptLink
 
-    @Column(columnDefinition = "TEXT")
-    private String stepType; // comma separated type (maybe many types)
+//    @Column(columnDefinition = "TEXT")
+//    private String stepType; // comma separated type (maybe many types)
+    @Column(columnDefinition = "is_sensor")
+    private Boolean isSensor;
 
     @Column(columnDefinition ="TEXT")
     private String tags; // comma separated
