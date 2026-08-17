@@ -3,7 +3,7 @@ package ag.com.dbo.services.schedule;
 
 import ag.com.dbo.models.management.Etl;
 import ag.com.dbo.repositories.management.EtlRepository;
-import ag.com.dbo.services.management.ExternalService;
+import ag.com.dbo.services.management.impl.ExternalServiceImpl;
 import ag.com.dbo.services.management.SendUrlTask;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +26,7 @@ public class DynamicSchedulerService   {
     private final ThreadPoolTaskScheduler taskScheduler;
     private final Map<BigInteger, ScheduledFuture<?>> scheduledTasks = new ConcurrentHashMap<>();
     private final EtlRepository etlRepository;
-    private final ExternalService externalService;
+    private final ExternalServiceImpl externalService;
 
     @PostConstruct
     public void init() {

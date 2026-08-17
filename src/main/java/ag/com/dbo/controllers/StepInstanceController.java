@@ -1,10 +1,8 @@
 package ag.com.dbo.controllers;
 
 import ag.com.dbo.models.management.StepInstanceDTO;
-import ag.com.dbo.services.management.StepInstanceService;
+import ag.com.dbo.services.management.impl.StepInstanceServiceImpl;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -20,19 +18,16 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigInteger;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 
 
 @Slf4j
 @Controller
 public class StepInstanceController {
 
-    private final StepInstanceService stepInstanceService;
+    private final StepInstanceServiceImpl stepInstanceService;
 
 
-    public StepInstanceController(StepInstanceService stepInstanceService) {
+    public StepInstanceController(StepInstanceServiceImpl stepInstanceService) {
         this.stepInstanceService = stepInstanceService;
     }
 

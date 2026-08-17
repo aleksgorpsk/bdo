@@ -4,8 +4,8 @@ import ag.com.dbo.controllers.model.ScriptResponse;
 import ag.com.dbo.controllers.model.ScriptTest;
 import ag.com.dbo.models.management.StepInstanceDTO;
 import ag.com.dbo.models.script.*;
-import ag.com.dbo.services.management.ScriptService;
-import ag.com.dbo.services.management.StepInstanceService;
+import ag.com.dbo.services.management.impl.ScriptServiceImpl;
+import ag.com.dbo.services.management.impl.StepInstanceServiceImpl;
 import ag.com.dbo.services.script.GroovyService;
 import ag.com.dbo.services.script.PythonService;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -31,15 +31,15 @@ import static ag.com.dbo.services.Utils.getScriptDefinitionFromFullName;
 @Slf4j
 public class ScriptUiController {
 
-    private final ScriptService scriptService;
-    private final StepInstanceService stepInstanceService;
+    private final ScriptServiceImpl scriptService;
+    private final StepInstanceServiceImpl stepInstanceService;
     private final GroovyService groovyService;
     private final PythonService pythonService;
 
     private final List<String> allLanguages;
 
 
-    public ScriptUiController(ScriptService scriptService, StepInstanceService stepInstanceService, GroovyService groovyService, PythonService pythonService) {
+    public ScriptUiController(ScriptServiceImpl scriptService, StepInstanceServiceImpl stepInstanceService, GroovyService groovyService, PythonService pythonService) {
         this.scriptService = scriptService;
         this.stepInstanceService = stepInstanceService;
         this.groovyService = groovyService;

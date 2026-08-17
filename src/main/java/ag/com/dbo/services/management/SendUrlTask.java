@@ -1,6 +1,7 @@
 package ag.com.dbo.services.management;
 
 
+import ag.com.dbo.services.management.impl.ExternalServiceImpl;
 import ag.com.scheduling.models.ScheduleData;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
@@ -9,10 +10,10 @@ import java.math.BigInteger;
 
 @Slf4j
 public class SendUrlTask implements Runnable{
-    private final ExternalService externalService;
+    private final ExternalServiceImpl externalService;
     private final BigInteger etlId;
 
-    public SendUrlTask(ExternalService externalService, BigInteger etlId){
+    public SendUrlTask(ExternalServiceImpl externalService, BigInteger etlId){
         this.externalService = externalService;
         this.etlId = etlId;
     }

@@ -4,12 +4,10 @@ package ag.com.dbo.service;
 import ag.com.dbo.models.management.Etl;
 import ag.com.dbo.models.management.EtlInstance;
 import ag.com.dbo.repositories.management.EtlInstanceRepository;
-import ag.com.dbo.repositories.management.EtlRepository;
 import ag.com.dbo.repositories.management.StepInstanceRepository;
 import ag.com.dbo.repositories.management.StepRepository;
-import ag.com.dbo.services.management.EngineService;
-import ag.com.dbo.services.management.ExternalService;
-import ag.com.dbo.services.management.ScriptService;
+import ag.com.dbo.services.management.impl.EngineServiceImpl;
+import ag.com.dbo.services.management.impl.ScriptServiceImpl;
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.ReadContext;
 import org.junit.Test;
@@ -33,15 +31,13 @@ public class StartDatetimeTest {
     @Test
     public void testEmptyData() throws IOException {
 
-        EtlRepository etlRepository = Mockito.mock(EtlRepository.class);
         EtlInstanceRepository etlInstanceRepository= Mockito.mock(EtlInstanceRepository.class);
         StepRepository stepRepository =Mockito.mock(StepRepository.class);
         StepInstanceRepository stepInstanceRepository = Mockito.mock(StepInstanceRepository.class);
-        ScriptService scriptService = Mockito.mock(ScriptService.class);
-        ExternalService externalService  = Mockito.mock(ExternalService.class);
+        ScriptServiceImpl scriptService = Mockito.mock(ScriptServiceImpl.class);
 
-        EngineServiceTest test = new EngineServiceTest(etlRepository,etlInstanceRepository,
-                stepRepository,stepInstanceRepository,  scriptService, externalService);
+        EngineServiceTest test = new EngineServiceTest(etlInstanceRepository,
+                stepRepository,stepInstanceRepository,  scriptService);
 
         Etl etl = new Etl();
         test.startEtl(etl, true);
@@ -51,14 +47,12 @@ public class StartDatetimeTest {
         assertNotNull(startDate);
         assertNotNull(OffsetDateTime.parse(startDate));
     }
-
-    protected static class EngineServiceTest extends EngineService {
-        public EngineServiceTest(EtlRepository etlRepository, EtlInstanceRepository etlInstanceRepository,
-                                 StepRepository stepRepository, StepInstanceRepository stepInstanceRepository,
-                                 ScriptService scriptService, ExternalService externalService) {
+    protected static class EngineServiceTest extends EngineServiceImpl {
+        public EngineServiceTest(EtlInstanceRepository etlInstanceRepository, StepRepository stepRepository,
+                                 StepInstanceRepository stepInstanceRepository, ScriptServiceImpl scriptService) {
 
 
-            super(etlRepository, etlInstanceRepository, stepRepository, stepInstanceRepository, scriptService, externalService);
+            super( etlInstanceRepository, stepRepository, stepInstanceRepository, scriptService);
         }
 
         public void createStepInstances(EtlInstance etl) {

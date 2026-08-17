@@ -4,11 +4,10 @@ package ag.com.dbo.script;
 
 import ag.com.dbo.controllers.model.ScriptResponse;
 import ag.com.dbo.models.script.Script;
-import ag.com.dbo.models.script.ScriptType;
 import ag.com.dbo.repositories.management.NodeRepository;
 import ag.com.dbo.repositories.management.ScriptRepository;
 import ag.com.dbo.repositories.management.StepInstanceRepository;
-import ag.com.dbo.services.management.ExternalService;
+import ag.com.dbo.services.management.impl.ExternalServiceImpl;
 import ag.com.dbo.services.script.GroovyService;
 import ag.com.dbo.utils.Constants;
 import lombok.extern.slf4j.Slf4j;
@@ -44,10 +43,10 @@ public class ScriptStartDateTest {
     @Autowired
     private StepInstanceRepository stepInstanceRepository;
 
-    private ExternalService getExternalService(){
+    private ExternalServiceImpl getExternalService(){
         RestClient scriptRestClient = Mockito.mock(RestClient.class);
         ScriptRepository scriptRepository =Mockito.mock(ScriptRepository.class);
-        ExternalService externalService = new ExternalService(this.stepInstanceRepository,
+        ExternalServiceImpl externalService = new ExternalServiceImpl(this.stepInstanceRepository,
                 this.nodeRepository,
                 scriptRepository);
         externalService.port="9051";

@@ -2,161 +2,104 @@ package ag.com.dbo.services.management;
 
 import ag.com.dbo.models.management.EtlInstance;
 import ag.com.dbo.models.management.EtlInstanceDto;
-import ag.com.dbo.repositories.management.EtlInstanceRepository;
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
 
 import java.math.BigInteger;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Function;
-import java.util.stream.StreamSupport;
 
-@Service
-@RequiredArgsConstructor
-@Slf4j
-public class EtlInstanceService {
+/**
+ *
+ */
 
-    private final EtlInstanceRepository etlInstanceRepository;
-    private final ModelMapper modelMapper;
+public interface EtlInstanceService {
 
-    /*
-     * -------------------------------------------------------------------------
-     * Create
-     * -------------------------------------------------------------------------
+    /**
+     *  Get EtlInstanceDto by Id
+     * @param id BigInteger EtlInstance Id
+     * @return
      */
 
-    public EtlInstanceDto create(EtlInstanceDto etlInstanceDTO) {
-            EtlInstance etl = mapFrom(etlInstanceDTO);
-            EtlInstance newEtl =etlInstanceRepository.saveAndFlush(etl);
-            return mapFrom(newEtl);
-    }
+    EtlInstanceDto retrieveById(BigInteger id) ;
 
-    /*
-     * -------------------------------------------------------------------------
-     * Retrieve
-     * -------------------------------------------------------------------------
+    /**
+     *  Get page of EtlInstanceDto by id and PageRequest
+     * @param etlId EtlInstanceDto id
+     * @param pageable pate parameters
+     * @return Page< EtlInstanceDto>
+     */
+    Page<@NonNull EtlInstanceDto> retrievePage(BigInteger etlId, PageRequest pageable);
+
+    /**
+     *  Get page of EtlInstanceDto by id and Page
+     * @param etlId
+     * @param pageable
+     * @return
+     */
+    Page<@NonNull EtlInstanceDto> retrievePage(BigInteger etlId, Pageable pageable );
+
+    /**
+     * get page of EtlInstanceDto for search (Ignore case)
+     * @param etlId
+     * @param keyword
+     * @param pageable
+     * @return
+     */
+    Page<@NonNull EtlInstanceDto> findByEtlContainingIgnoreCase(BigInteger etlId, String keyword, Pageable pageable);
+
+    /**
+     * get EtlInstanceDto by id
+     * @param id
+     * @return
+     */
+    Optional<EtlInstanceDto> findById(BigInteger id);
+
+    /**
+     * Get list of EtlInstanceDto by etlId and status
+     * @param etlId
+     * @param status
+     * @return
+     */
+    List<EtlInstanceDto> findByStatus(BigInteger etlId, String status);
+
+    /**
+     * get all EtlInstanceDto
+     * @return
+     */
+    List<EtlInstanceDto> retrieveAll() ;
+
+    /**
+     * get all EtlInstance
+     * @return
      */
 
-    public EtlInstanceDto retrieveById(BigInteger id) {
-        return etlInstanceRepository.findById(id)
-                .map(this::mapFrom)
-                .orElse(null);
-    }
+    List<EtlInstance> retrieveAll0();
+
+    /**
+     * get all EtlInstanceDto
+     * @return
+     */
+    List<EtlInstanceDto> retrievePage() ;
 
 
-
-    public Page<@NonNull EtlInstanceDto> retrievePage(BigInteger etlId, PageRequest pageable){
-        Page<@NonNull EtlInstance> entities = etlInstanceRepository.findByEtl(etlId, pageable);
-        return entities.map(e-> modelMapper.map(e, EtlInstanceDto.class));
-
-    }
-
-    public Page<@NonNull EtlInstanceDto> retrievePage(BigInteger etlId, Pageable pageable ){
-        Page<@NonNull EtlInstance> entities = etlInstanceRepository.findByEtl(etlId, pageable);
-        return entities.map(e-> modelMapper.map(e, EtlInstanceDto.class));
-
-    }
-
-    public Page<@NonNull EtlInstanceDto> findByEtlContainingIgnoreCase(BigInteger etlId, String keyword, Pageable pageable){
-        Page<@NonNull EtlInstance> etlPage = etlInstanceRepository.findByNameContainingIgnoreCase( keyword, etlId, pageable);
-        return convert(etlPage);
-
-    }
-    public Optional<EtlInstanceDto> findById(BigInteger id){
-        Optional<EtlInstance> e=etlInstanceRepository.findById(id);
-        if (e.isPresent()) {
-            return Optional.of(mapFrom(e.get()));
-        }
-        return Optional.empty();
-    }
-
-    public List<EtlInstanceDto> findByStatus(BigInteger etlId, String status){
-        return etlInstanceRepository.findByEtlIdAndStatus(etlId, status).stream()
-                .map(this::mapFrom)
-                .peek(x-> log.info("etl by status:"+ x.toString()))
-                .toList();
-
-    }
-
-    public List<EtlInstanceDto> retrieveAll() {
-        return etlInstanceRepository.findAll().stream()
-                .map(this::mapFrom)
-                .peek(x-> log.info("etl:"+ x.toString()))
-                .toList();
-    }
-
-    public List<EtlInstance> retrieveAll0() {
-        return etlInstanceRepository.findAll();
-    }
-
-    public List<EtlInstanceDto> retrievePage() {
-
-        log.info("retrievePage");
-        return StreamSupport.stream(etlInstanceRepository.findAll().spliterator(), false)
-                .map(this::mapFrom)
-                .peek(x-> log.info("etl:"+ x.toString()))
-                .toList();
-    }
-
-
-
-    /*
-     * -------------------------------------------------------------------------
-     * Update
-     * -------------------------------------------------------------------------
+    /**
+     * update EtlInstanceDto
+     * @param etlDTO
+     * @return
      */
 
-//    @CachePut(value = "etlInstances", key = "#etlInstanceDTO.etlInstanceId")
-    public boolean update(EtlInstanceDto etlDTO) {
-        if (etlInstanceRepository.existsById(etlDTO.getEtlInstanceId())) {
-            etlInstanceRepository.save(mapFrom(etlDTO));
-            return true;
-        } else {
-            return false;
-        }
-    }
 
-    /*
-     * -------------------------------------------------------------------------
-     * Delete
-     * -------------------------------------------------------------------------
+    boolean update(EtlInstanceDto etlDTO) ;
+
+    /**
+     * delete EtlInstance by Id
+     * @param id
+     * @return
      */
 
-//    @CacheEvict(value = "etlInstances", key = "#etlInstanceId")
-    public boolean delete(BigInteger id) {
-        if (etlInstanceRepository.existsById(id)) {
-            etlInstanceRepository.deleteById(id);
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    public Page<EtlInstanceDto> convert(Page<EtlInstance> etlp){
-        Page<EtlInstanceDto> dtoPage = etlp.map(new Function<EtlInstance, EtlInstanceDto>() {
-            @Override
-            public EtlInstanceDto apply(EtlInstance entity) {
-                return mapFrom(entity);
-            }
-        });
-        return dtoPage;
-
-    }
-
-
-    public EtlInstanceDto mapFrom(EtlInstance etl) {
-        return modelMapper.map(etl, EtlInstanceDto.class);
-    }
-
-    public EtlInstance mapFrom(EtlInstanceDto dto) {
-        return modelMapper.map(dto, EtlInstance.class);
-    }
+    boolean delete(BigInteger id) ;
 
 }

@@ -2,8 +2,8 @@ package ag.com.dbo.controllers;
 
 import ag.com.dbo.models.management.EtlDto;
 import ag.com.dbo.models.management.EtlInstanceDto;
-import ag.com.dbo.services.management.EtlInstanceService;
-import ag.com.dbo.services.management.EtlService;
+import ag.com.dbo.services.management.impl.EtlInstanceServiceImpl;
+import ag.com.dbo.services.management.impl.EtlServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -28,8 +28,8 @@ import java.util.Optional;
 //@ConditionalOnProperty(name = "dbo.management", havingValue = "true")
 public class EtlInstanceController {
 
-    private final EtlInstanceService etlInstanceService;
-    private final EtlService etlService;
+    private final EtlInstanceServiceImpl etlInstanceService;
+    private final EtlServiceImpl etlService;
 
 
     @GetMapping(value = {"/etl_instance_browser","/etl_instance_browser/{etlId}"})

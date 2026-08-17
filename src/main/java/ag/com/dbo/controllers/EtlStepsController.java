@@ -2,15 +2,13 @@ package ag.com.dbo.controllers;
 
 import ag.com.dbo.models.graf.Figure;
 import ag.com.dbo.models.management.StepDTO;
-import ag.com.dbo.models.management.StepType;
 import ag.com.dbo.models.management.EtlDto;
 import ag.com.dbo.models.management.Etl;
 import ag.com.dbo.repositories.management.StepRepository;
-import ag.com.dbo.services.management.EtlService;
-import ag.com.dbo.services.management.GrafBuilderService;
-import ag.com.dbo.services.management.StepService;
+import ag.com.dbo.services.management.impl.EtlServiceImpl;
+import ag.com.dbo.services.management.impl.GrafBuilderServiceImpl;
+import ag.com.dbo.services.management.impl.StepServiceImpl;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,19 +20,17 @@ import java.math.BigInteger;
 import java.util.List;
 import java.util.Optional;
 
-import static ag.com.dbo.utils.Utils.isArrayNullOrEmpty;
-
 @Slf4j
 @Controller
 public class EtlStepsController {
 
-    private final GrafBuilderService grafBuilderService;
+    private final GrafBuilderServiceImpl grafBuilderService;
     private final StepRepository stepRepository;
-    private final StepService stepService;
-    private final EtlService etlService;
+    private final StepServiceImpl stepService;
+    private final EtlServiceImpl etlService;
 
 
-    public EtlStepsController(GrafBuilderService grafBuilderService, StepRepository stepRepository, StepService stepService, EtlService etlService) {
+    public EtlStepsController(GrafBuilderServiceImpl grafBuilderService, StepRepository stepRepository, StepServiceImpl stepService, EtlServiceImpl etlService) {
         this.grafBuilderService = grafBuilderService;
         this.stepRepository = stepRepository;
         this.stepService = stepService;

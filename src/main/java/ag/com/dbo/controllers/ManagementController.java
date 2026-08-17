@@ -2,8 +2,8 @@ package ag.com.dbo.controllers;
 
 import ag.com.dbo.models.management.StepInstance;
 import ag.com.dbo.models.queue.QueueStorage;
-import ag.com.dbo.services.management.EngineService;
-import ag.com.dbo.services.management.StepInstanceService;
+import ag.com.dbo.services.management.impl.EngineServiceImpl;
+import ag.com.dbo.services.management.impl.StepInstanceServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.http.HttpStatus;
@@ -15,10 +15,10 @@ import org.springframework.web.bind.annotation.*;
 @Controller
 public class ManagementController {
 
-    private final StepInstanceService stepInstanceService;
-    private final EngineService engineService;
+    private final StepInstanceServiceImpl stepInstanceService;
+    private final EngineServiceImpl engineService;
 
-    public ManagementController(StepInstanceService stepInstanceService, EngineService engineService) {
+    public ManagementController(StepInstanceServiceImpl stepInstanceService, EngineServiceImpl engineService) {
         this.stepInstanceService = stepInstanceService;
         this.engineService = engineService;
     }

@@ -2,7 +2,7 @@ package ag.com.dbo.controllers;
 
 import ag.com.dbo.models.management.Node;
 import ag.com.dbo.models.management.NodeType;
-import ag.com.dbo.services.management.NodeService;
+import ag.com.dbo.services.management.impl.NodeServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.data.domain.Page;
@@ -27,10 +27,10 @@ import java.util.Optional;
 @Controller
 public class NodeController {
 
-    private final NodeService nodeService;
+    private final NodeServiceImpl nodeService;
     private final List<String> nodeTypes;
 
-    public NodeController(NodeService nodeService) {
+    public NodeController(NodeServiceImpl nodeService) {
         this.nodeService = nodeService;
         this.nodeTypes = Arrays.stream(NodeType.values()).map(Enum::name).toList();
     }

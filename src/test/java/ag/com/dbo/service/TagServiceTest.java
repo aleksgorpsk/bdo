@@ -6,7 +6,7 @@ import ag.com.dbo.models.management.NodeType;
 import ag.com.dbo.repositories.management.NodeRepository;
 import ag.com.dbo.repositories.management.ScriptRepository;
 import ag.com.dbo.repositories.management.StepInstanceRepository;
-import ag.com.dbo.services.management.ExternalService;
+import ag.com.dbo.services.management.impl.ExternalServiceImpl;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
@@ -36,10 +36,10 @@ public class TagServiceTest {
     @Autowired
     private StepInstanceRepository stepInstanceRepository;
 
-    private ExternalService getExternalService(){
+    private ExternalServiceImpl getExternalService(){
         RestClient scriptRestClient = Mockito.mock(RestClient.class);
         ScriptRepository scriptRepository =Mockito.mock(ScriptRepository.class);
-        ExternalService externalService = new ExternalService(this.stepInstanceRepository,
+        ExternalServiceImpl externalService = new ExternalServiceImpl(this.stepInstanceRepository,
                 this.nodeRepository,
                 scriptRepository);
         externalService.port="9051";
@@ -48,7 +48,7 @@ public class TagServiceTest {
 
     @Test
     public void testEmptyData() {
-     ExternalService externalService = getExternalService();
+     ExternalServiceImpl externalService = getExternalService();
         assertDoesNotThrow(externalService::afterPropertiesSet);
 
         Node node= externalService.getHost(null);
@@ -125,7 +125,7 @@ public class TagServiceTest {
         nodeRepository.save(  new Node( null, "Worker1", "http://localhost:8881", NodeType.Worker.name(), "aa",true,3,1));
         nodeRepository.save(  new Node( null, "Worker2", "http://localhost:8882", NodeType.Worker.name(), "bb",true,3,1));
         nodeRepository.save(  new Node( null, "Worker2", "http://localhost:8883", NodeType.Worker.name(), "cc",true,3,1));
-        ExternalService es= getExternalService();
+        ExternalServiceImpl es= getExternalService();
         assertEquals(es.nodeMap, null);
 
         assertDoesNotThrow(es::afterPropertiesSet);

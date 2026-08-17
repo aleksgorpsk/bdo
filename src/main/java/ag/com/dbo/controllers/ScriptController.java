@@ -3,7 +3,7 @@ package ag.com.dbo.controllers;
 import ag.com.dbo.controllers.model.ScriptRequest;
 import ag.com.dbo.controllers.model.ScriptResponse;
 import ag.com.dbo.models.script.*;
-import ag.com.dbo.services.management.ScriptService;
+import ag.com.dbo.services.management.impl.ScriptServiceImpl;
 import ag.com.dbo.services.script.GroovyService;
 import ag.com.dbo.services.script.PythonService;
 import ag.com.dbo.utils.Constants;
@@ -23,12 +23,12 @@ import static ag.com.dbo.utils.Utils.getScriptIdString;
 @Slf4j
 public class ScriptController {
 
-    private final ScriptService scriptService;
+    private final ScriptServiceImpl scriptService;
     private final GroovyService groovyService;
     private final PythonService pythonService;
 
 
-    public ScriptController(ScriptService scriptService, GroovyService groovyService, PythonService pythonService) {
+    public ScriptController(ScriptServiceImpl scriptService, GroovyService groovyService, PythonService pythonService) {
         this.scriptService = scriptService;
         this.groovyService = groovyService;
         this.pythonService = pythonService;

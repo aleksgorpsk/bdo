@@ -8,9 +8,9 @@ import java.util.Optional;
 import ag.com.dbo.models.management.Etl;
 import ag.com.dbo.models.management.EtlDto;
 import ag.com.dbo.models.management.EtlStatus;
-import ag.com.dbo.services.management.EngineService;
-import ag.com.dbo.services.management.EtlService;
-import ag.com.dbo.services.management.ExternalService;
+import ag.com.dbo.services.management.impl.EngineServiceImpl;
+import ag.com.dbo.services.management.impl.EtlServiceImpl;
+import ag.com.dbo.services.management.impl.ExternalServiceImpl;
 import ag.com.dbo.utils.Constants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -30,12 +30,12 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @Controller
 public class EtlController {
 
-    private final EtlService etlService;
-    private final EngineService engineService;
+    private final EtlServiceImpl etlService;
+    private final EngineServiceImpl engineService;
     private final List<String> etlStatuses;
-    private final ExternalService externalService;
+    private final ExternalServiceImpl externalService;
 
-    public EtlController(EtlService etlService, EngineService engineService, ExternalService externalService) {
+    public EtlController(EtlServiceImpl etlService, EngineServiceImpl engineService, ExternalServiceImpl externalService) {
         this.etlService = etlService;
         this.engineService = engineService;
         this.externalService = externalService;

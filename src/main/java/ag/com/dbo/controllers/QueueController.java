@@ -7,7 +7,7 @@ import ag.com.dbo.models.checker.varmodel.CommonModel;
 import ag.com.dbo.models.queue.QueueStorage;
 import ag.com.dbo.models.script.Script;
 import ag.com.dbo.models.script.ScriptDefinition;
-import ag.com.dbo.services.management.ScriptService;
+import ag.com.dbo.services.management.impl.ScriptServiceImpl;
 import ag.com.dbo.services.queue.MultithreadExecutor;
 import ag.com.dbo.services.queue.QueueService;
 import ag.com.dbo.models.management.statuses.QueueInfo;
@@ -38,7 +38,7 @@ public class QueueController {
 
     private final QueueService queueService;
     private final MultithreadExecutor multithreadExecutor;
-    private final ScriptService scriptService;
+    private final ScriptServiceImpl scriptService;
 
 
 

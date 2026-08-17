@@ -2,8 +2,8 @@ package ag.com.dbo.service;
 
 import ag.com.dbo.models.management.Node;
 import ag.com.dbo.repositories.management.NodeRepository;
-import ag.com.dbo.services.management.ExternalService;
-import ag.com.dbo.services.management.NodeService;
+import ag.com.dbo.services.management.impl.ExternalServiceImpl;
+import ag.com.dbo.services.management.impl.NodeServiceImpl;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -30,8 +30,8 @@ public class NodeServiceTest {
     public void getNodes() {
         // Arrange
         NodeRepository nodeRepository = Mockito.mock(NodeRepository.class);
-        ExternalService externalService = Mockito.mock(ExternalService.class);
-        NodeService nodeService = new  NodeService( nodeRepository,  externalService) ;
+        ExternalServiceImpl externalService = Mockito.mock(ExternalServiceImpl.class);
+        NodeServiceImpl nodeService = new NodeServiceImpl( nodeRepository,  externalService) ;
         Integer nodeId = 1;
         Node mockNode =  new Node(    1, "master","localhost","Master","big,no",true,3,1);
 
@@ -51,7 +51,7 @@ public class NodeServiceTest {
         when(nodeRepository.existsById(1666)).thenReturn(true);
         when(nodeRepository.existsById(3)).thenReturn(false);
 
-        NodeService nodeService= new NodeService(nodeRepository,Mockito.mock(ExternalService.class) );
+        NodeServiceImpl nodeService= new NodeServiceImpl(nodeRepository,Mockito.mock(ExternalServiceImpl.class) );
         Integer nodeId = 1666;
         nodeService.delete(nodeId);
         assertTrue(nodeService.delete(nodeId));

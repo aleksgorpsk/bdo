@@ -1,11 +1,10 @@
 package ag.com.dbo.controllers;
 
 import ag.com.dbo.controllers.model.StepData;
-import ag.com.dbo.models.management.*;
 import ag.com.dbo.repositories.management.StepRepository;
-import ag.com.dbo.services.management.EtlService;
-import ag.com.dbo.services.management.GrafBuilderService;
-import ag.com.dbo.services.management.StepService;
+import ag.com.dbo.services.management.impl.EtlServiceImpl;
+import ag.com.dbo.services.management.impl.GrafBuilderServiceImpl;
+import ag.com.dbo.services.management.impl.StepServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -18,12 +17,12 @@ import java.math.BigInteger;
 @Controller
 public class StepsFieldController {
 
-    private final GrafBuilderService grafBuilderService;
+    private final GrafBuilderServiceImpl grafBuilderService;
     private final StepRepository stepRepository;
-    private final StepService stepService;
-    private final EtlService etlService;
+    private final StepServiceImpl stepService;
+    private final EtlServiceImpl etlService;
 
-    public StepsFieldController(GrafBuilderService grafBuilderService, StepRepository stepRepository, StepService stepService, EtlService etlService) {
+    public StepsFieldController(GrafBuilderServiceImpl grafBuilderService, StepRepository stepRepository, StepServiceImpl stepService, EtlServiceImpl etlService) {
         this.grafBuilderService = grafBuilderService;
         this.stepRepository = stepRepository;
         this.stepService = stepService;

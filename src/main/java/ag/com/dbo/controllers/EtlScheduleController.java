@@ -1,8 +1,8 @@
 package ag.com.dbo.controllers;
 
 import ag.com.dbo.models.management.Etl;
-import ag.com.dbo.services.management.EngineService;
-import ag.com.dbo.services.management.EtlService;
+import ag.com.dbo.services.management.impl.EngineServiceImpl;
+import ag.com.dbo.services.management.impl.EtlServiceImpl;
 import ag.com.dbo.services.schedule.DynamicSchedulerService;
 import ag.com.dbo.utils.Constants;
 import lombok.extern.slf4j.Slf4j;
@@ -19,11 +19,11 @@ import java.util.Optional;
 @Controller
 public class EtlScheduleController {
 
-    private final EngineService engineService;
-    private final EtlService etlService;
+    private final EngineServiceImpl engineService;
+    private final EtlServiceImpl etlService;
     private final DynamicSchedulerService dynamicSchedulerService;
 
-    public EtlScheduleController(EngineService engineService, EtlService etlService, DynamicSchedulerService dynamicSchedulerService) {
+    public EtlScheduleController(EngineServiceImpl engineService, EtlServiceImpl etlService, DynamicSchedulerService dynamicSchedulerService) {
         this.engineService = engineService;
         this.etlService = etlService;
         this.dynamicSchedulerService = dynamicSchedulerService;
